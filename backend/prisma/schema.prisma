@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  farmer
+  ws
+  factory
+  exporter
+  importer
+  retailer
+  admin
+}
+
+enum ProductType {
+  coffee
+  tea
+}
+
+enum SupplyChainStage {
+  farmer
+  washing_station
+  factory
+  exporter
+  importer
+  retailer
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  farmerBatches        ProductBatch[] @relation("FarmerBatches")
+  washingStationBatches ProductBatch[] @relation("WashingStationBatches")
+  factoryBatches       ProductBatch[] @relation("FactoryBatches")
+  exporterBatches      ProductBatch[] @relation("ExporterBatches")
+  importerBatches      ProductBatch[] @relation("ImporterBatches")
+  retailerBatches     ProductBatch[] @relation("RetailerBatches")
+  batchHistory        BatchHistory[]
+
+  @@map("users")
+}
+
+model ProductBatch {
+  id               String           @id @default(cuid())
+  type             ProductType
+  originLocation   String
+  currentStage     SupplyChainStage
+  blockchainTxHash String?
+  deletedAt        DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Foreign keys for supply chain participants
+  farmerId         String?
+  washingStationId String?
+  factoryId        String?
+  exporterId       String?
+  importerId       String?
+  retailerId       String?
+
+  // Relations
+  farmer           User?            @relation("FarmerBatches", fields: [farmerId], references: [id])
+  washingStation   User?            @relation("WashingStationBatches", fields: [washingStationId], references: [id])
+  factory          User?            @relation("FactoryBatches", fields: [factoryId], references: [id])
+  exporter         User?            @relation("ExporterBatches", fields: [exporterId], references: [id])
+  importer         User?            @relation("ImporterBatches", fields: [importerId], references: [id])
+  retailer         User?            @relation("RetailerBatches", fields: [retailerId], references: [id])
+  history          BatchHistory[]
+
+  @@map("product_batches")
+}
+
+model BatchHistory {
+  id               String           @id @default(cuid())
+  batchId          String
+  stage            SupplyChainStage
+  blockchainTxHash String?
+  timestamp        DateTime         @default(now())
+  changedBy        String
+
+  // Relations
+  batch            ProductBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [changedBy], references: [id])
+
+  @@map("batch_history")
+}
+

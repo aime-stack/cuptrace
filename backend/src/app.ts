@@ -1,0 +1,37 @@
+import express, { Express } from 'express';
+import cors from 'cors';
+import { errorHandler } from './middleware/error.middleware';
+
+// Import routes
+import authRoutes from './routes/auth.routes';
+import coffeeRoutes from './routes/coffee.routes';
+import teaRoutes from './routes/tea.routes';
+import stageRoutes from './routes/stage.routes';
+
+const createApp = (): Express => {
+  const app = express();
+
+  // Middleware
+  app.use(cors());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
+
+  // Health check
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Routes
+  app.use('/auth', authRoutes);
+  app.use('/coffee', coffeeRoutes);
+  app.use('/tea', teaRoutes);
+  app.use('/stage', stageRoutes);
+
+  // Error handling middleware (must be last)
+  app.use(errorHandler);
+
+  return app;
+};
+
+export default createApp;
+
