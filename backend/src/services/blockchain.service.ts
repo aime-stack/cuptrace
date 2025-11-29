@@ -11,8 +11,10 @@
  * 
  * Refer to the official Lucid documentation for the correct API usage.
  */
-import env from '../config/env';
-import { SupplyChainStage } from '@prisma/client';
+// import env from '../config/env'; // Will be used when Lucid is implemented
+// SupplyChainStage will be available after Prisma client generation
+// import { SupplyChainStage } from '@prisma/client';
+type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
 // Initialize Lucid instance
 // TODO: Replace 'any' with proper Lucid type once library is integrated
@@ -30,9 +32,8 @@ export const initializeLucid = async (): Promise<any> => {
   }
 
   try {
-    const network = env.CARDANO_NETWORK;
-
     // TODO: Initialize Lucid based on the actual library API
+    // const network = env.CARDANO_NETWORK;
     // Example structure (adjust based on actual Lucid API):
     // 
     // if (env.BLOCKFROST_API_KEY) {
@@ -67,34 +68,33 @@ export const initializeLucid = async (): Promise<any> => {
  * @returns Transaction hash
  */
 export const createBatchOnChain = async (
-  batchId: string,
-  metadata: {
+  _batchId: string,
+  _metadata: {
     type: 'coffee' | 'tea';
     originLocation: string;
     farmerId?: string;
     timestamp: string;
   },
-  privateKey?: string
+  _privateKey?: string
 ): Promise<string> => {
   try {
-    const lucidInstance = await initializeLucid();
+    await initializeLucid();
 
     // If private key is provided, select wallet
-    if (privateKey) {
-      lucidInstance.selectWalletFromPrivateKey(privateKey);
-    }
-
-    // Prepare metadata for on-chain storage
-    const batchMetadata = {
-      batchId,
-      type: metadata.type,
-      originLocation: metadata.originLocation,
-      farmerId: metadata.farmerId,
-      timestamp: metadata.timestamp,
-      action: 'create',
-    };
+    // if (_privateKey) {
+    //   lucidInstance.selectWalletFromPrivateKey(_privateKey);
+    // }
 
     // TODO: Load Aiken-compiled contract
+    // Prepare metadata for on-chain storage (will be used when implemented)
+    // const batchMetadata = {
+    //   batchId: _batchId,
+    //   type: _metadata.type,
+    //   originLocation: _metadata.originLocation,
+    //   farmerId: _metadata.farmerId,
+    //   timestamp: _metadata.timestamp,
+    //   action: 'create',
+    // };
     // const contract = await loadContract(env.BATCH_CONTRACT_ADDRESS);
 
     // TODO: Build transaction to lock batch metadata on-chain
@@ -104,16 +104,15 @@ export const createBatchOnChain = async (
     // Example structure (adjust based on actual Lucid API):
     // const tx = await lucidInstance
     //   .newTx()
-    //   .attachMetadata(674, batchMetadata) // 674 is the CIP-20 metadata label for custom data
+    //   .attachMetadata(674, _batchMetadata) // 674 is the CIP-20 metadata label for custom data
     //   .complete();
     // 
     // const signedTx = await tx.sign().complete();
     // const txHash = await signedTx.submit();
+    // return txHash;
     
     // Placeholder - implement based on actual Lucid library
     throw new Error('Transaction building not yet implemented. Please implement based on your Lucid library version.');
-
-    return txHash;
   } catch (error) {
     console.error('Error creating batch on chain:', error);
     throw new Error(`Failed to create batch on blockchain: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -132,30 +131,29 @@ export const createBatchOnChain = async (
  * @returns Transaction hash
  */
 export const updateBatchStageOnChain = async (
-  batchId: string,
-  stage: SupplyChainStage,
-  previousStage: SupplyChainStage,
-  changedBy: string,
-  privateKey?: string
+  _batchId: string,
+  _stage: SupplyChainStage,
+  _previousStage: SupplyChainStage,
+  _changedBy: string,
+  _privateKey?: string
 ): Promise<string> => {
   try {
-    const lucidInstance = await initializeLucid();
+    await initializeLucid();
 
-    if (privateKey) {
-      lucidInstance.selectWalletFromPrivateKey(privateKey);
-    }
-
-    // Prepare stage update metadata
-    const stageMetadata = {
-      batchId,
-      previousStage,
-      newStage: stage,
-      changedBy,
-      timestamp: new Date().toISOString(),
-      action: 'stage_update',
-    };
+    // if (_privateKey) {
+    //   lucidInstance.selectWalletFromPrivateKey(_privateKey);
+    // }
 
     // TODO: Interact with Aiken-compiled stage contract
+    // Prepare stage update metadata (will be used when implemented)
+    // const stageMetadata = {
+    //   batchId: _batchId,
+    //   previousStage: _previousStage,
+    //   newStage: _stage,
+    //   changedBy: _changedBy,
+    //   timestamp: new Date().toISOString(),
+    //   action: 'stage_update',
+    // };
     // const contract = await loadContract(env.STAGE_CONTRACT_ADDRESS);
 
     // TODO: Build transaction
@@ -164,16 +162,15 @@ export const updateBatchStageOnChain = async (
     // Example structure (adjust based on actual Lucid API):
     // const tx = await lucidInstance
     //   .newTx()
-    //   .attachMetadata(674, stageMetadata)
+    //   .attachMetadata(674, _stageMetadata)
     //   .complete();
     // 
     // const signedTx = await tx.sign().complete();
     // const txHash = await signedTx.submit();
+    // return txHash;
     
     // Placeholder - implement based on actual Lucid library
     throw new Error('Transaction building not yet implemented. Please implement based on your Lucid library version.');
-
-    return txHash;
   } catch (error) {
     console.error('Error updating batch stage on chain:', error);
     throw new Error(`Failed to update batch stage on blockchain: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -189,21 +186,20 @@ export const updateBatchStageOnChain = async (
  * @returns Verification result with batch data
  */
 export const verifyBatchOnChain = async (
-  batchId: string,
-  txHash: string
+  _batchId: string,
+  _txHash: string
 ): Promise<{
   verified: boolean;
-  batchData?: any;
+  batchData?: unknown;
   error?: string;
 }> => {
   try {
-    const lucidInstance = await initializeLucid();
-
     // TODO: Fetch transaction details
+    // const lucidInstance = await initializeLucid();
     // The exact API will depend on the Lucid library version you're using
     // 
     // Example structure (adjust based on actual Lucid API):
-    // const tx = await lucidInstance.getTx(txHash);
+    // const tx = await _lucidInstance.getTx(_txHash);
     // 
     // if (!tx) {
     //   return {
@@ -221,7 +217,7 @@ export const verifyBatchOnChain = async (
     // }
     // 
     // const batchMetadata = metadata[674];
-    // if (batchMetadata.batchId !== batchId) {
+    // if (batchMetadata.batchId !== _batchId) {
     //   return {
     //     verified: false,
     //     error: 'Batch ID mismatch',
@@ -254,7 +250,7 @@ export const verifyBatchOnChain = async (
  * @param contractAddress - Contract address
  * @returns Contract instance
  */
-export const loadContract = async (contractAddress: string): Promise<any> => {
+export const loadContract = async (_contractAddress: string): Promise<unknown> => {
   // TODO: Implement contract loading
   // This will depend on how you compile and deploy your Aiken contracts
   // Example:
@@ -271,12 +267,11 @@ export const loadContract = async (contractAddress: string): Promise<any> => {
  * @returns Array of transaction hashes related to the batch
  */
 export const getBatchTransactionHistory = async (
-  batchId: string
+  _batchId: string
 ): Promise<string[]> => {
   try {
-    const lucidInstance = await initializeLucid();
-
     // TODO: Query blockchain for all transactions related to this batch
+    // const lucidInstance = await initializeLucid();
     // This requires indexing or querying metadata
     // For now, return empty array as placeholder
     

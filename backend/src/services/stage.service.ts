@@ -1,6 +1,8 @@
 import prisma from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
-import { SupplyChainStage } from '@prisma/client';
+// SupplyChainStage will be available after Prisma client generation
+// import { SupplyChainStage } from '@prisma/client';
+type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
 // Define valid stage transitions
 const STAGE_ORDER: SupplyChainStage[] = [

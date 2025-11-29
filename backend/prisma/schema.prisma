@@ -10,6 +10,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// ENUMS
+// ============================================
+
 enum UserRole {
   farmer
   ws
@@ -34,36 +38,157 @@ enum SupplyChainStage {
   retailer
 }
 
+enum BatchStatus {
+  pending
+  approved
+  rejected
+  in_transit
+  completed
+}
+
+enum PaymentType {
+  harvest_payment
+  processing_payment
+  export_payment
+  quality_bonus
+  other
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  cancelled
+}
+
+enum ReportType {
+  monthly_summary
+  quarterly_export
+  annual_statistics
+  quality_report
+  payment_report
+  custom
+}
+
+enum ReportStatus {
+  draft
+  submitted
+  approved
+  rejected
+}
+
+enum CertificateType {
+  organic
+  fair_trade
+  quality_grade
+  export_permit
+  health_certificate
+  origin_certificate
+  other
+}
+
+// ============================================
+// MODELS
+// ============================================
+
 model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  email             String   @unique
+  password          String
+  role              UserRole
+  phone             String?
+  address           String?
+  city              String?
+  province          String?
+  country           String   @default("Rwanda")
+  cooperativeId     String?
+  registrationNumber String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  farmerBatches        ProductBatch[] @relation("FarmerBatches")
-  washingStationBatches ProductBatch[] @relation("WashingStationBatches")
-  factoryBatches       ProductBatch[] @relation("FactoryBatches")
-  exporterBatches      ProductBatch[] @relation("ExporterBatches")
-  importerBatches      ProductBatch[] @relation("ImporterBatches")
-  retailerBatches     ProductBatch[] @relation("RetailerBatches")
-  batchHistory        BatchHistory[]
+  cooperative           Cooperative?      @relation(fields: [cooperativeId], references: [id])
+  farmerBatches         ProductBatch[]   @relation("FarmerBatches")
+  washingStationBatches ProductBatch[]   @relation("WashingStationBatches")
+  factoryBatches        ProductBatch[]    @relation("FactoryBatches")
+  exporterBatches       ProductBatch[]    @relation("ExporterBatches")
+  importerBatches       ProductBatch[]   @relation("ImporterBatches")
+  retailerBatches       ProductBatch[]   @relation("RetailerBatches")
+  batchHistory          BatchHistory[]
+  processingRecords     ProcessingRecord[]
+  paymentsMade          Payment[]        @relation("PaymentsMade")
+  paymentsReceived      Payment[]        @relation("PaymentsReceived")
+  exportRecords         ExportRecord[]
+  naebReports           NAEBReport[]
 
   @@map("users")
+}
+
+model Cooperative {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  location    String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  farmers     User[]
+  batches     ProductBatch[]
+
+  @@map("cooperatives")
 }
 
 model ProductBatch {
   id               String           @id @default(cuid())
   type             ProductType
-  originLocation   String
+  status           BatchStatus      @default(pending)
+  
+  // Location (structured)
+  originLocation   String           // Keep for backward compatibility
+  region           String?
+  district         String?
+  sector           String?
+  cell             String?
+  village          String?
+  coordinates      String?          // GPS coordinates (lat, lng)
+  
+  // Product Attributes
+  lotId            String?          @unique  // Unique lot identifier
+  quantity         Float?          // Weight in kg
+  quality          String?          // Quality grade/rating
+  moisture         Float?          // Moisture percentage
+  harvestDate      DateTime?       // When product was harvested/plucked
+  
+  // Coffee-specific
+  processingType   String?         // "wet", "dry", "honey"
+  grade            String?         // Coffee grade (A, AA, etc.)
+  
+  // Tea-specific
+  teaType          String?         // "CTC", "Orthodox", "Green", "Black", "White"
+  pluckingDate     DateTime?
+  
+  // QR Code & Verification
+  qrCode           String?         @unique
+  qrCodeGeneratedAt DateTime?
+  verificationUrl  String?
+  
+  // Current Stage & Blockchain
   currentStage     SupplyChainStage
   blockchainTxHash String?
+  
+  // Metadata
+  description      String?
+  metadata         Json?           // Flexible JSON for additional data
+  tags             String[]       // Array of tags for categorization
+  
+  // Soft Delete
   deletedAt        DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
   // Foreign keys for supply chain participants
   farmerId         String?
@@ -72,15 +197,21 @@ model ProductBatch {
   exporterId       String?
   importerId       String?
   retailerId       String?
+  cooperativeId    String?
 
   // Relations
-  farmer           User?            @relation("FarmerBatches", fields: [farmerId], references: [id])
-  washingStation   User?            @relation("WashingStationBatches", fields: [washingStationId], references: [id])
-  factory          User?            @relation("FactoryBatches", fields: [factoryId], references: [id])
-  exporter         User?            @relation("ExporterBatches", fields: [exporterId], references: [id])
-  importer         User?            @relation("ImporterBatches", fields: [importerId], references: [id])
-  retailer         User?            @relation("RetailerBatches", fields: [retailerId], references: [id])
+  cooperative      Cooperative?    @relation(fields: [cooperativeId], references: [id])
+  farmer           User?          @relation("FarmerBatches", fields: [farmerId], references: [id])
+  washingStation   User?          @relation("WashingStationBatches", fields: [washingStationId], references: [id])
+  factory          User?          @relation("FactoryBatches", fields: [factoryId], references: [id])
+  exporter         User?          @relation("ExporterBatches", fields: [exporterId], references: [id])
+  importer         User?          @relation("ImporterBatches", fields: [importerId], references: [id])
+  retailer         User?          @relation("RetailerBatches", fields: [retailerId], references: [id])
   history          BatchHistory[]
+  processingRecords ProcessingRecord[]
+  payments         Payment[]
+  exportRecord     ExportRecord?
+  certificates     Certificate[]
 
   @@map("product_batches")
 }
@@ -92,6 +223,13 @@ model BatchHistory {
   blockchainTxHash String?
   timestamp        DateTime         @default(now())
   changedBy        String
+  
+  // Enhanced fields
+  notes            String?
+  quantity         Float?
+  quality          String?
+  location         String?
+  metadata         Json?
 
   // Relations
   batch            ProductBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
@@ -100,3 +238,106 @@ model BatchHistory {
   @@map("batch_history")
 }
 
+model ProcessingRecord {
+  id              String   @id @default(cuid())
+  batchId         String
+  stage           SupplyChainStage
+  processingType  String   // "wet_processing", "drying", "milling", "grading", "packaging", etc.
+  notes           String?
+  qualityScore    Float?
+  quantityIn      Float?   // Input quantity
+  quantityOut     Float?   // Output quantity (after processing loss)
+  processedBy     String   // User ID
+  processedAt     DateTime @default(now())
+  blockchainTxHash String?
+  
+  // Relations
+  batch           ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  processor       User         @relation(fields: [processedBy], references: [id])
+  
+  @@map("processing_records")
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  batchId         String
+  payerId         String
+  payeeId         String
+  amount          Decimal       // Payment amount
+  currency        String        @default("RWF")
+  paymentType     PaymentType
+  status          PaymentStatus @default(pending)
+  paymentDate     DateTime?
+  transactionRef String?        // External transaction reference
+  notes           String?
+  blockchainTxHash String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  batch           ProductBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  payer           User          @relation("PaymentsMade", fields: [payerId], references: [id])
+  payee           User          @relation("PaymentsReceived", fields: [payeeId], references: [id])
+  
+  @@map("payments")
+}
+
+model ExportRecord {
+  id              String   @id @default(cuid())
+  batchId         String   @unique
+  exporterId      String
+  buyerName       String
+  buyerAddress    String?
+  buyerEmail      String?
+  shippingMethod  String   // "air", "sea", "road"
+  shippingDate    DateTime
+  expectedArrival DateTime?
+  trackingNumber  String?
+  certificates    String?  // JSON array of certificate references
+  blockchainTxHash String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  batch           ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  exporter        User         @relation(fields: [exporterId], references: [id])
+  
+  @@map("export_records")
+}
+
+model Certificate {
+  id              String         @id @default(cuid())
+  batchId         String
+  certificateType CertificateType
+  certificateNumber String        @unique
+  issuedBy        String
+  issuedDate      DateTime
+  expiryDate      DateTime?
+  documentUrl     String?         // Link to certificate document
+  blockchainTxHash String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  batch           ProductBatch   @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  
+  @@map("certificates")
+}
+
+model NAEBReport {
+  id              String       @id @default(cuid())
+  reportType      ReportType
+  periodStart     DateTime
+  periodEnd       DateTime
+  generatedBy     String       // Admin user ID
+  data            Json         // Report data (JSON structure)
+  status          ReportStatus @default(draft)
+  submittedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  // Relations
+  generatedByUser User         @relation(fields: [generatedBy], references: [id])
+  
+  @@map("naeb_reports")
+}

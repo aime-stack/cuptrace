@@ -1,11 +1,38 @@
 import prisma from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
-import { ProductType, SupplyChainStage } from '@prisma/client';
+// These types will be available after Prisma client generation
+// import { ProductType, SupplyChainStage, BatchStatus } from '@prisma/client';
+type ProductType = 'coffee' | 'tea';
+type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
+type BatchStatus = 'pending' | 'approved' | 'rejected' | 'in_transit' | 'completed';
 
 export interface CreateProductData {
   type: ProductType;
   originLocation: string;
   farmerId?: string;
+  cooperativeId?: string;
+  // Location fields
+  region?: string;
+  district?: string;
+  sector?: string;
+  cell?: string;
+  village?: string;
+  coordinates?: string;
+  // Product attributes
+  lotId?: string;
+  quantity?: number;
+  quality?: string;
+  moisture?: number;
+  harvestDate?: string;
+  pluckingDate?: string;
+  // Coffee-specific
+  processingType?: string;
+  grade?: string;
+  // Tea-specific
+  teaType?: string;
+  // Metadata
+  description?: string;
+  tags?: string[];
 }
 
 export interface UpdateProductData {
@@ -16,6 +43,31 @@ export interface UpdateProductData {
   exporterId?: string;
   importerId?: string;
   retailerId?: string;
+  cooperativeId?: string;
+  // Location fields
+  region?: string;
+  district?: string;
+  sector?: string;
+  cell?: string;
+  village?: string;
+  coordinates?: string;
+  // Product attributes
+  lotId?: string;
+  quantity?: number;
+  quality?: string;
+  moisture?: number;
+  harvestDate?: string;
+  pluckingDate?: string;
+  // Coffee-specific
+  processingType?: string;
+  grade?: string;
+  // Tea-specific
+  teaType?: string;
+  // Status
+  status?: BatchStatus;
+  // Metadata
+  description?: string;
+  tags?: string[];
 }
 
 export const createProduct = async (data: CreateProductData) => {
@@ -39,7 +91,30 @@ export const createProduct = async (data: CreateProductData) => {
       type: data.type,
       originLocation: data.originLocation,
       farmerId: data.farmerId,
+      cooperativeId: data.cooperativeId,
       currentStage: 'farmer',
+      // Location fields
+      region: data.region ?? null,
+      district: data.district ?? null,
+      sector: data.sector ?? null,
+      cell: data.cell ?? null,
+      village: data.village ?? null,
+      coordinates: data.coordinates ?? null,
+      // Product attributes
+      lotId: data.lotId ?? null,
+      quantity: data.quantity ?? null,
+      quality: data.quality ?? null,
+      moisture: data.moisture ?? null,
+      harvestDate: data.harvestDate ? new Date(data.harvestDate) : null,
+      pluckingDate: data.pluckingDate ? new Date(data.pluckingDate) : null,
+      // Coffee-specific
+      processingType: data.processingType ?? null,
+      grade: data.grade ?? null,
+      // Tea-specific
+      teaType: data.teaType ?? null,
+      // Metadata
+      description: data.description ?? null,
+      tags: data.tags ?? [],
     },
     include: {
       farmer: {
@@ -167,6 +242,13 @@ export const getProductById = async (id: string, type?: ProductType) => {
           },
         },
       },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
     },
   });
 
@@ -185,7 +267,11 @@ export const listProducts = async (
 ) => {
   const skip = (page - 1) * limit;
 
-  const where: any = {
+  const where: {
+    deletedAt: null;
+    type?: ProductType;
+    currentStage?: SupplyChainStage;
+  } = {
     deletedAt: null,
   };
 
@@ -254,6 +340,13 @@ export const listProducts = async (
             role: true,
           },
         },
+        cooperative: {
+          select: {
+            id: true,
+            name: true,
+            location: true,
+          },
+        },
       },
     }),
     prisma.productBatch.count({ where }),
@@ -305,12 +398,51 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
     }
   }
 
+  // Prepare update data, handling date strings and removing undefined values
+  const updateData: {
+    updatedAt: Date;
+    [key: string]: unknown;
+  } = {
+    updatedAt: new Date(),
+  };
+
+  // Only include fields that are provided
+  if (data.originLocation !== undefined) updateData.originLocation = data.originLocation;
+  if (data.farmerId !== undefined) updateData.farmerId = data.farmerId;
+  if (data.washingStationId !== undefined) updateData.washingStationId = data.washingStationId;
+  if (data.factoryId !== undefined) updateData.factoryId = data.factoryId;
+  if (data.exporterId !== undefined) updateData.exporterId = data.exporterId;
+  if (data.importerId !== undefined) updateData.importerId = data.importerId;
+  if (data.retailerId !== undefined) updateData.retailerId = data.retailerId;
+  if (data.cooperativeId !== undefined) updateData.cooperativeId = data.cooperativeId;
+  if (data.region !== undefined) updateData.region = data.region;
+  if (data.district !== undefined) updateData.district = data.district;
+  if (data.sector !== undefined) updateData.sector = data.sector;
+  if (data.cell !== undefined) updateData.cell = data.cell;
+  if (data.village !== undefined) updateData.village = data.village;
+  if (data.coordinates !== undefined) updateData.coordinates = data.coordinates;
+  if (data.lotId !== undefined) updateData.lotId = data.lotId;
+  if (data.quantity !== undefined) updateData.quantity = data.quantity;
+  if (data.quality !== undefined) updateData.quality = data.quality;
+  if (data.moisture !== undefined) updateData.moisture = data.moisture;
+  if (data.processingType !== undefined) updateData.processingType = data.processingType;
+  if (data.grade !== undefined) updateData.grade = data.grade;
+  if (data.teaType !== undefined) updateData.teaType = data.teaType;
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.tags !== undefined) updateData.tags = data.tags;
+
+  // Convert date strings to Date objects if provided
+  if (data.harvestDate) {
+    updateData.harvestDate = new Date(data.harvestDate);
+  }
+  if (data.pluckingDate) {
+    updateData.pluckingDate = new Date(data.pluckingDate);
+  }
+
   const product = await prisma.productBatch.update({
     where: { id },
-    data: {
-      ...data,
-      updatedAt: new Date(),
-    },
+    data: updateData,
     include: {
       farmer: {
         select: {
@@ -358,6 +490,13 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
           name: true,
           email: true,
           role: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
         },
       },
     },

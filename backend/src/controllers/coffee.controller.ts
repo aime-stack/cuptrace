@@ -8,6 +8,8 @@ import {
   deleteProduct,
 } from '../services/product.service';
 import { sendSuccess } from '../utils/response';
+// SupplyChainStage will be available after Prisma client generation
+type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
 export const createCoffeeController = async (
   req: AuthRequest,
@@ -15,12 +17,47 @@ export const createCoffeeController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { originLocation, farmerId } = req.body;
+    const { 
+      originLocation, 
+      farmerId,
+      cooperativeId,
+      region,
+      district,
+      sector,
+      cell,
+      village,
+      coordinates,
+      lotId,
+      quantity,
+      quality,
+      moisture,
+      harvestDate,
+      processingType,
+      grade,
+      description,
+      tags,
+    } = req.body;
 
     const product = await createProduct({
       type: 'coffee',
       originLocation,
       farmerId,
+      cooperativeId,
+      region,
+      district,
+      sector,
+      cell,
+      village,
+      coordinates,
+      lotId,
+      quantity,
+      quality,
+      moisture,
+      harvestDate,
+      processingType,
+      grade,
+      description,
+      tags,
     });
 
     return sendSuccess(res, product, 201);
@@ -55,7 +92,7 @@ export const listCoffeeController = async (
 
     const result = await listProducts(
       'coffee',
-      stage as any,
+      stage ? (stage as SupplyChainStage) : undefined,
       parseInt(page as string, 10),
       parseInt(limit as string, 10)
     );
