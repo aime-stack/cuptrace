@@ -101,8 +101,11 @@ const storeTransactionRecord = async (
     // Log error but don't fail the operation
     // Transaction hash generation should not block batch creation
     if (error instanceof Error) {
-      throw new Error(`Failed to store transaction record: ${error.message}`);
+      console.error(`Failed to store transaction record for batch ${batchId}:`, error.message);
+    } else {
+      console.error(`Failed to store transaction record for batch ${batchId}:`, error);
     }
+    // Silently return - don't throw to avoid blocking the operation
   }
 };
 

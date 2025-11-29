@@ -68,6 +68,11 @@ export const updateBatchStage = async (
     );
   }
 
+  // Validate enhanced fields if provided (BEFORE database update to prevent inconsistent state)
+  if (data.quantity !== undefined && !isValidNonNegativeNumber(data.quantity)) {
+    throw new ValidationError('Quantity must be a non-negative number');
+  }
+
   // Update the batch stage
   const updatedBatch = await prisma.productBatch.update({
     where: { id: batchId },
@@ -142,11 +147,6 @@ export const updateBatchStage = async (
       },
     },
   });
-
-  // Validate enhanced fields if provided
-  if (data.quantity !== undefined && !isValidNonNegativeNumber(data.quantity)) {
-    throw new ValidationError('Quantity must be a non-negative number');
-  }
 
   // Create history entry with enhanced fields
   await prisma.batchHistory.create({
