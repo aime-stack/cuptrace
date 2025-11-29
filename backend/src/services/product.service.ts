@@ -1,7 +1,11 @@
 import prisma from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
-// These types will be available after Prisma client generation
-// import { ProductType, SupplyChainStage, BatchStatus } from '@prisma/client';
+import { parseDate } from '../utils/date';
+import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '../utils/validation';
+import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
+import { buildSoftDeleteFilter } from '../utils/query';
+import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
+
 type ProductType = 'coffee' | 'tea';
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 type BatchStatus = 'pending' | 'approved' | 'rejected' | 'in_transit' | 'completed';
@@ -33,6 +37,7 @@ export interface CreateProductData {
   // Metadata
   description?: string;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateProductData {
@@ -68,9 +73,16 @@ export interface UpdateProductData {
   // Metadata
   description?: string;
   tags?: string[];
+  metadata?: Record<string, unknown>;
 }
 
 export const createProduct = async (data: CreateProductData) => {
+  // Validate and sanitize input
+  const originLocation = sanitizeString(data.originLocation);
+  if (!originLocation) {
+    throw new ValidationError('Origin location is required');
+  }
+
   // Validate farmer exists if provided
   if (data.farmerId) {
     const farmer = await prisma.user.findUnique({
@@ -86,35 +98,68 @@ export const createProduct = async (data: CreateProductData) => {
     }
   }
 
+  // Validate cooperative exists if provided
+  if (data.cooperativeId) {
+    const cooperative = await prisma.cooperative.findUnique({
+      where: { id: data.cooperativeId },
+    });
+
+    if (!cooperative) {
+      throw new ValidationError('Cooperative not found');
+    }
+  }
+
+  // Validate coordinates if provided
+  if (data.coordinates && !isValidCoordinates(data.coordinates)) {
+    throw new ValidationError('Invalid coordinates format. Expected format: lat,lng');
+  }
+
+  // Validate quantity if provided
+  if (data.quantity !== undefined && !isValidNonNegativeNumber(data.quantity)) {
+    throw new ValidationError('Quantity must be a non-negative number');
+  }
+
+  // Validate moisture if provided
+  if (data.moisture !== undefined && (data.moisture < 0 || data.moisture > 100)) {
+    throw new ValidationError('Moisture must be between 0 and 100');
+  }
+
+  // Parse dates
+  const harvestDate = parseDate(data.harvestDate);
+  const pluckingDate = parseDate(data.pluckingDate);
+
+  // Create product first (we'll update QR code after we have the ID)
   const product = await prisma.productBatch.create({
     data: {
       type: data.type,
-      originLocation: data.originLocation,
-      farmerId: data.farmerId,
-      cooperativeId: data.cooperativeId,
+      originLocation,
+      farmerId: data.farmerId || null,
+      cooperativeId: data.cooperativeId || null,
       currentStage: 'farmer',
+      status: 'pending',
       // Location fields
-      region: data.region ?? null,
-      district: data.district ?? null,
-      sector: data.sector ?? null,
-      cell: data.cell ?? null,
-      village: data.village ?? null,
-      coordinates: data.coordinates ?? null,
+      region: sanitizeString(data.region),
+      district: sanitizeString(data.district),
+      sector: sanitizeString(data.sector),
+      cell: sanitizeString(data.cell),
+      village: sanitizeString(data.village),
+      coordinates: data.coordinates ? sanitizeString(data.coordinates) : null,
       // Product attributes
-      lotId: data.lotId ?? null,
+      lotId: sanitizeString(data.lotId),
       quantity: data.quantity ?? null,
-      quality: data.quality ?? null,
+      quality: sanitizeString(data.quality),
       moisture: data.moisture ?? null,
-      harvestDate: data.harvestDate ? new Date(data.harvestDate) : null,
-      pluckingDate: data.pluckingDate ? new Date(data.pluckingDate) : null,
+      harvestDate,
+      pluckingDate,
       // Coffee-specific
-      processingType: data.processingType ?? null,
-      grade: data.grade ?? null,
+      processingType: sanitizeString(data.processingType),
+      grade: sanitizeString(data.grade),
       // Tea-specific
-      teaType: data.teaType ?? null,
+      teaType: sanitizeString(data.teaType),
       // Metadata
-      description: data.description ?? null,
-      tags: data.tags ?? [],
+      description: sanitizeString(data.description),
+      tags: data.tags || [],
+      metadata: data.metadata ? (data.metadata as Record<string, unknown>) : null,
     },
     include: {
       farmer: {
@@ -168,14 +213,89 @@ export const createProduct = async (data: CreateProductData) => {
     },
   });
 
-  return product;
+  // Generate QR code and verification URL with actual batch ID
+  const qrCode = generateQRCode(product.id, data.type);
+  const verificationUrl = generateVerificationUrl(product.id);
+
+  // Update product with QR code
+  const updatedProduct = await prisma.productBatch.update({
+    where: { id: product.id },
+    data: {
+      qrCode,
+      qrCodeGeneratedAt: new Date(),
+      verificationUrl,
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      washingStation: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      factory: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      exporter: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      importer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      retailer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
+    },
+  });
+
+  return updatedProduct;
 };
 
 export const getProductById = async (id: string, type?: ProductType) => {
+  if (!id) {
+    throw new ValidationError('Product ID is required');
+  }
+
   const product = await prisma.productBatch.findFirst({
     where: {
       id,
-      deletedAt: null,
+      ...buildSoftDeleteFilter(),
       ...(type && { type }),
     },
     include: {
@@ -263,16 +383,17 @@ export const listProducts = async (
   type?: ProductType,
   stage?: SupplyChainStage,
   page: number = 1,
-  limit: number = 10
-) => {
-  const skip = (page - 1) * limit;
+  limit: number = 10,
+  status?: BatchStatus,
+  farmerId?: string,
+  cooperativeId?: string,
+  search?: string
+): Promise<PaginationResult<unknown>> => {
+  const pagination = normalizePagination(page, limit, 1, 10, 100);
+  const skip = (pagination.page - 1) * pagination.limit;
 
-  const where: {
-    deletedAt: null;
-    type?: ProductType;
-    currentStage?: SupplyChainStage;
-  } = {
-    deletedAt: null,
+  const where: Record<string, unknown> = {
+    ...buildSoftDeleteFilter(),
   };
 
   if (type) {
@@ -283,11 +404,33 @@ export const listProducts = async (
     where.currentStage = stage;
   }
 
+  if (status) {
+    where.status = status;
+  }
+
+  if (farmerId) {
+    where.farmerId = farmerId;
+  }
+
+  if (cooperativeId) {
+    where.cooperativeId = cooperativeId;
+  }
+
+  if (search) {
+    const searchTerm = sanitizeString(search);
+    where.OR = [
+      { lotId: { contains: searchTerm || '', mode: 'insensitive' } },
+      { originLocation: { contains: searchTerm || '', mode: 'insensitive' } },
+      { description: { contains: searchTerm || '', mode: 'insensitive' } },
+      { quality: { contains: searchTerm || '', mode: 'insensitive' } },
+    ];
+  }
+
   const [products, total] = await Promise.all([
     prisma.productBatch.findMany({
       where,
       skip,
-      take: limit,
+      take: pagination.limit,
       orderBy: {
         createdAt: 'desc',
       },
@@ -352,15 +495,7 @@ export const listProducts = async (
     prisma.productBatch.count({ where }),
   ]);
 
-  return {
-    products,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  return createPaginationResult(products, total, pagination.page, pagination.limit);
 };
 
 export const updateProduct = async (id: string, data: UpdateProductData) => {
@@ -398,6 +533,32 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
     }
   }
 
+  // Validate coordinates if provided
+  if (data.coordinates !== undefined && data.coordinates !== null && !isValidCoordinates(data.coordinates)) {
+    throw new ValidationError('Invalid coordinates format. Expected format: lat,lng');
+  }
+
+  // Validate quantity if provided
+  if (data.quantity !== undefined && !isValidNonNegativeNumber(data.quantity)) {
+    throw new ValidationError('Quantity must be a non-negative number');
+  }
+
+  // Validate moisture if provided
+  if (data.moisture !== undefined && (data.moisture < 0 || data.moisture > 100)) {
+    throw new ValidationError('Moisture must be between 0 and 100');
+  }
+
+  // Validate cooperative exists if provided
+  if (data.cooperativeId !== undefined && data.cooperativeId !== null) {
+    const cooperative = await prisma.cooperative.findUnique({
+      where: { id: data.cooperativeId },
+    });
+
+    if (!cooperative) {
+      throw new ValidationError('Cooperative not found');
+    }
+  }
+
   // Prepare update data, handling date strings and removing undefined values
   const updateData: {
     updatedAt: Date;
@@ -406,38 +567,43 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
     updatedAt: new Date(),
   };
 
-  // Only include fields that are provided
-  if (data.originLocation !== undefined) updateData.originLocation = data.originLocation;
-  if (data.farmerId !== undefined) updateData.farmerId = data.farmerId;
-  if (data.washingStationId !== undefined) updateData.washingStationId = data.washingStationId;
-  if (data.factoryId !== undefined) updateData.factoryId = data.factoryId;
-  if (data.exporterId !== undefined) updateData.exporterId = data.exporterId;
-  if (data.importerId !== undefined) updateData.importerId = data.importerId;
-  if (data.retailerId !== undefined) updateData.retailerId = data.retailerId;
-  if (data.cooperativeId !== undefined) updateData.cooperativeId = data.cooperativeId;
-  if (data.region !== undefined) updateData.region = data.region;
-  if (data.district !== undefined) updateData.district = data.district;
-  if (data.sector !== undefined) updateData.sector = data.sector;
-  if (data.cell !== undefined) updateData.cell = data.cell;
-  if (data.village !== undefined) updateData.village = data.village;
-  if (data.coordinates !== undefined) updateData.coordinates = data.coordinates;
-  if (data.lotId !== undefined) updateData.lotId = data.lotId;
+  // Only include fields that are provided, with sanitization
+  if (data.originLocation !== undefined) updateData.originLocation = sanitizeString(data.originLocation) || data.originLocation;
+  if (data.farmerId !== undefined) updateData.farmerId = data.farmerId || null;
+  if (data.washingStationId !== undefined) updateData.washingStationId = data.washingStationId || null;
+  if (data.factoryId !== undefined) updateData.factoryId = data.factoryId || null;
+  if (data.exporterId !== undefined) updateData.exporterId = data.exporterId || null;
+  if (data.importerId !== undefined) updateData.importerId = data.importerId || null;
+  if (data.retailerId !== undefined) updateData.retailerId = data.retailerId || null;
+  if (data.cooperativeId !== undefined) updateData.cooperativeId = data.cooperativeId || null;
+  if (data.region !== undefined) updateData.region = sanitizeString(data.region);
+  if (data.district !== undefined) updateData.district = sanitizeString(data.district);
+  if (data.sector !== undefined) updateData.sector = sanitizeString(data.sector);
+  if (data.cell !== undefined) updateData.cell = sanitizeString(data.cell);
+  if (data.village !== undefined) updateData.village = sanitizeString(data.village);
+  if (data.coordinates !== undefined) updateData.coordinates = data.coordinates ? sanitizeString(data.coordinates) : null;
+  if (data.lotId !== undefined) updateData.lotId = sanitizeString(data.lotId);
   if (data.quantity !== undefined) updateData.quantity = data.quantity;
-  if (data.quality !== undefined) updateData.quality = data.quality;
+  if (data.quality !== undefined) updateData.quality = sanitizeString(data.quality);
   if (data.moisture !== undefined) updateData.moisture = data.moisture;
-  if (data.processingType !== undefined) updateData.processingType = data.processingType;
-  if (data.grade !== undefined) updateData.grade = data.grade;
-  if (data.teaType !== undefined) updateData.teaType = data.teaType;
+  if (data.processingType !== undefined) updateData.processingType = sanitizeString(data.processingType);
+  if (data.grade !== undefined) updateData.grade = sanitizeString(data.grade);
+  if (data.teaType !== undefined) updateData.teaType = sanitizeString(data.teaType);
   if (data.status !== undefined) updateData.status = data.status;
-  if (data.description !== undefined) updateData.description = data.description;
+  if (data.description !== undefined) updateData.description = sanitizeString(data.description);
   if (data.tags !== undefined) updateData.tags = data.tags;
+  if (data.metadata !== undefined) {
+    updateData.metadata = data.metadata ? (data.metadata as Record<string, unknown>) : null;
+  }
 
   // Convert date strings to Date objects if provided
-  if (data.harvestDate) {
-    updateData.harvestDate = new Date(data.harvestDate);
+  if (data.harvestDate !== undefined) {
+    const parsedDate = parseDate(data.harvestDate);
+    updateData.harvestDate = parsedDate;
   }
-  if (data.pluckingDate) {
-    updateData.pluckingDate = new Date(data.pluckingDate);
+  if (data.pluckingDate !== undefined) {
+    const parsedDate = parseDate(data.pluckingDate);
+    updateData.pluckingDate = parsedDate;
   }
 
   const product = await prisma.productBatch.update({
@@ -506,10 +672,14 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
 };
 
 export const deleteProduct = async (id: string) => {
+  if (!id) {
+    throw new ValidationError('Product ID is required');
+  }
+
   const product = await prisma.productBatch.findFirst({
     where: {
       id,
-      deletedAt: null,
+      ...buildSoftDeleteFilter(),
     },
   });
 
@@ -526,5 +696,315 @@ export const deleteProduct = async (id: string) => {
   });
 
   return { message: 'Product batch deleted successfully' };
+};
+
+/**
+ * Approve batch
+ */
+export const approveBatch = async (id: string) => {
+  if (!id) {
+    throw new ValidationError('Batch ID is required');
+  }
+
+  const batch = await prisma.productBatch.findFirst({
+    where: {
+      id,
+      ...buildSoftDeleteFilter(),
+    },
+  });
+
+  if (!batch) {
+    throw new NotFoundError('Product batch not found');
+  }
+
+  if (batch.status === 'approved') {
+    throw new ValidationError('Batch is already approved');
+  }
+
+  const updated = await prisma.productBatch.update({
+    where: { id },
+    data: {
+      status: 'approved',
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return updated;
+};
+
+/**
+ * Reject batch
+ */
+export const rejectBatch = async (id: string, reason?: string) => {
+  if (!id) {
+    throw new ValidationError('Batch ID is required');
+  }
+
+  const batch = await prisma.productBatch.findFirst({
+    where: {
+      id,
+      ...buildSoftDeleteFilter(),
+    },
+  });
+
+  if (!batch) {
+    throw new NotFoundError('Product batch not found');
+  }
+
+  if (batch.status === 'rejected') {
+    throw new ValidationError('Batch is already rejected');
+  }
+
+  const updateData: Record<string, unknown> = {
+    status: 'rejected',
+  };
+
+  // Store rejection reason in metadata
+  if (reason) {
+    const currentMetadata = (batch.metadata as Record<string, unknown>) || {};
+    updateData.metadata = {
+      ...currentMetadata,
+      rejectionReason: sanitizeString(reason),
+      rejectedAt: new Date().toISOString(),
+    };
+  }
+
+  const updated = await prisma.productBatch.update({
+    where: { id },
+    data: updateData,
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return updated;
+};
+
+/**
+ * Verify batch by QR code
+ */
+export const verifyBatchByQRCode = async (qrCode: string) => {
+  if (!qrCode) {
+    throw new ValidationError('QR code is required');
+  }
+
+  const batch = await prisma.productBatch.findFirst({
+    where: {
+      qrCode,
+      ...buildSoftDeleteFilter(),
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      washingStation: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      factory: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      exporter: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      importer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      retailer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
+      certificates: {
+        select: {
+          id: true,
+          certificateType: true,
+          certificateNumber: true,
+          issuedBy: true,
+          issuedDate: true,
+          expiryDate: true,
+        },
+        orderBy: {
+          issuedDate: 'desc',
+        },
+      },
+      history: {
+        select: {
+          id: true,
+          stage: true,
+          timestamp: true,
+          notes: true,
+        },
+        orderBy: {
+          timestamp: 'desc',
+        },
+        take: 10,
+      },
+    },
+  });
+
+  if (!batch) {
+    throw new NotFoundError('Batch not found or invalid QR code');
+  }
+
+  return {
+    verified: true,
+    batch,
+    verifiedAt: new Date().toISOString(),
+  };
+};
+
+/**
+ * Get batch by lot ID
+ */
+export const getProductByLotId = async (lotId: string) => {
+  if (!lotId) {
+    throw new ValidationError('Lot ID is required');
+  }
+
+  const product = await prisma.productBatch.findFirst({
+    where: {
+      lotId,
+      ...buildSoftDeleteFilter(),
+    },
+    include: {
+      farmer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      washingStation: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      factory: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      exporter: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      importer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      retailer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      cooperative: {
+        select: {
+          id: true,
+          name: true,
+          location: true,
+        },
+      },
+      history: {
+        orderBy: {
+          timestamp: 'desc',
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!product) {
+    throw new NotFoundError('Product batch not found');
+  }
+
+  return product;
 };
 

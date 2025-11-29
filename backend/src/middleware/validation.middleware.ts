@@ -17,7 +17,7 @@ export const validate = (schema: ZodSchema) => {
           const path = err.path.join('.');
           return `${path}: ${err.message}`;
         });
-        throw new ValidationError(errorMessages.join(', '));
+        return next(new ValidationError(errorMessages.join(', ')));
       }
       next(error);
     }

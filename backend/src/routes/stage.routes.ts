@@ -9,6 +9,7 @@ import { validate } from '../middleware/validation.middleware';
 import {
   updateCoffeeStageSchema,
   updateTeaStageSchema,
+  getBatchHistorySchema,
 } from '../validators/stage.validator';
 
 const router = Router();
@@ -21,7 +22,7 @@ router.put('/coffee/:id', validate(updateCoffeeStageSchema), updateCoffeeStageCo
 router.put('/tea/:id', validate(updateTeaStageSchema), updateTeaStageController);
 
 // History route
-router.get('/:id/history', getBatchHistoryController);
+router.get('/:id/history', validate(getBatchHistorySchema), getBatchHistoryController);
 
 export default router;
 

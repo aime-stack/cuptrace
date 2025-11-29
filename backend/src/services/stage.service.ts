@@ -1,7 +1,8 @@
 import prisma from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
-// SupplyChainStage will be available after Prisma client generation
-// import { SupplyChainStage } from '@prisma/client';
+import { buildSoftDeleteFilter } from '../utils/query';
+import { sanitizeString, isValidNonNegativeNumber } from '../utils/validation';
+
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
 // Define valid stage transitions
@@ -18,6 +19,11 @@ export interface UpdateStageData {
   stage: SupplyChainStage;
   blockchainTxHash?: string;
   changedBy: string;
+  notes?: string;
+  quantity?: number;
+  quality?: string;
+  location?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export const validateStageTransition = (
@@ -35,11 +41,19 @@ export const updateBatchStage = async (
   batchId: string,
   data: UpdateStageData
 ) => {
+  if (!batchId) {
+    throw new ValidationError('Batch ID is required');
+  }
+
+  if (!data.changedBy) {
+    throw new ValidationError('Changed by user ID is required');
+  }
+
   // Find the batch
   const batch = await prisma.productBatch.findFirst({
     where: {
       id: batchId,
-      deletedAt: null,
+      ...buildSoftDeleteFilter(),
     },
   });
 
@@ -129,13 +143,23 @@ export const updateBatchStage = async (
     },
   });
 
-  // Create history entry
+  // Validate enhanced fields if provided
+  if (data.quantity !== undefined && !isValidNonNegativeNumber(data.quantity)) {
+    throw new ValidationError('Quantity must be a non-negative number');
+  }
+
+  // Create history entry with enhanced fields
   await prisma.batchHistory.create({
     data: {
       batchId: batchId,
       stage: data.stage,
       changedBy: data.changedBy,
-      blockchainTxHash: data.blockchainTxHash,
+      blockchainTxHash: sanitizeString(data.blockchainTxHash) || null,
+      notes: sanitizeString(data.notes),
+      quantity: data.quantity ?? null,
+      quality: sanitizeString(data.quality),
+      location: sanitizeString(data.location),
+      metadata: data.metadata ? (data.metadata as Record<string, unknown>) : null,
     },
   });
 
@@ -143,10 +167,14 @@ export const updateBatchStage = async (
 };
 
 export const getBatchHistory = async (batchId: string) => {
+  if (!batchId) {
+    throw new ValidationError('Batch ID is required');
+  }
+
   const batch = await prisma.productBatch.findFirst({
     where: {
       id: batchId,
-      deletedAt: null,
+      ...buildSoftDeleteFilter(),
     },
   });
 

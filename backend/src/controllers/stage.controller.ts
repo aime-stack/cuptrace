@@ -12,7 +12,7 @@ export const updateCoffeeStageController = async (
 ): Promise<Response | void> => {
   try {
     const { id } = req.params;
-    const { stage, blockchainTxHash } = req.body;
+    const { stage, blockchainTxHash, notes, quantity, quality, location, metadata } = req.body;
 
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -35,6 +35,11 @@ export const updateCoffeeStageController = async (
       stage,
       blockchainTxHash,
       changedBy: req.user.id,
+      notes,
+      quantity,
+      quality,
+      location,
+      metadata,
     });
 
     return sendSuccess(res, updatedBatch);
@@ -50,7 +55,7 @@ export const updateTeaStageController = async (
 ): Promise<Response | void> => {
   try {
     const { id } = req.params;
-    const { stage, blockchainTxHash } = req.body;
+    const { stage, blockchainTxHash, notes, quantity, quality, location, metadata } = req.body;
 
     if (!req.user) {
       throw new Error('User not authenticated');
@@ -73,6 +78,11 @@ export const updateTeaStageController = async (
       stage,
       blockchainTxHash,
       changedBy: req.user.id,
+      notes,
+      quantity,
+      quality,
+      location,
+      metadata,
     });
 
     return sendSuccess(res, updatedBatch);

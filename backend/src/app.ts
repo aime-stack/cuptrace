@@ -7,6 +7,12 @@ import authRoutes from './routes/auth.routes';
 import coffeeRoutes from './routes/coffee.routes';
 import teaRoutes from './routes/tea.routes';
 import stageRoutes from './routes/stage.routes';
+import cooperativeRoutes from './routes/cooperative.routes';
+import processingRoutes from './routes/processing.routes';
+import paymentRoutes from './routes/payment.routes';
+import exportRoutes from './routes/export.routes';
+import certificateRoutes from './routes/certificate.routes';
+import reportRoutes from './routes/report.routes';
 
 const createApp = (): Express => {
   const app = express();
@@ -26,6 +32,12 @@ const createApp = (): Express => {
   app.use('/coffee', coffeeRoutes);
   app.use('/tea', teaRoutes);
   app.use('/stage', stageRoutes);
+  app.use('/cooperatives', cooperativeRoutes);
+  app.use('/processing', processingRoutes);
+  app.use('/payments', paymentRoutes);
+  app.use('/exports', exportRoutes);
+  app.use('/certificates', certificateRoutes);
+  app.use('/reports', reportRoutes);
 
   // Error handling middleware (must be last)
   app.use(errorHandler);

@@ -1,0 +1,184 @@
+import { Response, NextFunction } from 'express';
+import { AuthRequest } from '../middleware/auth.middleware';
+import {
+  createReport,
+  getReportById,
+  listReports,
+  updateReport,
+  submitReport,
+  approveReport,
+  rejectReport,
+  deleteReport,
+} from '../services/report.service';
+import { sendSuccess } from '../utils/response';
+
+export const createReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    if (!req.user) {
+      throw new Error('User not authenticated');
+    }
+
+    const {
+      reportType,
+      periodStart,
+      periodEnd,
+      data,
+      status,
+    } = req.body;
+
+    const report = await createReport({
+      reportType,
+      periodStart,
+      periodEnd,
+      generatedBy: req.user.id,
+      data,
+      status,
+    });
+
+    return sendSuccess(res, report, 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const report = await getReportById(id);
+
+    return sendSuccess(res, report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const listReportsController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { 
+      reportType, 
+      status, 
+      generatedBy, 
+      page = '1', 
+      limit = '10' 
+    } = req.query;
+
+    const result = await listReports(
+      parseInt(page as string, 10),
+      parseInt(limit as string, 10),
+      reportType as 'monthly_summary' | 'quarterly_export' | 'annual_statistics' | 'quality_report' | 'payment_report' | 'custom' | undefined,
+      status as 'draft' | 'submitted' | 'approved' | 'rejected' | undefined,
+      generatedBy as string | undefined
+    );
+
+    return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const {
+      reportType,
+      periodStart,
+      periodEnd,
+      data,
+      status,
+    } = req.body;
+
+    const report = await updateReport(id, {
+      reportType,
+      periodStart,
+      periodEnd,
+      data,
+      status,
+    });
+
+    return sendSuccess(res, report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const submitReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const report = await submitReport(id);
+
+    return sendSuccess(res, report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const report = await approveReport(id);
+
+    return sendSuccess(res, report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const report = await rejectReport(id);
+
+    return sendSuccess(res, report);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const result = await deleteReport(id);
+
+    return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
