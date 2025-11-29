@@ -90,8 +90,6 @@ export const listExportRecordsController = async (
   try {
     const { 
       exporterId, 
-      batchId, 
-      shippingMethod, 
       page = '1', 
       limit = '10' 
     } = req.query;
@@ -99,9 +97,7 @@ export const listExportRecordsController = async (
     const result = await listExportRecords(
       parseInt(page as string, 10),
       parseInt(limit as string, 10),
-      exporterId as string | undefined,
-      batchId as string | undefined,
-      shippingMethod as 'air' | 'sea' | 'road' | undefined
+      exporterId as string | undefined
     );
 
     return sendSuccess(res, result);

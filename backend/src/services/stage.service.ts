@@ -159,7 +159,7 @@ export const updateBatchStage = async (
       quantity: data.quantity ?? null,
       quality: sanitizeString(data.quality),
       location: sanitizeString(data.location),
-      metadata: data.metadata ? (data.metadata as Record<string, unknown>) : null,
+      metadata: data.metadata ? (data.metadata as any) : undefined,
     },
   });
 

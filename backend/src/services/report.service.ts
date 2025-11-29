@@ -75,7 +75,7 @@ export const createReport = async (data: CreateReportData) => {
       periodStart,
       periodEnd,
       generatedBy: data.generatedBy,
-      data: data.data as Record<string, unknown>,
+      data: data.data as any,
       status: data.status || 'draft',
     },
     include: {
@@ -217,6 +217,9 @@ export const updateReport = async (id: string, data: UpdateReportData) => {
     }
     
     const periodStart = data.periodStart ? parseDate(data.periodStart) : existing.periodStart;
+    if (!periodStart) {
+      throw new ValidationError('Period start date is required for validation');
+    }
     if (periodEnd < periodStart) {
       throw new ValidationError('Period end date must be after period start date');
     }

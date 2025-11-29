@@ -2,7 +2,8 @@
  * Query building utilities for Prisma queries
  */
 
-import { Prisma } from '@prisma/client';
+// Prisma types - will be available after running prisma generate
+type PrismaQueryMode = 'insensitive' | 'default';
 
 /**
  * Build where clause with soft delete filter
@@ -51,7 +52,7 @@ export const buildSearchFilter = (
     OR: fields.map(field => ({
       [field]: {
         contains: searchTerm,
-        mode: 'insensitive' as Prisma.QueryMode,
+        mode: 'insensitive' as PrismaQueryMode,
       },
     })),
   };

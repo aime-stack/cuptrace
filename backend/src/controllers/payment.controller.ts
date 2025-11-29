@@ -85,8 +85,8 @@ export const listPaymentsController = async (
       batchId as string | undefined,
       payerId as string | undefined,
       payeeId as string | undefined,
-      paymentType as 'harvest_payment' | 'processing_payment' | 'export_payment' | 'quality_bonus' | 'other' | undefined,
-      status as 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | undefined
+      status as 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | undefined,
+      paymentType as 'harvest_payment' | 'processing_payment' | 'export_payment' | 'quality_bonus' | 'other' | undefined
     );
 
     return sendSuccess(res, result);

@@ -94,7 +94,6 @@ export const listProcessingRecordsController = async (
     const { 
       batchId, 
       stage, 
-      processedBy, 
       page = '1', 
       limit = '10' 
     } = req.query;
@@ -103,8 +102,7 @@ export const listProcessingRecordsController = async (
       parseInt(page as string, 10),
       parseInt(limit as string, 10),
       batchId as string | undefined,
-      stage as 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer' | undefined,
-      processedBy as string | undefined
+      stage as 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer' | undefined
     );
 
     return sendSuccess(res, result);

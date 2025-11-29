@@ -159,7 +159,7 @@ export const createProduct = async (data: CreateProductData) => {
       // Metadata
       description: sanitizeString(data.description),
       tags: data.tags || [],
-      metadata: data.metadata ? (data.metadata as Record<string, unknown>) : null,
+      metadata: data.metadata ? (data.metadata as any) : undefined,
     },
     include: {
       farmer: {
