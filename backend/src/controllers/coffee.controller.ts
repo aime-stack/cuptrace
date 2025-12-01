@@ -21,8 +21,8 @@ export const createCoffeeController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { 
-      originLocation, 
+    const {
+      originLocation,
       farmerId,
       cooperativeId,
       region,
@@ -43,11 +43,23 @@ export const createCoffeeController = async (
       metadata,
     } = req.body;
 
+    // Determine farmerId and cooperativeId based on authenticated user
+    let finalFarmerId = farmerId;
+    let finalCooperativeId = cooperativeId;
+
+    if (req.user?.role === 'farmer') {
+      finalFarmerId = req.user.id;
+      // If farmer belongs to a cooperative, automatically associate the batch
+      if (req.user.cooperativeId) {
+        finalCooperativeId = req.user.cooperativeId;
+      }
+    }
+
     const product = await createProduct({
       type: 'coffee',
       originLocation,
-      farmerId,
-      cooperativeId,
+      farmerId: finalFarmerId,
+      cooperativeId: finalCooperativeId,
       region,
       district,
       sector,
@@ -94,14 +106,14 @@ export const listCoffeeController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { 
-      stage, 
+    const {
+      stage,
       status,
       farmerId,
       cooperativeId,
       search,
-      page = '1', 
-      limit = '10' 
+      page = '1',
+      limit = '10'
     } = req.query;
 
     const result = await listProducts(

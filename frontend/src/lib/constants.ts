@@ -42,3 +42,38 @@ export const RWANDA_PROVINCES = [
     'Eastern Province',
     'Western Province',
 ];
+
+export const COFFEE_GRADES = [
+    'A1', 'A2', 'A3',
+    'B1', 'B2',
+    'C1', 'C2',
+    'PB', // Peaberry
+    'E',  // Elephant
+    'UG', // Under Grade
+    'Triage'
+];
+
+export const PROCESSING_TYPES = [
+    'Fully Washed',
+    'Semi Washed',
+    'Natural',
+    'Honey',
+    'Anaerobic',
+    'Wet Hulling'
+];
+
+export const TEA_TYPES = [
+    'Black Tea',
+    'Green Tea',
+    'White Tea',
+    'Oolong Tea',
+    'Orthodox Tea'
+];
+
+export const TEA_GRADES = [
+    'BP1', // Broken Pekoe 1
+    'PF1', // Pekoe Fannings 1
+    'PD',  // Pekoe Dust
+    'D1',  // Dust 1
+    'FNGS' // Fannings
+];

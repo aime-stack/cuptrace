@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     role: string;
+    cooperativeId?: string | null;
   };
 }
 
@@ -36,6 +37,7 @@ export const verifyTokenMiddleware = async (
         email: true,
         role: true,
         isActive: true,
+        cooperativeId: true,
       },
     });
 
@@ -53,6 +55,7 @@ export const verifyTokenMiddleware = async (
       id: user.id,
       email: user.email,
       role: user.role,
+      cooperativeId: user.cooperativeId,
     };
 
     next();
