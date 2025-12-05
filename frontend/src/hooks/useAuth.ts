@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import * as authService from '@/services/auth.service';
 import { LoginRequest, RegisterRequest, User } from '@/types';
+import { STORAGE_KEYS } from '@/lib/constants';
 
 /**
  * Login mutation
@@ -72,11 +73,17 @@ export const useRegister = () => {
  * Current user query
  */
 export const useCurrentUser = () => {
+    // Only fetch user if token exists
+    const token = typeof window !== 'undefined' 
+        ? localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) 
+        : null;
+    
     return useQuery({
         queryKey: ['currentUser'],
         queryFn: authService.getCurrentUser,
         retry: false,
         staleTime: Infinity,
+        enabled: !!token, // Only run query if token exists
     });
 };
 

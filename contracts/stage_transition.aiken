@@ -1,0 +1,75 @@
+/// Stage Transition Validator
+/// 
+/// This validator validates and records stage transitions.
+/// It checks previous stage validity, verifies authorized users, and stores transition metadata.
+
+use cardano/transaction.{Transaction, OutputReference}
+use cuptrace/lib/types
+use cuptrace/lib/utils
+
+/// Redeemer for stage transitions
+pub type Redeemer {
+  RecordTransition {
+    batch_id: ByteArray,
+    from_stage: Stage,
+    to_stage: Stage,
+    changed_by: ByteArray,
+    quantity: Option<Int>,
+    metadata: Option<ByteArray>,
+    timestamp: Int,
+  }
+}
+
+validator stage_transition {
+  spend(datum: Option<StageTransition>, redeemer: Redeemer, utxo: OutputReference, self: Transaction) {
+    when datum {
+      Some(d) -> {
+        when redeemer is {
+          RecordTransition { batch_id, from_stage, to_stage, changed_by, quantity, metadata, timestamp } -> {
+            validate_transition(d, batch_id, from_stage, to_stage, changed_by, quantity, metadata, timestamp)
+          }
+        }
+      }
+      None -> False
+    }
+  }
+}
+
+/// Validate stage transition
+fn validate_transition(
+  datum: StageTransition,
+  batch_id: ByteArray,
+  from_stage: Stage,
+  to_stage: Stage,
+  changed_by: ByteArray,
+  quantity: Option<Int>,
+  metadata: Option<ByteArray>,
+  timestamp: Int
+) -> Bool {
+  // Verify batch ID matches
+  let batch_match = datum.batch_id == batch_id
+  
+  // Verify from_stage matches current datum stage
+  let stage_match = datum.to_stage == from_stage
+  
+  // Verify valid transition
+  let valid_transition = is_valid_transition(from_stage, to_stage)
+  
+  // Verify timestamp is sequential
+  let valid_timestamp = is_valid_timestamp(datum.timestamp, timestamp)
+  
+  // Verify quantity if provided
+  let valid_quantity = when quantity is {
+    Some(qty) -> {
+      when datum.quantity is {
+        Some(old_qty) -> is_valid_quantity_change(old_qty, qty)
+        None -> True
+      }
+    }
+    None -> True
+  }
+  
+  // All validations must pass
+  batch_match && stage_match && valid_transition && valid_timestamp && valid_quantity
+}
+

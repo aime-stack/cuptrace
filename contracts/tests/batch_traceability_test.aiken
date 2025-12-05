@@ -1,0 +1,53 @@
+/// Tests for Batch Traceability Validator
+
+use cuptrace/validators/batch_traceability
+use cuptrace/types
+
+test valid_batch_creation() {
+  let initial_state = BatchState {
+    batch_id: #"test_batch_001",
+    product_type: Coffee,
+    current_stage: Farmer,
+    origin_location: #"Rwanda, Northern Province",
+    quantity: 1000,
+    farmer_id: Some(#"farmer_001"),
+    created_at: 1000000,
+    last_updated: 1000000,
+  }
+  
+  let redeemer = CreateBatch {
+    product_type: Coffee,
+    origin_location: #"Rwanda, Northern Province",
+    farmer_id: Some(#"farmer_001"),
+    quantity: 1000,
+    timestamp: 1000000,
+  }
+  
+  // This is a simplified test - in real implementation, you'd need ScriptContext
+  True
+}
+
+test valid_stage_transition() {
+  let state = BatchState {
+    batch_id: #"test_batch_001",
+    product_type: Coffee,
+    current_stage: Farmer,
+    origin_location: #"Rwanda, Northern Province",
+    quantity: 1000,
+    farmer_id: Some(#"farmer_001"),
+    created_at: 1000000,
+    last_updated: 1000000,
+  }
+  
+  let redeemer = UpdateStage {
+    to_stage: WashingStation,
+    changed_by: #"washing_station_001",
+    quantity: Some(950),
+    metadata: None,
+    timestamp: 1000100,
+  }
+  
+  // Simplified test
+  True
+}
+

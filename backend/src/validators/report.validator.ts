@@ -87,3 +87,19 @@ export const listReportsSchema = z.object({
   }),
 });
 
+export const generateNaebReportSchema = z.object({
+  query: z.object({
+    periodStart: z.string().datetime('Invalid period start date format').optional(),
+    periodEnd: z.string().datetime('Invalid period end date format').optional(),
+    reportType: z.enum([
+      'monthly_summary',
+      'quarterly_export',
+      'annual_statistics',
+      'quality_report',
+      'payment_report',
+      'custom',
+    ]).optional(),
+    format: z.enum(['json', 'pdf', 'excel']).default('json').optional(),
+  }),
+});
+

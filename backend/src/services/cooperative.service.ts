@@ -239,7 +239,7 @@ export const updateCooperative = async (id: string, data: UpdateCooperativeData)
 };
 
 /**
- * Delete cooperative (soft delete not implemented for cooperatives)
+ * Delete cooperative (soft delete)
  */
 export const deleteCooperative = async (id: string) => {
   if (!id) {
@@ -262,18 +262,48 @@ export const deleteCooperative = async (id: string) => {
     throw new NotFoundError('Cooperative not found');
   }
 
-  // Check if cooperative has associated farmers or batches
-  if (cooperative._count.farmers > 0) {
-    throw new ValidationError('Cannot delete cooperative with associated farmers');
-  }
-
-  if (cooperative._count.batches > 0) {
-    throw new ValidationError('Cannot delete cooperative with associated batches');
-  }
-
-  await prisma.cooperative.delete({
-    where: { id },
+  // Check if cooperative has associated active farmers or batches
+  const activeFarmers = await prisma.user.count({
+    where: {
+      cooperativeId: id,
+      isActive: true,
+    },
   });
+
+  const activeBatches = await prisma.productBatch.count({
+    where: {
+      cooperativeId: id,
+      deletedAt: null,
+    },
+  });
+
+  if (activeFarmers > 0) {
+    throw new ValidationError('Cannot delete cooperative with active associated farmers');
+  }
+
+  if (activeBatches > 0) {
+    throw new ValidationError('Cannot delete cooperative with active associated batches');
+  }
+
+  // Soft delete by updating name to make it unique (add deleted timestamp)
+  // Since name is unique, we need to handle this carefully
+  const deletedName = `${cooperative.name}_deleted_${Date.now()}`;
+  
+  await prisma.cooperative.update({
+    where: { id },
+    data: {
+      name: deletedName,
+      description: cooperative.description 
+        ? `${cooperative.description} [DELETED]`
+        : '[DELETED]',
+    },
+  });
+
+  // Note: If Cooperative model had deletedAt field, we would use:
+  // await prisma.cooperative.update({
+  //   where: { id },
+  //   data: { deletedAt: new Date() },
+  // });
 
   return { message: 'Cooperative deleted successfully' };
 };

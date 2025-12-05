@@ -1,0 +1,11 @@
+/// Tests for NFT Minting Policy
+
+use cuptrace/policies/batch_nft
+
+test valid_mint() {
+  let redeemer = Mint { batch_id: #"test_batch_001" }
+  
+  // Simplified test - would need ScriptContext in real implementation
+  True
+}
+

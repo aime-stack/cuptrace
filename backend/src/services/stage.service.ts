@@ -2,6 +2,7 @@ import prisma from '../config/database';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { buildSoftDeleteFilter } from '../utils/query';
 import { sanitizeString, isValidNonNegativeNumber } from '../utils/validation';
+import { updateBatchStageOnChain } from './blockchain.service';
 
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
@@ -161,6 +162,17 @@ export const updateBatchStage = async (
       location: sanitizeString(data.location),
       metadata: data.metadata ? (data.metadata as any) : undefined,
     },
+  });
+
+  // Update stage on blockchain (async, don't block on failure)
+  updateBatchStageOnChain(
+    batchId,
+    data.stage,
+    batch.currentStage,
+    data.changedBy
+  ).catch((error) => {
+    console.error(`Failed to update batch stage on blockchain for ${batchId}:`, error);
+    // Don't throw - blockchain failure shouldn't block stage update
   });
 
   return updatedBatch;

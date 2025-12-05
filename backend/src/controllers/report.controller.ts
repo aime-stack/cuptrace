@@ -9,6 +9,7 @@ import {
   approveReport,
   rejectReport,
   deleteReport,
+  generateNaebReport,
 } from '../services/report.service';
 import { sendSuccess } from '../utils/response';
 
@@ -177,6 +178,53 @@ export const deleteReportController = async (
     const result = await deleteReport(id);
 
     return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateNaebReportController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    if (!req.user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Only admins can generate NAEB reports
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Only administrators can generate NAEB reports',
+      });
+    }
+
+    const {
+      periodStart,
+      periodEnd,
+      reportType,
+      format = 'json',
+    } = req.query;
+
+    const reportData = await generateNaebReport({
+      periodStart: periodStart as string | undefined,
+      periodEnd: periodEnd as string | undefined,
+      reportType: reportType as 'monthly_summary' | 'quarterly_export' | 'annual_statistics' | 'quality_report' | 'payment_report' | 'custom' | undefined,
+      format: format as 'json' | 'pdf' | 'excel',
+    });
+
+    // Return JSON format (PDF/Excel generation requires additional libraries like pdfkit or exceljs)
+    if (format === 'json') {
+      return sendSuccess(res, reportData);
+    } else {
+      const formatStr = typeof format === 'string' ? format : 'json';
+      return res.status(501).json({
+        success: false,
+        error: `${formatStr.toUpperCase()} format not yet implemented. Please use format=json`,
+      });
+    }
   } catch (error) {
     next(error);
   }

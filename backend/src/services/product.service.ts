@@ -5,6 +5,8 @@ import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '..
 import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
 import { buildSoftDeleteFilter } from '../utils/query';
 import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
+import { mintBatchNFT } from './nft.service';
+import { createBatchOnChain } from './blockchain.service';
 
 type ProductType = 'coffee' | 'tea';
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
@@ -216,6 +218,26 @@ export const createProduct = async (data: CreateProductData) => {
   // Generate QR code and verification URL with actual batch ID
   const qrCode = generateQRCode(product.id, data.type);
   const verificationUrl = generateVerificationUrl(product.id);
+
+  // Mint NFT for the batch (async, don't block on failure)
+  mintBatchNFT(product.id).catch((error) => {
+    console.error(`Failed to mint NFT for batch ${product.id}:`, error);
+    // Don't throw - NFT minting failure shouldn't block batch creation
+  });
+
+  // Create batch on blockchain (async, don't block on failure)
+  createBatchOnChain(
+    product.id,
+    {
+      type: data.type,
+      originLocation,
+      farmerId: data.farmerId,
+      timestamp: new Date().toISOString(),
+    }
+  ).catch((error) => {
+    console.error(`Failed to create batch on blockchain for ${product.id}:`, error);
+    // Don't throw - blockchain failure shouldn't block batch creation
+  });
 
   // Update product with QR code
   const updatedProduct = await prisma.productBatch.update({

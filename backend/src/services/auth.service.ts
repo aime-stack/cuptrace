@@ -81,14 +81,17 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
   }
 
   // Validate role-specific requirements
-  if (data.role === 'farmer' && !data.cooperativeId) {
-    throw new ValidationError('Farmers must be associated with a cooperative');
+  // Note: cooperativeId is optional for non-farmer roles
+  if (data.role === 'farmer') {
+    if (!data.cooperativeId || data.cooperativeId.trim() === '') {
+      throw new ValidationError('Farmers must be associated with a cooperative');
+    }
   }
 
   // Validate cooperative exists if provided
-  if (data.cooperativeId) {
+  if (data.cooperativeId && data.cooperativeId.trim() !== '') {
     const cooperative = await prisma.cooperative.findUnique({
-      where: { id: data.cooperativeId },
+      where: { id: data.cooperativeId.trim() },
     });
 
     if (!cooperative) {
@@ -106,13 +109,13 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
       email: normalizedEmail,
       password: hashedPassword,
       role: data.role,
-      phone: sanitizeString(data.phone),
-      address: sanitizeString(data.address),
-      city: sanitizeString(data.city),
-      province: sanitizeString(data.province),
-      country: sanitizeString(data.country) || 'Rwanda',
-      cooperativeId: data.cooperativeId || null,
-      registrationNumber: sanitizeString(data.registrationNumber),
+      phone: data.phone && data.phone.trim() !== '' ? sanitizeString(data.phone) || undefined : undefined,
+      address: data.address && data.address.trim() !== '' ? sanitizeString(data.address) || undefined : undefined,
+      city: data.city && data.city.trim() !== '' ? sanitizeString(data.city) || undefined : undefined,
+      province: data.province && data.province.trim() !== '' ? sanitizeString(data.province) || undefined : undefined,
+      country: data.country && data.country.trim() !== '' ? (sanitizeString(data.country) || 'Rwanda') : 'Rwanda',
+      cooperativeId: data.cooperativeId && data.cooperativeId.trim() !== '' ? data.cooperativeId.trim() : undefined,
+      registrationNumber: data.registrationNumber && data.registrationNumber.trim() !== '' ? (sanitizeString(data.registrationNumber) || undefined) : undefined,
       isActive: true,
     },
     select: {

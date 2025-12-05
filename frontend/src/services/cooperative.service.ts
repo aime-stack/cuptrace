@@ -19,7 +19,7 @@ export const createCooperative = async (coopData: Omit<Cooperative, 'id' | 'crea
 };
 
 export const updateCooperative = async (id: string, coopData: Partial<Cooperative>): Promise<Cooperative> => {
-    const { data } = await axiosInstance.patch<ApiResponse<Cooperative>>(`/cooperatives/${id}`, coopData);
+    const { data } = await axiosInstance.put<ApiResponse<Cooperative>>(`/cooperatives/${id}`, coopData);
     if (data.data) return data.data;
     throw new Error(data.message || 'Failed to update cooperative');
 };

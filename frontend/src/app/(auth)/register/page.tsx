@@ -35,7 +35,26 @@ export default function RegisterPage() {
 
     const onSubmit = (data: RegisterFormData) => {
         const { confirmPassword, ...submitData } = data;
-        register(submitData);
+        // Clean up empty strings for optional fields
+        const cleanedData = {
+            ...submitData,
+            cooperativeId: submitData.cooperativeId && submitData.cooperativeId.trim() !== '' 
+                ? submitData.cooperativeId.trim() 
+                : undefined,
+            phone: submitData.phone && submitData.phone.trim() !== '' 
+                ? submitData.phone.trim() 
+                : undefined,
+            address: submitData.address && submitData.address.trim() !== '' 
+                ? submitData.address.trim() 
+                : undefined,
+            city: submitData.city && submitData.city.trim() !== '' 
+                ? submitData.city.trim() 
+                : undefined,
+            province: submitData.province && submitData.province.trim() !== '' 
+                ? submitData.province.trim() 
+                : undefined,
+        };
+        register(cleanedData);
     };
 
     return (
@@ -100,22 +119,31 @@ export default function RegisterPage() {
                         )}
                     </div>
 
-                    {selectedRole === UserRole.farmer && cooperatives && (
+                    {selectedRole === UserRole.farmer && (
                         <div className="space-y-2">
-                            <Label htmlFor="cooperativeId">Cooperative (Optional)</Label>
+                            <Label htmlFor="cooperativeId">Cooperative <span className="text-red-500">*</span></Label>
                             <select
                                 id="cooperativeId"
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                {...registerField('cooperativeId')}
+                                {...registerField('cooperativeId', {
+                                    required: 'Cooperative is required for farmers',
+                                })}
                                 disabled={isPending}
                             >
                                 <option value="">Select a cooperative</option>
-                                {cooperatives.map((coop) => (
-                                    <option key={coop.id} value={coop.id}>
-                                        {coop.name}
-                                    </option>
-                                ))}
+                                {cooperatives && cooperatives.length > 0 ? (
+                                    cooperatives.map((coop) => (
+                                        <option key={coop.id} value={coop.id}>
+                                            {coop.name}
+                                        </option>
+                                    ))
+                                ) : (
+                                    <option value="" disabled>No cooperatives available</option>
+                                )}
                             </select>
+                            {errors.cooperativeId && (
+                                <p className="text-sm text-red-500">{errors.cooperativeId.message}</p>
+                            )}
                         </div>
                     )}
 

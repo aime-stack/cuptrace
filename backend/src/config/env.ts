@@ -9,11 +9,14 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('7d'),
+  APP_URL: z.string().default('http://localhost:3000'),
   CARDANO_NETWORK: z.enum(['mainnet', 'preprod', 'preview', 'testnet']).default('preprod'),
   BLOCKFROST_API_KEY: z.string().optional(),
   CARDANO_NODE_URL: z.string().optional(),
   BATCH_CONTRACT_ADDRESS: z.string().optional(),
   STAGE_CONTRACT_ADDRESS: z.string().optional(),
+  NFT_POLICY_ID: z.string().optional(),
+  WALLET_PRIVATE_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

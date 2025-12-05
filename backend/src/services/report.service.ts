@@ -28,6 +28,13 @@ export interface UpdateReportData {
   status?: ReportStatus;
 }
 
+export interface NaebReportParams {
+  periodStart?: string;
+  periodEnd?: string;
+  reportType?: ReportType;
+  format?: 'json' | 'pdf' | 'excel';
+}
+
 /**
  * Create a new NAEB report
  */
@@ -407,3 +414,199 @@ export const deleteReport = async (id: string) => {
   return { message: 'Report deleted successfully' };
 };
 
+/**
+ * Generate NAEB report
+ * Aggregates data from batches, payments, exports, and certificates
+ * for the specified period and generates a comprehensive report
+ */
+export const generateNaebReport = async (params: NaebReportParams) => {
+  const periodStart = params.periodStart ? parseDate(params.periodStart) : null;
+  const periodEnd = params.periodEnd ? parseDate(params.periodEnd) : null;
+
+  // Build date filter
+  const dateFilter: Record<string, unknown> = {};
+  if (periodStart && periodEnd) {
+    dateFilter.createdAt = {
+      gte: periodStart,
+      lte: periodEnd,
+    };
+  } else if (periodStart) {
+    dateFilter.createdAt = {
+      gte: periodStart,
+    };
+  } else if (periodEnd) {
+    dateFilter.createdAt = {
+      lte: periodEnd,
+    };
+  }
+
+  // Aggregate batch data
+  const [coffeeBatches, teaBatches] = await Promise.all([
+    prisma.productBatch.findMany({
+      where: {
+        type: 'coffee',
+        ...dateFilter,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        currentStage: true,
+        quantity: true,
+        originLocation: true,
+        region: true,
+        createdAt: true,
+      },
+    }),
+    prisma.productBatch.findMany({
+      where: {
+        type: 'tea',
+        ...dateFilter,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+        type: true,
+        status: true,
+        currentStage: true,
+        quantity: true,
+        originLocation: true,
+        region: true,
+        createdAt: true,
+      },
+    }),
+  ]);
+
+  // Aggregate payment data
+  const payments = await prisma.payment.findMany({
+    where: {
+      ...dateFilter,
+    },
+    select: {
+      id: true,
+      amount: true,
+      currency: true,
+      paymentType: true,
+      status: true,
+      paymentDate: true,
+    },
+  });
+
+  // Aggregate export data
+  const exports = await prisma.exportRecord.findMany({
+    where: {
+      ...dateFilter,
+    },
+    select: {
+      id: true,
+      batchId: true,
+      buyerName: true,
+      shippingMethod: true,
+      shippingDate: true,
+      createdAt: true,
+    },
+  });
+
+  // Aggregate certificate data
+  const certificates = await prisma.certificate.findMany({
+    where: {
+      ...dateFilter,
+    },
+    select: {
+      id: true,
+      certificateType: true,
+      issuedDate: true,
+      expiryDate: true,
+    },
+  });
+
+  // Calculate statistics
+  const totalCoffeeBatches = coffeeBatches.length;
+  const totalTeaBatches = teaBatches.length;
+  const totalBatches = totalCoffeeBatches + totalTeaBatches;
+  const totalCoffeeQuantity = coffeeBatches.reduce((sum, batch) => sum + (batch.quantity || 0), 0);
+  const totalTeaQuantity = teaBatches.reduce((sum, batch) => sum + (batch.quantity || 0), 0);
+  const totalQuantity = totalCoffeeQuantity + totalTeaQuantity;
+  const totalPayments = payments.reduce((sum, payment) => {
+    if (payment.status === 'completed') {
+      return sum + Number(payment.amount);
+    }
+    return sum;
+  }, 0);
+  const totalExports = exports.length;
+  const totalCertificates = certificates.length;
+
+  // Group by region
+  const regionStats: Record<string, { coffee: number; tea: number; batches: number }> = {};
+  [...coffeeBatches, ...teaBatches].forEach((batch) => {
+    const region = batch.region || 'Unknown';
+    if (!regionStats[region]) {
+      regionStats[region] = { coffee: 0, tea: 0, batches: 0 };
+    }
+    regionStats[region].batches += 1;
+    if (batch.type === 'coffee') {
+      regionStats[region].coffee += batch.quantity || 0;
+    } else {
+      regionStats[region].tea += batch.quantity || 0;
+    }
+  });
+
+  // Group by stage
+  const stageStats: Record<string, number> = {};
+  [...coffeeBatches, ...teaBatches].forEach((batch) => {
+    const stage = batch.currentStage || 'unknown';
+    stageStats[stage] = (stageStats[stage] || 0) + 1;
+  });
+
+  // Build report data
+  const reportData = {
+    period: {
+      start: periodStart?.toISOString() || null,
+      end: periodEnd?.toISOString() || null,
+    },
+    summary: {
+      totalBatches,
+      totalCoffeeBatches,
+      totalTeaBatches,
+      totalQuantity: {
+        total: totalQuantity,
+        coffee: totalCoffeeQuantity,
+        tea: totalTeaQuantity,
+      },
+      totalPayments,
+      totalExports,
+      totalCertificates,
+    },
+    byRegion: regionStats,
+    byStage: stageStats,
+    batches: {
+      coffee: coffeeBatches,
+      tea: teaBatches,
+    },
+    payments: payments.map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      currency: p.currency,
+      type: p.paymentType,
+      status: p.status,
+      date: p.paymentDate,
+    })),
+    exports: exports.map((e) => ({
+      id: e.id,
+      batchId: e.batchId,
+      buyer: e.buyerName,
+      shippingMethod: e.shippingMethod,
+      shippingDate: e.shippingDate,
+    })),
+    certificates: certificates.map((c) => ({
+      id: c.id,
+      type: c.certificateType,
+      issuedDate: c.issuedDate,
+      expiryDate: c.expiryDate,
+    })),
+    generatedAt: new Date().toISOString(),
+  };
+
+  return reportData;
+};

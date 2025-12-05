@@ -9,7 +9,11 @@ import { Cooperative } from '@/types';
 export const useCooperatives = () => {
     return useQuery({
         queryKey: ['cooperatives'],
-        queryFn: cooperativeService.listCooperatives,
+        queryFn: () => cooperativeService.listCooperatives(),
+        retry: false,
+        // Don't fail the page if cooperatives can't be loaded
+        // This is especially important on registration page
+        // Errors will be handled silently - cooperatives are optional
     });
 };
 

@@ -10,8 +10,16 @@ import {
 
 export const listBatches = async (filters?: BatchFilters, type: ProductType = ProductType.coffee): Promise<ProductBatch[]> => {
     const endpoint = type === ProductType.coffee ? '/coffee' : '/tea';
-    const { data } = await axiosInstance.get<ApiResponse<ProductBatch[]>>(endpoint, { params: filters });
-    return data.data || [];
+    const { data } = await axiosInstance.get<ApiResponse<{ data: ProductBatch[]; pagination?: any }>>(endpoint, { params: filters });
+    // Handle paginated response
+    if (data.data && Array.isArray(data.data)) {
+        return data.data;
+    }
+    // Handle nested pagination structure
+    if (data.data && typeof data.data === 'object' && 'data' in data.data) {
+        return (data.data as any).data || [];
+    }
+    return [];
 };
 
 export const getBatch = async (id: string, type: ProductType = ProductType.coffee): Promise<ProductBatch> => {
@@ -30,7 +38,7 @@ export const createBatch = async (batchData: CreateBatchRequest, type: ProductTy
 
 export const updateBatch = async (id: string, batchData: UpdateBatchRequest, type: ProductType = ProductType.coffee): Promise<ProductBatch> => {
     const endpoint = type === ProductType.coffee ? `/coffee/${id}` : `/tea/${id}`;
-    const { data } = await axiosInstance.patch<ApiResponse<ProductBatch>>(endpoint, batchData);
+    const { data } = await axiosInstance.put<ApiResponse<ProductBatch>>(endpoint, batchData);
     if (data.data) return data.data;
     throw new Error(data.message || 'Failed to update batch');
 };

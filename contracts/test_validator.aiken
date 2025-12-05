@@ -1,0 +1,8 @@
+use aiken/transaction.{ScriptContext}
+
+validator {
+  fn spend(datum: ByteArray, redeemer: ByteArray, context: ScriptContext) -> Bool {
+    True
+  }
+}
+

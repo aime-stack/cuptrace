@@ -27,8 +27,13 @@ axiosInstance.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
-            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+            // Don't redirect on auth pages (login, register) or if already on login
+            if (typeof window !== 'undefined') {
+                const authPages = ['/login', '/register', '/forgot-password'];
+                const isAuthPage = authPages.some(page => window.location.pathname.includes(page));
+                if (!isAuthPage) {
+                    window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);

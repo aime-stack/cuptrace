@@ -2,6 +2,8 @@
  * QR Code utility functions
  */
 
+import env from '../config/env';
+
 /**
  * Generate unique QR code string for a batch
  */
@@ -16,7 +18,7 @@ export const generateQRCode = (batchId: string, type: 'coffee' | 'tea'): string 
  * Generate verification URL for a batch
  */
 export const generateVerificationUrl = (batchId: string, baseUrl?: string): string => {
-  const base = baseUrl || process.env.APP_URL || 'http://localhost:3000';
+  const base = baseUrl || env.APP_URL;
   return `${base}/verify/${batchId}`;
 };
 

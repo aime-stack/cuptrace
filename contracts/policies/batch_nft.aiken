@@ -1,0 +1,45 @@
+/// NFT Minting Policy for CupTrace Batches
+/// 
+/// This policy mints a unique NFT for each product batch.
+/// The NFT follows CIP-25 metadata standard and is minted once per batch.
+/// No burning is allowed - NFTs are permanent.
+
+use cardano/transaction.{Transaction}
+use cardano/assets.{PolicyId}
+use cardano/value.{get_mint}
+use aiken/map
+
+/// Redeemer for NFT minting
+pub type Redeemer {
+  Mint { batch_id: ByteArray }
+}
+
+validator batch_nft {
+  mint(redeemer: Redeemer, policy_id: PolicyId, self: Transaction) {
+    when redeemer is {
+      Mint { batch_id: _ } -> {
+        let minted = get_mint(self)
+        
+        let policy_count = map.size(minted)
+        let is_single_policy = policy_count == 1
+        
+        let is_own_policy = map.has_key(minted, policy_id)
+        
+        let policy_assets = when map.get(minted, policy_id) {
+          Some(assets) -> assets
+          None -> map.empty()
+        }
+        
+        let asset_count = map.size(policy_assets)
+        let is_single_asset = asset_count == 1
+        
+        let all_valid = map.fold(policy_assets, True, fn(asset_name, quantity, acc) {
+          acc && quantity > 0 && quantity == 1
+        })
+        
+        is_single_policy && is_own_policy && is_single_asset && all_valid
+      }
+    }
+  }
+}
+

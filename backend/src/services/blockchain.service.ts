@@ -12,6 +12,7 @@ import env from '../config/env';
 import prisma from '../config/database';
 import { ValidationError } from '../utils/errors';
 import { createHash } from 'crypto';
+import { getBatchTraceabilityValidator, getStageTransitionValidator, loadContractFromFile } from '../utils/contract-loader';
 
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
@@ -118,55 +119,105 @@ export const initializeLucid = async (): Promise<unknown | null> => {
   const config = getBlockchainConfig();
   
   if (!isBlockchainConfigured()) {
+    console.error('❌ Blockchain not configured: BLOCKFROST_API_KEY or CARDANO_NODE_URL is required');
     return null;
   }
 
   try {
     // Dynamic import to avoid errors if lucid-cardano is not installed
-    // Using any type since we can't know exact types without the library
     const lucidModule = await import('lucid-cardano') as any;
+    
+    // Check if Lucid and Blockfrost are available
+    if (!lucidModule.Lucid) {
+      console.error('❌ Lucid not found in lucid-cardano module');
+      return null;
+    }
+    
     const { Lucid } = lucidModule;
-    const { Blockfrost } = lucidModule;
     
     if (config.blockfrostApiKey) {
-      const networkUrl = config.network === 'mainnet' 
-        ? 'https://cardano.blockfrost.io/api/v0'
-        : `https://${config.network}.blockfrost.io/api/v0`;
+      // Check if Blockfrost provider is available
+      if (!lucidModule.Blockfrost) {
+        console.error('❌ Blockfrost provider not found in lucid-cardano module');
+        return null;
+      }
       
-      // Map network names to Lucid network types
-      const networkMap: Record<string, string> = {
-        mainnet: 'Mainnet',
-        preprod: 'Preprod',
-        preview: 'Preview',
-        testnet: 'Testnet',
-      };
+      const { Blockfrost } = lucidModule;
       
-      const lucidNetwork = networkMap[config.network] || 'Preprod';
+      // Build Blockfrost API URL
+      // Blockfrost uses different URLs for different networks
+      let networkUrl: string;
+      if (config.network === 'mainnet') {
+        networkUrl = 'https://cardano.blockfrost.io/api/v0';
+      } else if (config.network === 'preprod') {
+        networkUrl = 'https://cardano-preprod.blockfrost.io/api/v0';
+      } else if (config.network === 'preview') {
+        networkUrl = 'https://cardano-preview.blockfrost.io/api/v0';
+      } else {
+        networkUrl = `https://cardano-${config.network}.blockfrost.io/api/v0`;
+      }
+      
+      console.log(`📡 Connecting to Blockfrost: ${networkUrl.substring(0, 30)}...`);
+      
+      // Create Blockfrost provider
       const blockfrostProvider = new Blockfrost(networkUrl, config.blockfrostApiKey);
       
-      return await Lucid.new(blockfrostProvider, lucidNetwork);
-    } else if (config.nodeUrl) {
-      const networkMap: Record<string, string> = {
+      // Map network names to Lucid network types
+      // Note: Lucid only supports 'Mainnet' | 'Testnet'
+      // Preprod and Preview are test networks, so map to 'Testnet'
+      const networkMap: Record<string, 'Mainnet' | 'Testnet'> = {
         mainnet: 'Mainnet',
-        preprod: 'Preprod',
-        preview: 'Preview',
+        preprod: 'Testnet', // Preprod is a test network
+        preview: 'Testnet', // Preview is a test network
         testnet: 'Testnet',
       };
       
-      const lucidNetwork = networkMap[config.network] || 'Preprod';
-      return await Lucid.new(config.nodeUrl, lucidNetwork);
+      const lucidNetwork = networkMap[config.network] || 'Testnet';
+      
+      console.log(`🌐 Initializing Lucid for network: ${lucidNetwork} (${config.network})`);
+      
+      // Initialize Lucid with Blockfrost provider
+      // Using type assertion to avoid TypeScript errors
+      const lucid = await Lucid.new(blockfrostProvider, lucidNetwork as any);
+      
+      console.log('✅ Lucid initialized successfully');
+      return lucid;
+    } else if (config.nodeUrl) {
+      // Map network names to Lucid network types
+      const networkMap: Record<string, 'Mainnet' | 'Testnet'> = {
+        mainnet: 'Mainnet',
+        preprod: 'Testnet',
+        preview: 'Testnet',
+        testnet: 'Testnet',
+      };
+      
+      const lucidNetwork = networkMap[config.network] || 'Testnet';
+      
+      console.log(`🌐 Initializing Lucid with node URL for network: ${lucidNetwork} (${config.network})`);
+      // Note: For node URL, the API might be different - using type assertion
+      const lucid = await Lucid.new(config.nodeUrl as any, lucidNetwork as any);
+      
+      console.log('✅ Lucid initialized successfully');
+      return lucid;
     }
     
     return null;
   } catch (error) {
-    // If lucid-cardano is not installed, return null
-    // The system will fall back to database-backed tracking
+    // Log the actual error for debugging
+    console.error('❌ Failed to initialize Lucid:', error);
+    if (error instanceof Error) {
+      console.error(`   Error message: ${error.message}`);
+      if (error.stack) {
+        console.error(`   Stack: ${error.stack.split('\n').slice(0, 5).join('\n')}`);
+      }
+    }
     return null;
   }
 };
 
 /**
  * Create a batch on the Cardano blockchain
+ * Also mints NFT for the batch if not already minted
  * 
  * @param batchId - Unique batch identifier
  * @param metadata - Batch metadata to store on-chain
@@ -218,7 +269,7 @@ export const createBatchOnChain = async (
       };
 
       lucid.selectWalletFromPrivateKey(privateKey);
-      
+
       const tx = await lucid
         .newTx()
         .attachMetadata(674, batchMetadata)
@@ -303,9 +354,7 @@ export const updateBatchStageOnChain = async (
       };
 
       lucid.selectWalletFromPrivateKey(privateKey);
-      
-      // Contract address can be used for future contract interactions
-      // For now, we're just attaching metadata
+
       const tx = await lucid
         .newTx()
         .attachMetadata(674, stageMetadata)
@@ -468,14 +517,27 @@ export const loadContract = async (contractAddress: string): Promise<string> => 
   }
 
   try {
+    // Try to load from contract loader utility first
+    if (contractAddress === 'batch_traceability' || contractAddress.includes('batch_traceability')) {
+      const validator = getBatchTraceabilityValidator();
+      if (validator) {
+        return validator.compiledCode;
+      }
+    }
+    
+    if (contractAddress === 'stage_transition' || contractAddress.includes('stage_transition')) {
+      const validator = getStageTransitionValidator();
+      if (validator) {
+        return validator.compiledCode;
+      }
+    }
+
     // Try to load from file system if it's a file path
     if (contractAddress.endsWith('.plutus') || contractAddress.includes('/')) {
-      const { readFileSync } = await import('fs');
-      const { join } = await import('path');
-      
-      const contractPath = join(process.cwd(), 'contracts', contractAddress);
-      const contractScript = readFileSync(contractPath);
-      return contractScript.toString('hex');
+      const contractScript = await loadContractFromFile(contractAddress);
+      if (contractScript) {
+        return contractScript;
+      }
     }
     
     // Otherwise, return the address as-is (assuming it's already a contract address)

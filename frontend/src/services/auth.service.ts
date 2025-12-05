@@ -45,18 +45,18 @@ export const logout = (): void => {
 };
 
 export const listUsers = async (params?: { role?: string; search?: string }): Promise<User[]> => {
-    const { data } = await axiosInstance.get<ApiResponse<User[]>>('/users', { params });
+    const { data } = await axiosInstance.get<ApiResponse<User[]>>('/auth/users', { params });
     return data.data || [];
 };
 
 export const getUserById = async (id: string): Promise<User> => {
-    const { data } = await axiosInstance.get<ApiResponse<User>>(`/users/${id}`);
+    const { data } = await axiosInstance.get<ApiResponse<User>>(`/auth/users/${id}`);
     if (data.data) return data.data;
     throw new Error(data.message || 'User not found');
 };
 
 export const updateUser = async (id: string, userData: Partial<User>): Promise<User> => {
-    const { data } = await axiosInstance.patch<ApiResponse<User>>(`/users/${id}`, userData);
+    const { data } = await axiosInstance.put<ApiResponse<User>>(`/auth/users/${id}`, userData);
     if (data.data) return data.data;
     throw new Error(data.message || 'Failed to update user');
 };
@@ -66,9 +66,13 @@ export const changePassword = async (oldPassword: string, newPassword: string): 
 };
 
 export const deactivateUser = async (id: string): Promise<void> => {
-    await axiosInstance.post(`/users/${id}/deactivate`);
+    await axiosInstance.post(`/auth/users/${id}/deactivate`);
 };
 
 export const activateUser = async (id: string): Promise<void> => {
-    await axiosInstance.post(`/users/${id}/activate`);
+    await axiosInstance.post(`/auth/users/${id}/activate`);
+};
+
+export const resetPassword = async (id: string): Promise<void> => {
+    await axiosInstance.post(`/auth/users/${id}/reset-password`);
 };

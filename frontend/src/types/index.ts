@@ -115,7 +115,7 @@ export interface LoginResponse {
 export interface RegisterRequest {
     name: string;
     email: string;
-    password?: string;
+    password: string;
     role: UserRole;
     phone?: string;
     address?: string;
@@ -170,4 +170,209 @@ export interface ApiResponse<T> {
     success: boolean;
     message?: string;
     data?: T;
+}
+
+export type CertificateType = 'organic' | 'fair_trade' | 'quality_grade' | 'export_permit' | 'health_certificate' | 'origin_certificate' | 'other';
+
+export interface Certificate {
+    id: string;
+    batchId: string;
+    certificateType: CertificateType;
+    certificateNumber: string;
+    issuedBy: string;
+    issuedDate: string;
+    expiryDate?: string;
+    documentUrl?: string;
+    blockchainTxHash?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateCertificateRequest {
+    batchId: string;
+    certificateType: CertificateType;
+    certificateNumber: string;
+    issuedBy: string;
+    issuedDate: string;
+    expiryDate?: string;
+    documentUrl?: string;
+    blockchainTxHash?: string;
+}
+
+export interface UpdateCertificateRequest {
+    certificateType?: CertificateType;
+    certificateNumber?: string;
+    issuedBy?: string;
+    issuedDate?: string;
+    expiryDate?: string;
+    documentUrl?: string;
+    blockchainTxHash?: string;
+}
+
+export type PaymentType = 'harvest_payment' | 'processing_payment' | 'export_payment' | 'quality_bonus' | 'other';
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+
+export interface Payment {
+    id: string;
+    batchId: string;
+    payerId: string;
+    payeeId: string;
+    amount: number;
+    currency: string;
+    paymentType: PaymentType;
+    status: PaymentStatus;
+    paymentDate?: string;
+    transactionRef?: string;
+    notes?: string;
+    blockchainTxHash?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreatePaymentRequest {
+    batchId: string;
+    payerId: string;
+    payeeId: string;
+    amount: number;
+    currency?: string;
+    paymentType: PaymentType;
+    paymentDate?: string;
+    transactionRef?: string;
+    notes?: string;
+    blockchainTxHash?: string;
+}
+
+export interface UpdatePaymentRequest {
+    amount?: number;
+    currency?: string;
+    paymentType?: PaymentType;
+    status?: PaymentStatus;
+    paymentDate?: string;
+    transactionRef?: string;
+    notes?: string;
+    blockchainTxHash?: string;
+}
+
+export interface ExportRecord {
+    id: string;
+    batchId: string;
+    exporterId: string;
+    buyerName: string;
+    buyerAddress?: string;
+    buyerEmail?: string;
+    shippingMethod: string;
+    shippingDate: string;
+    expectedArrival?: string;
+    trackingNumber?: string;
+    certificates?: string[];
+    blockchainTxHash?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateExportRequest {
+    batchId: string;
+    exporterId: string;
+    buyerName: string;
+    buyerAddress?: string;
+    buyerEmail?: string;
+    shippingMethod: string;
+    shippingDate: string;
+    expectedArrival?: string;
+    trackingNumber?: string;
+    certificates?: string[];
+    blockchainTxHash?: string;
+}
+
+export interface UpdateExportRequest {
+    buyerName?: string;
+    buyerAddress?: string;
+    buyerEmail?: string;
+    shippingMethod?: string;
+    shippingDate?: string;
+    expectedArrival?: string;
+    trackingNumber?: string;
+    certificates?: string[];
+    blockchainTxHash?: string;
+}
+
+export interface ProcessingRecord {
+    id: string;
+    batchId: string;
+    stage: SupplyChainStage;
+    processingType: string;
+    notes?: string;
+    qualityScore?: number;
+    quantityIn?: number;
+    quantityOut?: number;
+    processedBy: string;
+    processedAt: string;
+    blockchainTxHash?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateProcessingRecordRequest {
+    batchId: string;
+    stage: SupplyChainStage;
+    processingType: string;
+    notes?: string;
+    qualityScore?: number;
+    quantityIn?: number;
+    quantityOut?: number;
+    processedBy: string;
+    processedAt?: string;
+    blockchainTxHash?: string;
+}
+
+export interface UpdateProcessingRecordRequest {
+    processingType?: string;
+    notes?: string;
+    qualityScore?: number;
+    quantityIn?: number;
+    quantityOut?: number;
+    blockchainTxHash?: string;
+}
+
+export type ReportType = 'monthly_summary' | 'quarterly_export' | 'annual_statistics' | 'quality_report' | 'payment_report' | 'custom';
+export type ReportStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
+
+export interface Report {
+    id: string;
+    reportType: ReportType;
+    periodStart: string;
+    periodEnd: string;
+    generatedBy: string;
+    data: Record<string, unknown>;
+    status: ReportStatus;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CreateReportRequest {
+    reportType: ReportType;
+    periodStart: string;
+    periodEnd: string;
+    generatedBy: string;
+    data: Record<string, unknown>;
+    status?: ReportStatus;
+}
+
+export interface UpdateReportRequest {
+    reportType?: ReportType;
+    periodStart?: string;
+    periodEnd?: string;
+    data?: Record<string, unknown>;
+    status?: ReportStatus;
+}
+
+export interface UpdateStageRequest {
+    stage: SupplyChainStage;
+    blockchainTxHash?: string;
+    changedBy: string;
+    notes?: string;
+    quantity?: number;
+    quality?: string;
+    location?: string;
+    metadata?: Record<string, unknown>;
 }

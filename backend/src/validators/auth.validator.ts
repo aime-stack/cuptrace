@@ -38,9 +38,11 @@ export const registerSchema = z.object({
       .optional()
       .or(z.literal('')),
     cooperativeId: z.string()
-      .min(1, 'Cooperative ID cannot be empty if provided')
       .optional()
-      .or(z.literal('')),
+      .refine((val) => !val || val.trim().length > 0, {
+        message: 'Cooperative ID cannot be empty if provided',
+      })
+      .transform((val) => val && val.trim() !== '' ? val.trim() : undefined),
     registrationNumber: z.string()
       .max(50, 'Registration number must not exceed 50 characters')
       .optional()
