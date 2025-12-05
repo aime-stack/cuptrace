@@ -3,7 +3,7 @@ import { ZodSchema, ZodError } from 'zod';
 import { ValidationError } from '../utils/errors';
 
 export const validate = (schema: ZodSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
     try {
       schema.parse({
         body: req.body,
@@ -17,7 +17,7 @@ export const validate = (schema: ZodSchema) => {
           const path = err.path.join('.');
           return `${path}: ${err.message}`;
         });
-        throw new ValidationError(errorMessages.join(', '));
+        return next(new ValidationError(errorMessages.join(', ')));
       }
       next(error);
     }

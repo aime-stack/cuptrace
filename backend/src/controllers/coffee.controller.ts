@@ -6,8 +6,17 @@ import {
   listProducts,
   updateProduct,
   deleteProduct,
+  approveBatch,
+  rejectBatch,
+  verifyBatchByQRCode,
+  getProductByLotId,
 } from '../services/product.service';
-import { sendSuccess } from '../utils/response';
+import { mintBatchNFT } from '../services/nft.service';
+import { createBatchOnChain } from '../services/blockchain.service';
+import env from '../config/env';
+import { sendSuccess, sendSuccessWithMessage } from '../utils/response';
+// SupplyChainStage will be available after Prisma client generation
+type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
 export const createCoffeeController = async (
   req: AuthRequest,
@@ -15,12 +24,61 @@ export const createCoffeeController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { originLocation, farmerId } = req.body;
+    const {
+      originLocation,
+      farmerId,
+      cooperativeId,
+      region,
+      district,
+      sector,
+      cell,
+      village,
+      coordinates,
+      lotId,
+      quantity,
+      quality,
+      moisture,
+      harvestDate,
+      processingType,
+      grade,
+      description,
+      tags,
+      metadata,
+    } = req.body;
+
+    // Determine farmerId and cooperativeId based on authenticated user
+    let finalFarmerId = farmerId;
+    let finalCooperativeId = cooperativeId;
+
+    if (req.user?.role === 'farmer') {
+      finalFarmerId = req.user.id;
+      // If farmer belongs to a cooperative, automatically associate the batch
+      if (req.user.cooperativeId) {
+        finalCooperativeId = req.user.cooperativeId;
+      }
+    }
 
     const product = await createProduct({
       type: 'coffee',
       originLocation,
-      farmerId,
+      farmerId: finalFarmerId,
+      cooperativeId: finalCooperativeId,
+      region,
+      district,
+      sector,
+      cell,
+      village,
+      coordinates,
+      lotId,
+      quantity,
+      quality,
+      moisture,
+      harvestDate,
+      processingType,
+      grade,
+      description,
+      tags,
+      metadata,
     });
 
     return sendSuccess(res, product, 201);
@@ -51,13 +109,25 @@ export const listCoffeeController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { stage, page = '1', limit = '10' } = req.query;
+    const {
+      stage,
+      status,
+      farmerId,
+      cooperativeId,
+      search,
+      page = '1',
+      limit = '10'
+    } = req.query;
 
     const result = await listProducts(
       'coffee',
-      stage as any,
+      stage ? (stage as SupplyChainStage) : undefined,
       parseInt(page as string, 10),
-      parseInt(limit as string, 10)
+      parseInt(limit as string, 10),
+      status as 'pending' | 'approved' | 'rejected' | 'in_transit' | 'completed' | undefined,
+      farmerId as string | undefined,
+      cooperativeId as string | undefined,
+      search as string | undefined
     );
 
     return sendSuccess(res, result);
@@ -94,6 +164,134 @@ export const deleteCoffeeController = async (
     const result = await deleteProduct(id);
 
     return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const approveCoffeeBatchController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+
+    const batch = await approveBatch(id);
+
+    return sendSuccess(res, batch);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const rejectCoffeeBatchController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const batch = await rejectBatch(id, reason);
+
+    return sendSuccess(res, batch);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyCoffeeByQRCodeController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { qrCode } = req.params;
+
+    const result = await verifyBatchByQRCode(qrCode);
+
+    return sendSuccess(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getCoffeeByLotIdController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { lotId } = req.params;
+
+    const product = await getProductByLotId(lotId);
+
+    return sendSuccess(res, product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retry NFT minting for a batch
+ */
+export const retryMintNFTCoffeeController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+
+    if (!walletPrivateKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'WALLET_PRIVATE_KEY not configured. Cannot mint NFT.',
+      });
+    }
+
+    const nftInfo = await mintBatchNFT(id, walletPrivateKey);
+    return sendSuccessWithMessage(res, nftInfo, 'NFT minted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retry blockchain record creation for a batch
+ */
+export const retryBlockchainRecordCoffeeController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const batch = await getProductById(id, 'coffee');
+    const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+
+    if (!walletPrivateKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'WALLET_PRIVATE_KEY not configured. Cannot create blockchain record.',
+      });
+    }
+
+    const txHash = await createBatchOnChain(
+      id,
+      {
+        type: 'coffee',
+        originLocation: batch.originLocation,
+        farmerId: batch.farmerId || undefined,
+        timestamp: new Date().toISOString(),
+      },
+      walletPrivateKey
+    );
+
+    return sendSuccessWithMessage(res, { txHash }, 'Blockchain record created successfully');
   } catch (error) {
     next(error);
   }

@@ -8,12 +8,13 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     role: string;
+    cooperativeId?: string | null;
   };
 }
 
 export const verifyTokenMiddleware = async (
   req: AuthRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -35,6 +36,8 @@ export const verifyTokenMiddleware = async (
         id: true,
         email: true,
         role: true,
+        isActive: true,
+        cooperativeId: true,
       },
     });
 
@@ -42,8 +45,18 @@ export const verifyTokenMiddleware = async (
       throw new AuthenticationError('User not found');
     }
 
+    // Check if user is active
+    if (!user.isActive) {
+      throw new AuthenticationError('Account is deactivated. Please contact administrator.');
+    }
+
     // Attach user to request
-    req.user = user;
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      cooperativeId: user.cooperativeId,
+    };
 
     next();
   } catch (error) {

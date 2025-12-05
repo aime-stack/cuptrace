@@ -1,0 +1,461 @@
+{
+  "preamble": {
+    "title": "cuptrace/contracts",
+    "version": "1.0.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.19+e525483"
+    }
+  },
+  "validators": [
+    {
+      "title": "batch_nft.batch_nft.mint",
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/batch_nft~1Redeemer"
+        }
+      },
+      "compiledCode": "5901d401010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cdc3a40009112cc004c004c01cdd500144c966002600460106ea801226464b3001300f00289919912cc004c01cc034dd500144cc89660026002646600200200c44b30010018a4001133700900119801001180b000a0268acc004c8cc004004018896600200314a11325980099b9100b001899b8f00b001899801801980b8012022375c6022602a002809a2b3001300132330010010032259800800c52000899b8048008cc008008c05800501344ca6002003003a514004444b30010028800c4ca60020093018003acc00400a2b30013005375a602800313371e6eb8c04c00401e2941012452820244010602c00480a2294100e4528201c8a5040386eacc044c038dd50011b874800a294100c191919800800801912cc00400600713233225980099b9100a0028acc004cdc780500144cdd2a4000660286e980052f5c10064041133005005301600440406eb8c03c004dd598080009809000a02014c0103d87a8000375c601e60186ea801cdd59807180798079807980798059baa300e0088b2018375c601a00260126ea80122c8038dd7180598041baa0028b200c180400098019baa0088a4d13656400401",
+      "hash": "441361d212ab0f1d2f94e5887e9254e59809de0bc1c53b1d79afe0a4"
+    },
+    {
+      "title": "batch_nft.batch_nft.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "5901d401010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cdc3a40009112cc004c004c01cdd500144c966002600460106ea801226464b3001300f00289919912cc004c01cc034dd500144cc89660026002646600200200c44b30010018a4001133700900119801001180b000a0268acc004c8cc004004018896600200314a11325980099b9100b001899b8f00b001899801801980b8012022375c6022602a002809a2b3001300132330010010032259800800c52000899b8048008cc008008c05800501344ca6002003003a514004444b30010028800c4ca60020093018003acc00400a2b30013005375a602800313371e6eb8c04c00401e2941012452820244010602c00480a2294100e4528201c8a5040386eacc044c038dd50011b874800a294100c191919800800801912cc00400600713233225980099b9100a0028acc004cdc780500144cdd2a4000660286e980052f5c10064041133005005301600440406eb8c03c004dd598080009809000a02014c0103d87a8000375c601e60186ea801cdd59807180798079807980798059baa300e0088b2018375c601a00260126ea80122c8038dd7180598041baa0028b200c180400098019baa0088a4d13656400401",
+      "hash": "441361d212ab0f1d2f94e5887e9254e59809de0bc1c53b1d79afe0a4"
+    },
+    {
+      "title": "batch_traceability.batch_traceability.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/batch_traceability~1BatchState"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/batch_traceability~1Redeemer"
+        }
+      },
+      "compiledCode": "59049301010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cdc3a400530080024888966002600460106ea800e3300130093754007370e90024dc3a400d370e90044dc3a400130083754008911111194c0045660026006601e6ea8006330013013301037540032301430153015301530153015301530150019180a180a980a980a980a800cc03cdd5005a4444b30013007001899191919194c004dd6980e000cdd6980e180e800cdd7180e002cc0700126eb8c07000e60380049111112cc004cdd780799ba548000cc084dd48021981080199810a60103d8798000330213752004660426ea0018cc084004cc084dd4002998109ba80054bd70456600266e212000006899b8848000016294101d4528203a180e000980d800980d000980c800980a1baa00f8acc004c034006264646644b300132598009806000c566002602460306ea800a29462941017456600260240031598009807980c1baa0028a518a50405d1598009807800c566002601c60306ea800a294629410174566002601c0031598009806980c1baa0028a518a50405d1598009806800c56600266e1d200a3018375400514a314a080ba2941017202e405c80b9017180b9baa301b301c301c3018375401115980099b89375a600e60306ea8020dd6980d980e180e001c5660026016602e6ea800a266e24dd6980d980c1baa002375a600c60306ea802229450164528202c8a504058603200260320046032603200260286ea803e264b3001337126eb4c060004dd69801980a9baa005899b89375a6008602a6ea8014dd6980c180c800c52820263014375401e80910122294100e488c966002600c0031323259800980c80140122c80b0dd7180b80098099baa0038acc004c0300062b3001301337540070028b20288b2022404460226ea800a602600e9112cc004c01801626464646464653001375a6038003375c603800d375c6038009301c0039bad301c00248888966002604400d132332259800980a001456600260426ea800e003164089159800980d001456600260426ea800e00316408916407c80f8c078dd5000899807001807981080545901f0c070004c06c004c068004c064004c060004c04cdd50074566002601800b1323232323298009bad301b0019bae301b004980d801cc06c0092222598009810002c4c8cc89660026024005159800980f9baa003800c5902045660026030005159800980f9baa003800c590204566002602a005159800980f9baa003800c5902045660026028005159800980f9baa003800c5902045660026026005159800980f9baa003800c59020456600266e1d200a0028acc004c07cdd5001c0062c81022c80e901d203a407480e901d180e1baa00113322598009809000c4c8c966002604a0050048b2044375a6046002603e6ea80162b300130180018acc004c07cdd5002c00a2c81022c80e901d099806001006980e1baa003301f0098b203a180d800980d000980c800980c00098099baa00e8acc004c024016264646644b3001301b003803c590181bad3018001375a6030004603000260266ea803a2c808901120221809180980322c8038601000260066ea802229344d95900101",
+      "hash": "7a0c7fecbe04acee0389c39a28a805d6b41f1327d3684eb13e2e5522"
+    },
+    {
+      "title": "batch_traceability.batch_traceability.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59049301010029800aba2aba1aba0aab9faab9eaab9dab9a488888896600264653001300800198041804800cdc3a400530080024888966002600460106ea800e3300130093754007370e90024dc3a400d370e90044dc3a400130083754008911111194c0045660026006601e6ea8006330013013301037540032301430153015301530153015301530150019180a180a980a980a980a800cc03cdd5005a4444b30013007001899191919194c004dd6980e000cdd6980e180e800cdd7180e002cc0700126eb8c07000e60380049111112cc004cdd780799ba548000cc084dd48021981080199810a60103d8798000330213752004660426ea0018cc084004cc084dd4002998109ba80054bd70456600266e212000006899b8848000016294101d4528203a180e000980d800980d000980c800980a1baa00f8acc004c034006264646644b300132598009806000c566002602460306ea800a29462941017456600260240031598009807980c1baa0028a518a50405d1598009807800c566002601c60306ea800a294629410174566002601c0031598009806980c1baa0028a518a50405d1598009806800c56600266e1d200a3018375400514a314a080ba2941017202e405c80b9017180b9baa301b301c301c3018375401115980099b89375a600e60306ea8020dd6980d980e180e001c5660026016602e6ea800a266e24dd6980d980c1baa002375a600c60306ea802229450164528202c8a504058603200260320046032603200260286ea803e264b3001337126eb4c060004dd69801980a9baa005899b89375a6008602a6ea8014dd6980c180c800c52820263014375401e80910122294100e488c966002600c0031323259800980c80140122c80b0dd7180b80098099baa0038acc004c0300062b3001301337540070028b20288b2022404460226ea800a602600e9112cc004c01801626464646464653001375a6038003375c603800d375c6038009301c0039bad301c00248888966002604400d132332259800980a001456600260426ea800e003164089159800980d001456600260426ea800e00316408916407c80f8c078dd5000899807001807981080545901f0c070004c06c004c068004c064004c060004c04cdd50074566002601800b1323232323298009bad301b0019bae301b004980d801cc06c0092222598009810002c4c8cc89660026024005159800980f9baa003800c5902045660026030005159800980f9baa003800c590204566002602a005159800980f9baa003800c5902045660026028005159800980f9baa003800c5902045660026026005159800980f9baa003800c59020456600266e1d200a0028acc004c07cdd5001c0062c81022c80e901d203a407480e901d180e1baa00113322598009809000c4c8c966002604a0050048b2044375a6046002603e6ea80162b300130180018acc004c07cdd5002c00a2c81022c80e901d099806001006980e1baa003301f0098b203a180d800980d000980c800980c00098099baa00e8acc004c024016264646644b3001301b003803c590181bad3018001375a6030004603000260266ea803a2c808901120221809180980322c8038601000260066ea802229344d95900101",
+      "hash": "7a0c7fecbe04acee0389c39a28a805d6b41f1327d3684eb13e2e5522"
+    },
+    {
+      "title": "stage_transition.stage_transition.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/stage_transition~1StageTransition"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/stage_transition~1Redeemer"
+        }
+      },
+      "compiledCode": "59034c01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400530070024888966002600460106ea800e3300130093754007370e90024dc3a400d370e90044dc3a400091111194c0045660026004601c6ea800626464646530013015001980a98099baa0059bae3015004980a801cc054009222225980099b8f375c603460306ea801000e2b30013375e60346036603660306ea801000a2b300132598009806000c566002602460306ea800a29462941017456600260240031598009807980c1baa0028a518a50405d1598009807800c566002601c60306ea800a294629410174566002601c0031598009806980c1baa0028a518a50405d1598009806800c56600266e1d200a3018375400514a314a080ba2941017202e405c80b9017180b9baa0028acc004cdc49bad301a301b301b301b301b301b301b301837540086eb4c068c06cc06c01a2b3001300b3017375400b132598009806180c1baa001899b89375a603660326ea8018dd6980d980c9baa0018a51405c6034603660366036603660306ea801229450164528202c8a50405914a080b229410160c054c054004c050004c04c004c03cdd50054528201a91192cc004c0140062b3001301237540070028b20268acc004c02c0062b3001301237540070028b20268acc004c0200062b3001301237540070028b20268acc004c01c0062b3001301237540070028b20268acc004c0180062b3001301237540070028b20268acc004cdc3a401400315980098091baa0038014590134590102020404080810102020301037540053011006488966002600a60226ea80362646464646464653001375a6036003375c603600f301b0059bae301b004980d801cc06c009222222598009811003c4cc03cc0840304cc03c0104cc896600260280031323259800981300140122c8120dd6981200098109baa0048acc004c0680062b3001302137540090028b20448b203e407c264b30013013001899192cc004c09400a02716408c6eb8c08c004c080dd50014566002603200315980098101baa002808c5902145901e203c301e3754002603c6ea800a2c81006036002603400260320026030002602e002602c00260246ea80362c80806020602200a8b200e180380098019baa0078a4d1365640041",
+      "hash": "b9a24db3235ee15eb946a59c810bd34bab7b97d4dc25b1b36fcbd69e"
+    },
+    {
+      "title": "stage_transition.stage_transition.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59034c01010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cdc3a400530070024888966002600460106ea800e3300130093754007370e90024dc3a400d370e90044dc3a400091111194c0045660026004601c6ea800626464646530013015001980a98099baa0059bae3015004980a801cc054009222225980099b8f375c603460306ea801000e2b30013375e60346036603660306ea801000a2b300132598009806000c566002602460306ea800a29462941017456600260240031598009807980c1baa0028a518a50405d1598009807800c566002601c60306ea800a294629410174566002601c0031598009806980c1baa0028a518a50405d1598009806800c56600266e1d200a3018375400514a314a080ba2941017202e405c80b9017180b9baa0028acc004cdc49bad301a301b301b301b301b301b301b301837540086eb4c068c06cc06c01a2b3001300b3017375400b132598009806180c1baa001899b89375a603660326ea8018dd6980d980c9baa0018a51405c6034603660366036603660306ea801229450164528202c8a50405914a080b229410160c054c054004c050004c04c004c03cdd50054528201a91192cc004c0140062b3001301237540070028b20268acc004c02c0062b3001301237540070028b20268acc004c0200062b3001301237540070028b20268acc004c01c0062b3001301237540070028b20268acc004c0180062b3001301237540070028b20268acc004cdc3a401400315980098091baa0038014590134590102020404080810102020301037540053011006488966002600a60226ea80362646464646464653001375a6036003375c603600f301b0059bae301b004980d801cc06c009222222598009811003c4cc03cc0840304cc03c0104cc896600260280031323259800981300140122c8120dd6981200098109baa0048acc004c0680062b3001302137540090028b20448b203e407c264b30013013001899192cc004c09400a02716408c6eb8c08c004c080dd50014566002603200315980098101baa002808c5902145901e203c301e3754002603c6ea800a2c81006036002603400260320026030002602e002602c00260246ea80362c80806020602200a8b200e180380098019baa0078a4d1365640041",
+      "hash": "b9a24db3235ee15eb946a59c810bd34bab7b97d4dc25b1b36fcbd69e"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "Option$ByteArray": {
+      "title": "Option",
+      "anyOf": [
+        {
+          "title": "Some",
+          "description": "An optional value.",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        },
+        {
+          "title": "None",
+          "description": "Nothing.",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "Option$Int": {
+      "title": "Option",
+      "anyOf": [
+        {
+          "title": "Some",
+          "description": "An optional value.",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        },
+        {
+          "title": "None",
+          "description": "Nothing.",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "batch_nft/Redeemer": {
+      "title": "Redeemer",
+      "description": "Redeemer for NFT minting",
+      "anyOf": [
+        {
+          "title": "Mint",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "batch_id",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "batch_traceability/BatchState": {
+      "title": "BatchState",
+      "description": "Batch state stored on-chain",
+      "anyOf": [
+        {
+          "title": "BatchState",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "batch_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "product_type",
+              "$ref": "#/definitions/batch_traceability~1ProductType"
+            },
+            {
+              "title": "current_stage",
+              "$ref": "#/definitions/batch_traceability~1Stage"
+            },
+            {
+              "title": "origin_location",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "quantity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "farmer_id",
+              "$ref": "#/definitions/Option$ByteArray"
+            },
+            {
+              "title": "created_at",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "last_updated",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "batch_traceability/ProductType": {
+      "title": "ProductType",
+      "description": "Product types",
+      "anyOf": [
+        {
+          "title": "Coffee",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "Tea",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        }
+      ]
+    },
+    "batch_traceability/Redeemer": {
+      "title": "Redeemer",
+      "description": "Redeemer for batch operations",
+      "anyOf": [
+        {
+          "title": "CreateBatch",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "batch_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "product_type",
+              "$ref": "#/definitions/batch_traceability~1ProductType"
+            },
+            {
+              "title": "origin_location",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "farmer_id",
+              "$ref": "#/definitions/Option$ByteArray"
+            },
+            {
+              "title": "quantity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        },
+        {
+          "title": "UpdateStage",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": [
+            {
+              "title": "to_stage",
+              "$ref": "#/definitions/batch_traceability~1Stage"
+            },
+            {
+              "title": "changed_by",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "quantity",
+              "$ref": "#/definitions/Option$Int"
+            },
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Option$ByteArray"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        },
+        {
+          "title": "UpdateQuantity",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": [
+            {
+              "title": "new_quantity",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "batch_traceability/Stage": {
+      "title": "Stage",
+      "description": "Supply chain stages",
+      "anyOf": [
+        {
+          "title": "Farmer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "WashingStation",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "Factory",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        },
+        {
+          "title": "Exporter",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": []
+        },
+        {
+          "title": "Importer",
+          "dataType": "constructor",
+          "index": 4,
+          "fields": []
+        },
+        {
+          "title": "Retailer",
+          "dataType": "constructor",
+          "index": 5,
+          "fields": []
+        }
+      ]
+    },
+    "stage_transition/Redeemer": {
+      "title": "Redeemer",
+      "description": "Redeemer for stage transitions",
+      "anyOf": [
+        {
+          "title": "RecordTransition",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "batch_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "from_stage",
+              "$ref": "#/definitions/stage_transition~1Stage"
+            },
+            {
+              "title": "to_stage",
+              "$ref": "#/definitions/stage_transition~1Stage"
+            },
+            {
+              "title": "changed_by",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "quantity",
+              "$ref": "#/definitions/Option$Int"
+            },
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Option$ByteArray"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    },
+    "stage_transition/Stage": {
+      "title": "Stage",
+      "description": "Supply chain stages",
+      "anyOf": [
+        {
+          "title": "Farmer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": []
+        },
+        {
+          "title": "WashingStation",
+          "dataType": "constructor",
+          "index": 1,
+          "fields": []
+        },
+        {
+          "title": "Factory",
+          "dataType": "constructor",
+          "index": 2,
+          "fields": []
+        },
+        {
+          "title": "Exporter",
+          "dataType": "constructor",
+          "index": 3,
+          "fields": []
+        },
+        {
+          "title": "Importer",
+          "dataType": "constructor",
+          "index": 4,
+          "fields": []
+        },
+        {
+          "title": "Retailer",
+          "dataType": "constructor",
+          "index": 5,
+          "fields": []
+        }
+      ]
+    },
+    "stage_transition/StageTransition": {
+      "title": "StageTransition",
+      "description": "Stage transition data",
+      "anyOf": [
+        {
+          "title": "StageTransition",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "batch_id",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "from_stage",
+              "$ref": "#/definitions/stage_transition~1Stage"
+            },
+            {
+              "title": "to_stage",
+              "$ref": "#/definitions/stage_transition~1Stage"
+            },
+            {
+              "title": "changed_by",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "quantity",
+              "$ref": "#/definitions/Option$Int"
+            },
+            {
+              "title": "metadata",
+              "$ref": "#/definitions/Option$ByteArray"
+            },
+            {
+              "title": "timestamp",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

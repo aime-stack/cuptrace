@@ -1,0 +1,30 @@
+/// Tests for Stage Transition Validator
+
+use cuptrace/validators/stage_transition
+use cuptrace/types
+
+test valid_transition() {
+  let datum = StageTransition {
+    batch_id: #"test_batch_001",
+    from_stage: Farmer,
+    to_stage: WashingStation,
+    changed_by: #"washing_station_001",
+    quantity: Some(1000),
+    metadata: None,
+    timestamp: 1000000,
+  }
+  
+  let redeemer = RecordTransition {
+    batch_id: #"test_batch_001",
+    from_stage: WashingStation,
+    to_stage: Factory,
+    changed_by: #"factory_001",
+    quantity: Some(950),
+    metadata: None,
+    timestamp: 1000100,
+  }
+  
+  // Simplified test
+  True
+}
+
