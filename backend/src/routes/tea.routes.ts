@@ -9,6 +9,8 @@ import {
   rejectTeaBatchController,
   verifyTeaByQRCodeController,
   getTeaByLotIdController,
+  retryMintNFTTeaController,
+  retryBlockchainRecordTeaController,
 } from '../controllers/tea.controller';
 import { verifyTokenMiddleware } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
@@ -40,6 +42,10 @@ router.put('/:id', validate(updateProductSchema), updateTeaController);
 router.delete('/:id', validate(deleteProductSchema), deleteTeaController);
 router.post('/:id/approve', validate(approveBatchSchema), approveTeaBatchController);
 router.post('/:id/reject', validate(rejectBatchSchema), rejectTeaBatchController);
+// Retry NFT minting for a batch (must come before /:id route)
+router.post('/:id/retry-mint-nft', retryMintNFTTeaController);
+// Retry blockchain record creation for a batch (must come before /:id route)
+router.post('/:id/retry-blockchain', retryBlockchainRecordTeaController);
 
 export default router;
 

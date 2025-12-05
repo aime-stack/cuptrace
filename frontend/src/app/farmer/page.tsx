@@ -9,6 +9,8 @@ import { useCurrentUser } from '@/hooks/useAuth';
 import { useBatches } from '@/hooks/useBatches';
 import { ProductType, BatchStatus } from '@/types';
 import { formatCurrency, formatRelativeDate, getStatusColor } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import * as paymentService from '@/services/payment.service';
 
 export default function FarmerDashboard() {
     const { data: user } = useCurrentUser();
@@ -17,10 +19,23 @@ export default function FarmerDashboard() {
         ProductType.coffee
     );
 
+    // Fetch payments for the farmer
+    const { data: paymentsData } = useQuery({
+        queryKey: ['payments', user?.id],
+        queryFn: () => paymentService.listPayments({ payeeId: user?.id }),
+        enabled: !!user?.id,
+    });
+
     const batches = batchesData || [];
     const totalBatches = batches.length;
     const pendingBatches = batches.filter(b => b.status === BatchStatus.pending).length;
     const approvedBatches = batches.filter(b => b.status === BatchStatus.approved).length;
+    
+    // Calculate total payments received
+    const payments = paymentsData || [];
+    const totalPayments = payments
+        .filter((p: any) => p.status === 'completed')
+        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     return (
         <div className="space-y-8">
@@ -62,9 +77,9 @@ export default function FarmerDashboard() {
                 />
                 <StatsCard
                     title="Total Payments"
-                    value={formatCurrency(0)}
+                    value={formatCurrency(totalPayments)}
                     icon={Wallet}
-                    description="Coming soon"
+                    description={`${payments.filter((p: any) => p.status === 'completed').length} completed`}
                 />
             </div>
 

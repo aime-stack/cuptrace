@@ -46,16 +46,41 @@ export default function PaymentsPage() {
                     ) : (
                         <div className="space-y-4">
                             {payments.map((payment: any) => (
-                                <div key={payment.id} className="p-4 border rounded-lg">
+                                <div key={payment.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                                     <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="font-medium">{formatCurrency(payment.amount)}</p>
-                                            <p className="text-sm text-gray-500">{payment.status}</p>
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <p className="font-semibold text-lg">{formatCurrency(payment.amount)}</p>
+                                                <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                                    payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                                    payment.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                                                    payment.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                                    'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                    {payment.status}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-1 text-sm text-gray-600">
+                                                {payment.paymentType && (
+                                                    <p>Type: <span className="capitalize">{payment.paymentType.replace('_', ' ')}</span></p>
+                                                )}
+                                                {payment.batchId && (
+                                                    <p>Batch: {payment.batchId.substring(0, 8)}</p>
+                                                )}
+                                                {payment.notes && (
+                                                    <p className="text-gray-500 italic">{payment.notes}</p>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm font-medium text-gray-700">
                                                 {payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : 'N/A'}
                                             </p>
+                                            {payment.transactionRef && (
+                                                <p className="text-xs text-gray-500 mt-1 font-mono">
+                                                    {payment.transactionRef.substring(0, 12)}...
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

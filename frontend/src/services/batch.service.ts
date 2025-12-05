@@ -75,3 +75,17 @@ export const getBatchByLotId = async (lotId: string, type: ProductType = Product
     if (data.data) return data.data;
     throw new Error(data.message || 'Batch not found');
 };
+
+export const retryMintNFT = async (id: string, type: ProductType = ProductType.coffee): Promise<{ policyId: string; assetName: string; txHash: string }> => {
+    const endpoint = type === ProductType.coffee ? `/coffee/${id}/retry-mint-nft` : `/tea/${id}/retry-mint-nft`;
+    const { data } = await axiosInstance.post<ApiResponse<{ policyId: string; assetName: string; txHash: string }>>(endpoint);
+    if (data.data) return data.data;
+    throw new Error(data.message || 'Failed to mint NFT');
+};
+
+export const retryBlockchainRecord = async (id: string, type: ProductType = ProductType.coffee): Promise<{ txHash: string }> => {
+    const endpoint = type === ProductType.coffee ? `/coffee/${id}/retry-blockchain` : `/tea/${id}/retry-blockchain`;
+    const { data } = await axiosInstance.post<ApiResponse<{ txHash: string }>>(endpoint);
+    if (data.data) return data.data;
+    throw new Error(data.message || 'Failed to create blockchain record');
+};

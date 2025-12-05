@@ -188,10 +188,24 @@ export const mintBatchNFT = async (
       lucid.selectWalletFromPrivateKey(privateKey);
 
       // Create minting policy from compiled Plutus script
-      const mintingPolicy = lucid.newMintingPolicy().fromPlutusScript({
-        type: 'PlutusV3',
-        script: compiledCode,
-      });
+      // Note: Lucid 0.3.0 doesn't support PlutusV3 yet, try V2 format
+      let mintingPolicy: any;
+      try {
+        mintingPolicy = lucid.newMintingPolicy().fromPlutusScript({
+          type: 'PlutusV2',
+          script: compiledCode,
+        });
+      } catch (error) {
+        // If V2 fails, try V1 as fallback
+        try {
+          mintingPolicy = lucid.newMintingPolicy().fromPlutusScript({
+            type: 'PlutusV1',
+            script: compiledCode,
+          });
+        } catch (error2) {
+          throw new Error(`Failed to create minting policy: ${error2 instanceof Error ? error2.message : 'Unknown error'}`);
+        }
+      }
 
       // Create redeemer for minting (batch_id from batch ID)
       const batchIdBytes = Buffer.from(batchId.substring(0, 32));

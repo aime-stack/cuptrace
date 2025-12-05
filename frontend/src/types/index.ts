@@ -38,6 +38,7 @@ export interface User {
     email: string;
     role: UserRole;
     phone?: string;
+    address?: string;
     country?: string;
     city?: string;
     province?: string;
@@ -84,6 +85,9 @@ export interface ProductBatch {
     washingStationId?: string;
     factoryId?: string;
     blockchainTxHash?: string;
+    nftPolicyId?: string;
+    nftAssetName?: string;
+    nftMintedAt?: string;
     createdAt: string;
     updatedAt: string;
     history?: BatchHistory[];

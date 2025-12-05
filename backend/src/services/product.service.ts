@@ -7,6 +7,7 @@ import { buildSoftDeleteFilter } from '../utils/query';
 import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
 import { mintBatchNFT } from './nft.service';
 import { createBatchOnChain } from './blockchain.service';
+import env from '../config/env';
 
 type ProductType = 'coffee' | 'tea';
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
@@ -219,25 +220,54 @@ export const createProduct = async (data: CreateProductData) => {
   const qrCode = generateQRCode(product.id, data.type);
   const verificationUrl = generateVerificationUrl(product.id);
 
+  // Get wallet private key from environment for blockchain operations
+  // For now, use system wallet. In future, this could be per-user wallet
+  const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+
   // Mint NFT for the batch (async, don't block on failure)
-  mintBatchNFT(product.id).catch((error) => {
-    console.error(`Failed to mint NFT for batch ${product.id}:`, error);
-    // Don't throw - NFT minting failure shouldn't block batch creation
-  });
+  // Only attempt if wallet is configured
+  if (walletPrivateKey) {
+    mintBatchNFT(product.id, walletPrivateKey)
+      .then((nftInfo) => {
+        console.log(`✅ NFT minted for batch ${product.id}:`, {
+          policyId: nftInfo.policyId,
+          assetName: nftInfo.assetName,
+          txHash: nftInfo.txHash,
+        });
+      })
+      .catch((error) => {
+        console.error(`❌ Failed to mint NFT for batch ${product.id}:`, error);
+        // NFT minting failure is logged but doesn't block batch creation
+        // User can retry manually later
+      });
+  } else {
+    console.warn(`⚠️  WALLET_PRIVATE_KEY not configured. NFT minting skipped for batch ${product.id}`);
+  }
 
   // Create batch on blockchain (async, don't block on failure)
-  createBatchOnChain(
-    product.id,
-    {
-      type: data.type,
-      originLocation,
-      farmerId: data.farmerId,
-      timestamp: new Date().toISOString(),
-    }
-  ).catch((error) => {
-    console.error(`Failed to create batch on blockchain for ${product.id}:`, error);
-    // Don't throw - blockchain failure shouldn't block batch creation
-  });
+  // Only attempt if wallet is configured
+  if (walletPrivateKey) {
+    createBatchOnChain(
+      product.id,
+      {
+        type: data.type,
+        originLocation,
+        farmerId: data.farmerId,
+        timestamp: new Date().toISOString(),
+      },
+      walletPrivateKey
+    )
+      .then((txHash) => {
+        console.log(`✅ Batch ${product.id} recorded on blockchain: ${txHash}`);
+      })
+      .catch((error) => {
+        console.error(`❌ Failed to create batch on blockchain for ${product.id}:`, error);
+        // Blockchain failure is logged but doesn't block batch creation
+        // User can retry manually later
+      });
+  } else {
+    console.warn(`⚠️  WALLET_PRIVATE_KEY not configured. Blockchain record skipped for batch ${product.id}`);
+  }
 
   // Update product with QR code
   const updatedProduct = await prisma.productBatch.update({

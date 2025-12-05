@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Loader2, Eye } from "lucide-react";
@@ -14,15 +15,24 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { useBatches } from "@/hooks/useBatches";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { ProductType } from "@/types";
 
 export default function BatchesPage() {
     const { data: user } = useCurrentUser();
+    const [productType, setProductType] = useState<ProductType>(ProductType.coffee);
+    
     const { data: batchesData, isLoading } = useBatches(
         { farmerId: user?.id }, // Filter by current farmer
-        ProductType.coffee // Default to coffee for now, could be toggleable
+        productType
     );
 
     const batches = batchesData || [];
@@ -36,12 +46,23 @@ export default function BatchesPage() {
                         Manage your coffee and tea harvests.
                     </p>
                 </div>
-                <Button asChild className="gap-2">
-                    <Link href="/farmer/batches/new">
-                        <Plus className="h-4 w-4" />
-                        New Batch
-                    </Link>
-                </Button>
+                <div className="flex items-center gap-4">
+                    <Select value={productType} onValueChange={(value) => setProductType(value as ProductType)}>
+                        <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Product Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={ProductType.coffee}>Coffee</SelectItem>
+                            <SelectItem value={ProductType.tea}>Tea</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button asChild className="gap-2">
+                        <Link href="/farmer/batches/new">
+                            <Plus className="h-4 w-4" />
+                            New Batch
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             <Card>

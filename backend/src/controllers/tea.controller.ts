@@ -11,7 +11,10 @@ import {
   verifyBatchByQRCode,
   getProductByLotId,
 } from '../services/product.service';
-import { sendSuccess } from '../utils/response';
+import { mintBatchNFT } from '../services/nft.service';
+import { createBatchOnChain } from '../services/blockchain.service';
+import env from '../config/env';
+import { sendSuccess, sendSuccessWithMessage } from '../utils/response';
 // SupplyChainStage will be available after Prisma client generation
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
@@ -224,6 +227,69 @@ export const getTeaByLotIdController = async (
     const product = await getProductByLotId(lotId);
 
     return sendSuccess(res, product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retry NFT minting for a batch
+ */
+export const retryMintNFTTeaController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+
+    if (!walletPrivateKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'WALLET_PRIVATE_KEY not configured. Cannot mint NFT.',
+      });
+    }
+
+    const nftInfo = await mintBatchNFT(id, walletPrivateKey);
+    return sendSuccessWithMessage(res, nftInfo, 'NFT minted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Retry blockchain record creation for a batch
+ */
+export const retryBlockchainRecordTeaController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> => {
+  try {
+    const { id } = req.params;
+    const batch = await getProductById(id, 'tea');
+    const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+
+    if (!walletPrivateKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'WALLET_PRIVATE_KEY not configured. Cannot create blockchain record.',
+      });
+    }
+
+    const txHash = await createBatchOnChain(
+      id,
+      {
+        type: 'tea',
+        originLocation: batch.originLocation,
+        farmerId: batch.farmerId || undefined,
+        timestamp: new Date().toISOString(),
+      },
+      walletPrivateKey
+    );
+
+    return sendSuccessWithMessage(res, { txHash }, 'Blockchain record created successfully');
   } catch (error) {
     next(error);
   }
