@@ -152,6 +152,7 @@ export interface AuthResponse {
 
 export interface CreateBatchRequest {
     type: ProductType;
+    farmerId?: string;
     originLocation: string;
     region?: string;
     district?: string;

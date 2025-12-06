@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Coffee, LogOut, User as UserIcon, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Coffee, LogOut, User as UserIcon, Menu, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser, useLogout } from '@/hooks/useAuth';
 import { NAVIGATION_ITEMS } from '@/lib/constants';
@@ -12,12 +12,31 @@ import * as Icons from 'lucide-react';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { data: user } = useCurrentUser();
+    const router = useRouter();
+    const { data: user, isLoading } = useCurrentUser();
     const logout = useLogout();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
-    if (!user) return null;
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useEffect(() => {
+        // Redirect to login if not loading and no user
+        if (isMounted && !isLoading && !user) {
+            router.replace('/login');
+        }
+    }, [isMounted, isLoading, user, router]);
+
+    if (!isMounted || isLoading || !user) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     const navItems = NAVIGATION_ITEMS[user.role] || [];
 

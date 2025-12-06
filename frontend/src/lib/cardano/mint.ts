@@ -5,7 +5,8 @@ import {
     Token,
     BrowserWallet,
     ForgeScript,
-    NativeScript
+    NativeScript,
+    resolveScriptHash
 } from '@meshsdk/core';
 
 export const mintBatchNFT = async (
@@ -23,7 +24,8 @@ export const mintBatchNFT = async (
         const usedAddress = await wallet.getChangeAddress();
         const forgingScript = ForgeScript.withOneSignature(usedAddress);
 
-        const policyId = forgingScript.toNativeScript().getPolicyId();
+        const policyId = resolveScriptHash(forgingScript);
+
         const assetName = `CupTrace${batchData.id.substring(0, 8)}`;
 
         const metadata: AssetMetadata = {
@@ -40,13 +42,6 @@ export const mintBatchNFT = async (
             "version": "1.0"
         };
 
-        const asset: Token = {
-            assetName: assetName,
-            assetQuantity: '1',
-            metadata: metadata,
-            label: '721',
-            recipient: usedAddress,
-        };
 
         const tx = new MeshTxBuilder({})
             .mintPlutusScriptV2() // We might want native script for simple minting first

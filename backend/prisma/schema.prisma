@@ -189,8 +189,6 @@ model ProductBatch {
   // Current Stage & Blockchain
   currentStage     SupplyChainStage
   blockchainTxHash String?
-<<<<<<< HEAD
-
   // NFT Information
   nftPolicyId  String? // NFT Policy ID
   nftAssetName String? // NFT Asset Name
@@ -201,21 +199,10 @@ model ProductBatch {
   metadata    Json? // Flexible JSON for additional data
   tags        String[] // Array of tags for categorization
 
-=======
-  nftPolicyId      String?
-  nftAssetName     String?
-  
-  // Metadata
-  description      String?
-  metadata         Json?           // Flexible JSON for additional data
-  tags             String[]       // Array of tags for categorization
-  
   // Relations
   integrity        BatchIntegrity?
   events           SupplyChainEvent[]
   documents        BatchDocument[]
-  
->>>>>>> c259597 (All)
   // Soft Delete
   deletedAt DateTime?
   createdAt DateTime  @default(now())

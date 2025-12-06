@@ -189,7 +189,7 @@ export default function BatchDetailPage() {
                         <CardContent className="flex flex-col items-center space-y-4">
                             <div className="bg-white p-4 rounded-lg border shadow-sm">
                                 <QRCodeSVG
-                                    value={`https://cuptrace.app/verify/${batch.qrCode || batch.id}`}
+                                    value={`https://cuptrace.app/verify/${(batch as any).qrCode || batch.id}`}
                                     size={200}
                                     level="H"
                                     includeMargin

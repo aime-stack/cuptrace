@@ -39,10 +39,8 @@ const batchSchema = z.object({
     district: z.string().optional(),
     quantity: z.coerce.number().positive("Quantity must be positive"),
     quality: z.string().optional(),
-    moisture: z.coerce.number().min(0).max(100).optional(),
     harvestDate: z.string().optional(),
     processingType: z.string().optional(),
-    grade: z.string().optional(),
     description: z.string().optional(),
 });
 
@@ -75,10 +73,8 @@ export default function AgentNewBatchPage() {
             district: "",
             quantity: 0,
             quality: "",
-            moisture: undefined,
             harvestDate: "",
             processingType: "washed",
-            grade: "",
             description: "",
         },
     });
@@ -145,17 +141,26 @@ export default function AgentNewBatchPage() {
     };
 
     const onSubmit = (data: BatchFormData) => {
-        createBatch(
-            {
-                ...data,
-                cooperativeId: user?.cooperativeId,
+        // Build the batch request with required type field
+        const batchRequest = {
+            type: ProductType.coffee,
+            farmerId: data.farmerId,
+            originLocation: data.originLocation,
+            region: data.region,
+            district: data.district,
+            quantity: data.quantity,
+            quality: data.quality,
+            harvestDate: data.harvestDate,
+            processingType: data.processingType,
+            description: data.description,
+            cooperativeId: user?.cooperativeId,
+        };
+
+        createBatch(batchRequest, {
+            onSuccess: () => {
+                router.push("/agent");
             },
-            {
-                onSuccess: () => {
-                    router.push("/agent");
-                },
-            }
-        );
+        });
     };
 
     return (
@@ -291,68 +296,28 @@ export default function AgentNewBatchPage() {
                                     />
                                 </div>
 
-                                <div className="grid gap-4 md:grid-cols-3">
-                                    <FormField
-                                        control={form.control}
-                                        name="processingType"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Processing Type</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select type" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="washed">Washed</SelectItem>
-                                                        <SelectItem value="natural">Natural</SelectItem>
-                                                        <SelectItem value="honey">Honey</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField
-                                        control={form.control}
-                                        name="grade"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Grade</FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                    <FormControl>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select grade" />
-                                                        </SelectTrigger>
-                                                    </FormControl>
-                                                    <SelectContent>
-                                                        <SelectItem value="AA">AA (Premium)</SelectItem>
-                                                        <SelectItem value="A">A (High)</SelectItem>
-                                                        <SelectItem value="B">B (Standard)</SelectItem>
-                                                        <SelectItem value="C">C (Commercial)</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField
-                                        control={form.control}
-                                        name="moisture"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Moisture (%)</FormLabel>
+                                <FormField
+                                    control={form.control}
+                                    name="processingType"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Processing Type</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
-                                                    <Input type="number" step="0.1" {...field} />
+                                                    <SelectTrigger>
+                                                        <SelectValue placeholder="Select type" />
+                                                    </SelectTrigger>
                                                 </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
+                                                <SelectContent>
+                                                    <SelectItem value="washed">Washed</SelectItem>
+                                                    <SelectItem value="natural">Natural</SelectItem>
+                                                    <SelectItem value="honey">Honey</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
 
                                 <FormField
                                     control={form.control}

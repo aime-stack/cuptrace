@@ -4,7 +4,7 @@
   "description": "Backend API for CupTrace - Blockchain-powered traceability platform for Coffee & Tea supply chains",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
