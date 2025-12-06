@@ -93,11 +93,11 @@ export interface ProductBatch {
     blockchainTxHash?: string;
     nftPolicyId?: string;
     nftAssetName?: string;
-<<<<<<< HEAD
+
     nftMintedAt?: string;
-=======
+
     metadata?: Record<string, any>;
->>>>>>> c259597 (All)
+
     createdAt: string;
     updatedAt: string;
     history?: BatchHistory[];

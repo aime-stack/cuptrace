@@ -10,28 +10,22 @@ import {
 
 export const listBatches = async (filters?: BatchFilters, type: ProductType = ProductType.coffee): Promise<ProductBatch[]> => {
     const endpoint = type === ProductType.coffee ? '/coffee' : '/tea';
-<<<<<<< HEAD
-    const { data } = await axiosInstance.get<ApiResponse<{ data: ProductBatch[]; pagination?: any }>>(endpoint, { params: filters });
-    // Handle paginated response
-    if (data.data && Array.isArray(data.data)) {
-        return data.data;
-    }
-    // Handle nested pagination structure
-    if (data.data && typeof data.data === 'object' && 'data' in data.data) {
-        return (data.data as any).data || [];
-=======
+
     const { data } = await axiosInstance.get<any>(endpoint, { params: filters });
+
     // Handle both direct array response and paginated response
     // API returns { success, data: { data: [], pagination: {} } } for paginated
     // or { success, data: [] } for direct
     const responseData = data?.data;
+
     if (Array.isArray(responseData)) {
         return responseData;
     }
+
     if (responseData?.data && Array.isArray(responseData.data)) {
         return responseData.data;
->>>>>>> c259597 (All)
     }
+
     return [];
 };
 
