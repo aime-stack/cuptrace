@@ -6,7 +6,9 @@ import { AuthenticationError, ValidationError, NotFoundError } from '../utils/er
 import { normalizeEmail, sanitizeString, isValidEmail } from '../utils/validation';
 import { normalizePagination, createPaginationResult } from '../utils/pagination';
 
-type UserRole = 'farmer' | 'ws' | 'factory' | 'exporter' | 'importer' | 'retailer' | 'admin';
+import { UserRole } from '@prisma/client';
+
+// type UserRole = 'farmer' | 'agent' | 'ws' | 'factory' | 'exporter' | 'importer' | 'retailer' | 'admin' | 'qc';
 
 const SALT_ROUNDS = 10;
 
@@ -68,7 +70,7 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
   if (!isValidEmail(data.email)) {
     throw new ValidationError('Invalid email format');
   }
-  
+
   const normalizedEmail = normalizeEmail(data.email);
 
   // Check if user already exists
@@ -140,8 +142,9 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
   if (!isValidEmail(data.email)) {
     throw new ValidationError('Invalid email format');
   }
-  
+
   const normalizedEmail = normalizeEmail(data.email);
+  console.log('[LOGIN DEBUG] Attempting login for:', normalizedEmail);
 
   // Find user
   const user = await prisma.user.findUnique({
@@ -149,8 +152,11 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
   });
 
   if (!user) {
+    console.log('[LOGIN DEBUG] User not found:', normalizedEmail);
     throw new AuthenticationError('Invalid email or password');
   }
+
+  console.log('[LOGIN DEBUG] User found:', user.email, 'Role:', user.role);
 
   // Check if user is active
   if (!user.isActive) {
@@ -159,6 +165,7 @@ export const login = async (data: LoginData): Promise<AuthResponse> => {
 
   // Verify password
   const isPasswordValid = await comparePassword(data.password, user.password);
+  console.log('[LOGIN DEBUG] Password valid:', isPasswordValid);
 
   if (!isPasswordValid) {
     throw new AuthenticationError('Invalid email or password');

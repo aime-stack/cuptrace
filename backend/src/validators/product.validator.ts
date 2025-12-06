@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const createProductSchema = z.object({
   body: z.object({
-    type: z.enum(['coffee', 'tea']),
+    type: z.enum(['coffee', 'tea']).optional(), // Optional - set by route
     originLocation: z.string().min(1, 'Origin location is required'),
     farmerId: z.string().optional(),
     cooperativeId: z.string().optional(),

@@ -38,9 +38,20 @@ import {
     RWANDA_PROVINCES,
 } from "@/lib/constants";
 
+import { useCurrentUser } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { listUsers } from "@/services/auth.service";
+
 export function BatchForm() {
     const router = useRouter();
     const [productType, setProductType] = useState<ProductType>(ProductType.coffee);
+    const { data: user } = useCurrentUser();
+
+    const { data: farmers } = useQuery({
+        queryKey: ['farmers'],
+        queryFn: () => listUsers({ role: 'farmer' }),
+        enabled: user?.role === 'agent',
+    });
 
     const { mutate: createBatch, isPending } = useCreateBatch(productType);
 
@@ -60,6 +71,7 @@ export function BatchForm() {
             teaType: "",
             harvestDate: "",
             pluckingDate: "",
+            farmerId: undefined,
         },
     });
 
@@ -88,6 +100,36 @@ export function BatchForm() {
             <CardContent>
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        {user?.role === 'agent' && (
+                            <FormField
+                                control={form.control}
+                                name="farmerId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Select Farmer</FormLabel>
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a farmer" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {farmers?.map((farmer) => (
+                                                    <SelectItem key={farmer.id} value={farmer.id}>
+                                                        {farmer.name} ({farmer.email})
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Product Type */}
                             <FormField

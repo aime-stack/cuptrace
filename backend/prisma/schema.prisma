@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:6543/postgres"
-  directUrl = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:6543/postgres"
+  url       = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
+  directUrl = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
 }
 
 // ============================================
@@ -17,12 +17,15 @@ datasource db {
 
 enum UserRole {
   farmer
+  agent
   ws
   factory
   exporter
   importer
   retailer
+
   admin
+  qc
 }
 
 enum ProductType {
@@ -43,7 +46,11 @@ enum BatchStatus {
   pending
   approved
   rejected
+  processing
+  ready_for_export
   in_transit
+  exported
+  delivered
   completed
 }
 
@@ -124,6 +131,8 @@ model User {
   paymentsReceived      Payment[]          @relation("PaymentsReceived")
   exportRecords         ExportRecord[]
   naebReports           NAEBReport[]
+  events                SupplyChainEvent[]
+  uploadedDocuments     BatchDocument[]
 
   @@map("users")
 }
@@ -180,6 +189,7 @@ model ProductBatch {
   // Current Stage & Blockchain
   currentStage     SupplyChainStage
   blockchainTxHash String?
+<<<<<<< HEAD
 
   // NFT Information
   nftPolicyId  String? // NFT Policy ID
@@ -191,6 +201,21 @@ model ProductBatch {
   metadata    Json? // Flexible JSON for additional data
   tags        String[] // Array of tags for categorization
 
+=======
+  nftPolicyId      String?
+  nftAssetName     String?
+  
+  // Metadata
+  description      String?
+  metadata         Json?           // Flexible JSON for additional data
+  tags             String[]       // Array of tags for categorization
+  
+  // Relations
+  integrity        BatchIntegrity?
+  events           SupplyChainEvent[]
+  documents        BatchDocument[]
+  
+>>>>>>> c259597 (All)
   // Soft Delete
   deletedAt DateTime?
   createdAt DateTime  @default(now())
@@ -346,4 +371,45 @@ model NAEBReport {
   generatedByUser User @relation(fields: [generatedBy], references: [id])
 
   @@map("naeb_reports")
+}
+
+model BatchIntegrity {
+  id        String   @id @default(cuid())
+  batchId   String   @unique
+  batch     ProductBatch @relation(fields: [batchId], references: [id])
+  hash      String   // SHA256 hash of frozen data
+  frozenData Json    // The actual data that was hashed
+  createdAt DateTime @default(now())
+
+  @@map("batch_integrity")
+}
+
+model SupplyChainEvent {
+  id          String   @id @default(cuid())
+  batchId     String
+  batch       ProductBatch @relation(fields: [batchId], references: [id])
+  eventType   String   // "Washed", "Dried", "Roasted", etc.
+  timestamp   DateTime @default(now())
+  operatorId  String
+  operator    User     @relation(fields: [operatorId], references: [id])
+  location    String?
+  description String?
+  metadata    Json?
+  eventHash   String?  // SHA256 of this event data
+
+  @@map("supply_chain_events")
+}
+
+model BatchDocument {
+  id          String   @id @default(cuid())
+  batchId     String
+  batch       ProductBatch @relation(fields: [batchId], references: [id])
+  type        String   // "Certificate", "ICO", "LabReport"
+  url         String
+  hash        String   // SHA256 of the file content
+  uploadedBy  String
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("batch_documents")
 }

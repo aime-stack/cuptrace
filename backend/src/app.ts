@@ -13,6 +13,9 @@ import paymentRoutes from './routes/payment.routes';
 import exportRoutes from './routes/export.routes';
 import certificateRoutes from './routes/certificate.routes';
 import reportRoutes from './routes/report.routes';
+import supplyChainRoutes from './routes/supplychain.routes';
+import eventRoutes from './routes/events.routes';
+import documentRoutes from './routes/documents.routes';
 
 const createApp = (): Express => {
   const app = express();
@@ -38,6 +41,9 @@ const createApp = (): Express => {
   app.use('/exports', exportRoutes);
   app.use('/certificates', certificateRoutes);
   app.use('/reports', reportRoutes);
+  app.use('/supplychain', supplyChainRoutes);
+  app.use('/events', eventRoutes);
+  app.use('/documents', documentRoutes);
 
   // Error handling middleware (must be last)
   app.use(errorHandler);

@@ -1,11 +1,13 @@
 export enum UserRole {
     admin = 'admin',
     farmer = 'farmer',
+    agent = 'agent',
     ws = 'ws',
     factory = 'factory',
     exporter = 'exporter',
     importer = 'importer',
     retailer = 'retailer',
+    qc = 'qc',
 }
 
 export enum ProductType {
@@ -43,6 +45,8 @@ export interface User {
     city?: string;
     province?: string;
     cooperativeId?: string;
+    cooperative?: Cooperative;
+    registrationNumber?: string;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -52,6 +56,8 @@ export interface Cooperative {
     id: string;
     name: string;
     location: string;
+    district?: string;
+    province?: string;
     description?: string;
     createdAt: string;
     updatedAt: string;
@@ -87,10 +93,20 @@ export interface ProductBatch {
     blockchainTxHash?: string;
     nftPolicyId?: string;
     nftAssetName?: string;
+<<<<<<< HEAD
     nftMintedAt?: string;
+=======
+    metadata?: Record<string, any>;
+>>>>>>> c259597 (All)
     createdAt: string;
     updatedAt: string;
     history?: BatchHistory[];
+    events?: any[]; // TODO: Define SupplyChainEvent type
+    documents?: any[]; // TODO: Define BatchDocument type
+    integrity?: {
+        hash: string;
+        frozenData: any;
+    };
 }
 
 export interface BatchHistory {

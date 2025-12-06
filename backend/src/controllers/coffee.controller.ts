@@ -46,17 +46,35 @@ export const createCoffeeController = async (
       metadata,
     } = req.body;
 
+    console.log('[CREATE BATCH] User:', req.user?.email, 'Role:', req.user?.role);
+    console.log('[CREATE BATCH] Request body:', req.body);
+
     // Determine farmerId and cooperativeId based on authenticated user
     let finalFarmerId = farmerId;
     let finalCooperativeId = cooperativeId;
 
     if (req.user?.role === 'farmer') {
+      // Farmer creating their own batch
       finalFarmerId = req.user.id;
-      // If farmer belongs to a cooperative, automatically associate the batch
       if (req.user.cooperativeId) {
         finalCooperativeId = req.user.cooperativeId;
       }
+    } else if (req.user?.role === 'agent') {
+      // Agent creating batch on behalf of a farmer
+      // farmerId should be provided in request body
+      if (!farmerId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Farmer ID is required when agent creates a batch',
+        });
+      }
+      // Use agent's cooperative if not specified
+      if (!cooperativeId && req.user.cooperativeId) {
+        finalCooperativeId = req.user.cooperativeId;
+      }
     }
+
+    console.log('[CREATE BATCH] Final farmerId:', finalFarmerId, 'cooperativeId:', finalCooperativeId);
 
     const product = await createProduct({
       type: 'coffee',
@@ -81,8 +99,10 @@ export const createCoffeeController = async (
       metadata,
     });
 
+    console.log('[CREATE BATCH] Success! Batch ID:', product.id);
     return sendSuccess(res, product, 201);
   } catch (error) {
+    console.error('[CREATE BATCH] Error:', error);
     next(error);
   }
 };

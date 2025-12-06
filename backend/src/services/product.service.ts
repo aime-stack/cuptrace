@@ -1,4 +1,5 @@
 import prisma from '../config/database';
+import crypto from 'crypto';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { parseDate } from '../utils/date';
 import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '../utils/validation';
@@ -421,6 +422,26 @@ export const getProductById = async (id: string, type?: ProductType) => {
           location: true,
         },
       },
+      events: {
+        orderBy: {
+          timestamp: 'desc',
+        },
+        include: {
+          operator: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            }
+          }
+        }
+      },
+      documents: {
+        orderBy: {
+          createdAt: 'desc',
+        }
+      },
+      integrity: true,
     },
   });
 
@@ -656,6 +677,43 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
   if (data.pluckingDate !== undefined) {
     const parsedDate = parseDate(data.pluckingDate);
     updateData.pluckingDate = parsedDate;
+  }
+
+  if (data.pluckingDate !== undefined) {
+    const parsedDate = parseDate(data.pluckingDate);
+    updateData.pluckingDate = parsedDate;
+  }
+
+  // Lock-in Logic: If status is changing to 'approved', freeze data and create integrity record
+  if (data.status === 'approved' && existingProduct.status !== 'approved') {
+    // 1. Gather data to freeze (merge existing with updates)
+    const frozenData = {
+      batchId: id,
+      farmerId: updateData.farmerId !== undefined ? updateData.farmerId : existingProduct.farmerId,
+      cooperativeId: updateData.cooperativeId !== undefined ? updateData.cooperativeId : existingProduct.cooperativeId,
+      quantity: updateData.quantity !== undefined ? updateData.quantity : existingProduct.quantity,
+      grade: updateData.grade !== undefined ? updateData.grade : existingProduct.grade,
+      quality: updateData.quality !== undefined ? updateData.quality : existingProduct.quality,
+      approvedAt: new Date().toISOString(),
+    };
+
+    // 2. Calculate SHA256 hash
+    const hash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(frozenData))
+      .digest('hex');
+
+    // 3. Create BatchIntegrity record (transactional with update would be better, but keeping simple for now)
+    // We'll do it in a transaction if possible, or just create it here
+    await prisma.batchIntegrity.create({
+      data: {
+        batchId: id,
+        hash,
+        frozenData: frozenData as any,
+      },
+    });
+
+    console.log(`[BATCH LOCK-IN] Batch ${id} frozen with hash: ${hash}`);
   }
 
   const product = await prisma.productBatch.update({
@@ -940,6 +998,26 @@ export const verifyBatchByQRCode = async (qrCode: string) => {
           issuedDate: 'desc',
         },
       },
+      integrity: true,
+      events: {
+        orderBy: {
+          timestamp: 'desc',
+        },
+        include: {
+          operator: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+            },
+          },
+        },
+      },
+      documents: {
+        orderBy: {
+          createdAt: 'desc',
+        },
+      },
       history: {
         select: {
           id: true,
@@ -959,9 +1037,41 @@ export const verifyBatchByQRCode = async (qrCode: string) => {
     throw new NotFoundError('Batch not found or invalid QR code');
   }
 
+  // Verification Logic
+  const verificationResult = {
+    isValid: true,
+    issues: [] as string[],
+    tampered: false
+  };
+
+  if (batch.integrity) {
+    const frozen = batch.integrity.frozenData as any;
+
+    // Check for data tampering (Current vs Frozen)
+    if (frozen.farmerId !== batch.farmerId) verificationResult.issues.push('Farmer ID has been modified');
+    if (frozen.quantity !== batch.quantity) verificationResult.issues.push('Quantity has been modified');
+    if (frozen.grade !== batch.grade) verificationResult.issues.push('Grade has been modified');
+
+    // Re-calculate hash to ensure integrity record itself is valid
+    const recalculateHash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(frozen))
+      .digest('hex');
+
+    if (recalculateHash !== batch.integrity.hash) {
+      verificationResult.issues.push('Integrity record corrupted');
+      verificationResult.tampered = true;
+    }
+
+    if (verificationResult.issues.length > 0) {
+      verificationResult.isValid = false;
+    }
+  }
+
   return {
-    verified: true,
+    verified: true, // Batch exists
     batch,
+    verificationResult,
     verifiedAt: new Date().toISOString(),
   };
 };

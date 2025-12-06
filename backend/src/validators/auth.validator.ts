@@ -13,8 +13,8 @@ export const registerSchema = z.object({
     password: z.string()
       .min(8, 'Password must be at least 8 characters')
       .max(128, 'Password must not exceed 128 characters'),
-    role: z.enum(['farmer', 'ws', 'factory', 'exporter', 'importer', 'retailer', 'admin'], {
-      errorMap: () => ({ message: 'Invalid role. Must be one of: farmer, ws, factory, exporter, importer, retailer, admin' })
+    role: z.enum(['farmer', 'agent', 'ws', 'factory', 'exporter', 'importer', 'retailer', 'admin', 'qc'], {
+      errorMap: () => ({ message: 'Invalid role. Must be one of: farmer, agent, ws, factory, exporter, importer, retailer, admin, qc' })
     }),
     // New user profile fields
     phone: z.string()
@@ -133,7 +133,7 @@ export const getUserSchema = z.object({
 
 export const listUsersSchema = z.object({
   query: z.object({
-    role: z.enum(['farmer', 'ws', 'factory', 'exporter', 'importer', 'retailer', 'admin']).optional(),
+    role: z.enum(['farmer', 'agent', 'ws', 'factory', 'exporter', 'importer', 'retailer', 'admin']).optional(),
     cooperativeId: z.string().optional(),
     isActive: z.string().transform((val) => val === 'true').optional(),
     page: z.string().optional(),

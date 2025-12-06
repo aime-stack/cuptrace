@@ -21,12 +21,14 @@ export const useLogin = () => {
             // Redirect based on role
             const roleRoutes: Record<string, string> = {
                 farmer: '/farmer',
+                agent: '/agent',
                 ws: '/washing-station',
                 factory: '/factory',
                 exporter: '/exporter',
                 importer: '/importer',
                 retailer: '/retailer',
                 admin: '/admin',
+                qc: '/qc',
             };
 
             router.push(roleRoutes[data.user.role] || '/');
@@ -53,12 +55,14 @@ export const useRegister = () => {
             // Redirect based on role
             const roleRoutes: Record<string, string> = {
                 farmer: '/farmer',
+                agent: '/agent',
                 ws: '/washing-station',
                 factory: '/factory',
                 exporter: '/exporter',
                 importer: '/importer',
                 retailer: '/retailer',
                 admin: '/admin',
+                qc: '/qc',
             };
 
             router.push(roleRoutes[data.user.role] || '/');

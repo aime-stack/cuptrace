@@ -15,6 +15,12 @@ export const NAVIGATION_ITEMS: Record<string, Array<{ label: string; href: strin
         { label: 'Payments', href: '/farmer/payments', icon: 'Wallet' },
         { label: 'Profile', href: '/farmer/profile', icon: 'User' },
     ],
+    [UserRole.agent]: [
+        { label: 'Dashboard', href: '/agent', icon: 'LayoutDashboard' },
+        { label: 'Register Batch', href: '/agent/batches/new', icon: 'Plus' },
+        { label: 'Farmers', href: '/agent/farmers', icon: 'Users' },
+        { label: 'Profile', href: '/agent/profile', icon: 'User' },
+    ],
     [UserRole.ws]: [
         { label: 'Dashboard', href: '/washing-station', icon: 'LayoutDashboard' },
         { label: 'Incoming Batches', href: '/washing-station/batches', icon: 'Package' },
@@ -32,6 +38,16 @@ export const NAVIGATION_ITEMS: Record<string, Array<{ label: string; href: strin
         { label: 'Dashboard', href: '/exporter', icon: 'LayoutDashboard' },
         { label: 'Exports', href: '/exporter/exports', icon: 'Ship' },
         { label: 'Certificates', href: '/exporter/certificates', icon: 'FileCheck' },
+    ],
+    [UserRole.qc]: [
+        { label: 'Dashboard', href: '/qc', icon: 'LayoutDashboard' },
+        { label: 'Pending Grading', href: '/qc/grading', icon: 'ClipboardCheck' },
+        { label: 'History', href: '/qc/history', icon: 'History' },
+    ],
+    [UserRole.factory]: [
+        { label: 'Dashboard', href: '/factory', icon: 'LayoutDashboard' },
+        { label: 'Processing', href: '/factory/processing', icon: 'Settings' },
+        { label: 'Inventory', href: '/factory/inventory', icon: 'Package' },
     ],
 };
 

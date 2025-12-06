@@ -13,7 +13,9 @@ import { useLogin } from '@/hooks/useAuth';
 import { loginSchema, type LoginFormData } from '@/lib/validations/auth.schema';
 
 export default function LoginPage() {
-    const { mutate: login, isPending } = useLogin();
+    const [isRedirecting, setIsRedirecting] = useState(false);
+    const { mutate: login, isPending: isLoginPending } = useLogin();
+    const isPending = isLoginPending || isRedirecting;
 
     const {
         register,
@@ -24,7 +26,9 @@ export default function LoginPage() {
     });
 
     const onSubmit = (data: LoginFormData) => {
-        login(data);
+        login(data, {
+            onSuccess: () => setIsRedirecting(true),
+        });
     };
 
     return (

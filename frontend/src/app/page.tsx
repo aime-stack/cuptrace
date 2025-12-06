@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Coffee, Leaf, Shield, TrendingUp, Users, QrCode } from 'lucide-react';
 
+
 export default function HomePage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-coffee-50 to-white">
@@ -38,7 +39,7 @@ export default function HomePage() {
                     Blockchain-powered traceability system for Rwanda's coffee and tea value chains.
                     Ensuring transparency, authenticity, and fair payments.
                 </p>
-                <div className="flex gap-4 justify-center">
+                <div className="flex gap-4 justify-center mb-12">
                     <Link href="/register">
                         <Button size="lg" className="gap-2">
                             <Users className="h-5 w-5" />
@@ -52,6 +53,8 @@ export default function HomePage() {
                         </Button>
                     </Link>
                 </div>
+
+
             </section>
 
             {/* Features Section */}

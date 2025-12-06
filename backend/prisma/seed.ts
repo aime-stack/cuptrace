@@ -108,6 +108,27 @@ async function main() {
 
     console.log('✅ Washing station user created (email: huye.station@cuptrace.rw, password: station123)');
 
+    // Create agent user
+    console.log('Creating agent user...');
+    const agentPassword = await bcrypt.hash('agent123', 10);
+    const agent = await prisma.user.upsert({
+        where: { email: 'agent.huye@cuptrace.rw' },
+        update: {},
+        create: {
+            name: 'Jean Claude (Agent)',
+            email: 'agent.huye@cuptrace.rw',
+            password: agentPassword,
+            role: 'agent',
+            phone: '+250788555555',
+            country: 'Rwanda',
+            city: 'Huye',
+            province: 'Southern Province',
+            cooperativeId: cooperative1.id, // Agent is linked to Huye Coffee Cooperative
+        },
+    });
+
+    console.log('✅ Agent user created (email: agent.huye@cuptrace.rw, password: agent123)');
+
     // Create exporter user
     console.log('Creating exporter user...');
     const exporterPassword = await bcrypt.hash('exporter123', 10);
@@ -127,6 +148,7 @@ async function main() {
     });
 
     console.log('✅ Exporter user created (email: rwanda.exports@cuptrace.rw, password: exporter123)');
+
 
     // Create sample coffee batches
     console.log('Creating sample coffee batches...');

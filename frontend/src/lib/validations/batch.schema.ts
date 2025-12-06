@@ -26,6 +26,7 @@ export const batchSchema = z.object({
     description: z.string().optional(),
     tags: z.array(z.string()).optional(),
     cooperativeId: z.string().optional(),
+    farmerId: z.string().optional(),
 });
 
 export const updateBatchSchema = batchSchema.partial().extend({

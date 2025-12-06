@@ -55,6 +55,18 @@ export const createTeaController = async (
       if (req.user.cooperativeId) {
         finalCooperativeId = req.user.cooperativeId;
       }
+    } else if (req.user?.role === 'agent') {
+      // Agent creating batch on behalf of a farmer
+      if (!farmerId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Farmer ID is required when agent creates a batch',
+        });
+      }
+      // Use agent's cooperative if not specified
+      if (!cooperativeId && req.user.cooperativeId) {
+        finalCooperativeId = req.user.cooperativeId;
+      }
     }
 
     const product = await createProduct({
