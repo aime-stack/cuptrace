@@ -16,6 +16,10 @@ import reportRoutes from './routes/report.routes';
 import supplyChainRoutes from './routes/supplychain.routes';
 import eventRoutes from './routes/events.routes';
 import documentRoutes from './routes/documents.routes';
+import mintRoutes from './routes/mint.routes';
+import qrRoutes from './routes/qr.routes';
+import ussdRoutes from './routes/ussd.routes';
+import notificationRoutes from './routes/notifications.routes';
 
 const createApp = (): Express => {
   const app = express();
@@ -44,6 +48,16 @@ const createApp = (): Express => {
   app.use('/supplychain', supplyChainRoutes);
   app.use('/events', eventRoutes);
   app.use('/documents', documentRoutes);
+  app.use('/mint', mintRoutes);
+
+  // QR and Trace routes (includes public endpoints)
+  app.use('/api', qrRoutes);
+
+  // USSD gateway
+  app.use('/api/ussd', ussdRoutes);
+
+  // Notifications
+  app.use('/notifications', notificationRoutes);
 
   // Error handling middleware (must be last)
   app.use(errorHandler);

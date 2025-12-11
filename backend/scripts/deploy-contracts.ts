@@ -10,7 +10,12 @@
 
 // Load environment variables before importing config
 import dotenv from 'dotenv';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+// ES module: derive __dirname from import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load .env file from backend directory
 dotenv.config({ path: resolve(__dirname, '../.env') });

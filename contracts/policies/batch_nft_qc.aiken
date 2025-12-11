@@ -1,0 +1,126 @@
+/// QC-Enforced NFT Minting Policy (Aiken)
+///
+/// Draft policy that permits minting a single NFT for a batch only when the
+/// transaction consumes an on-chain QC approval UTxO locked at the Batch
+/// Traceability validator address. The approval UTxO must contain a datum
+/// with `batch_id` bytes that match the redeemer's `batch_id`.
+///
+/// IMPORTANT: This is a draft. Replace the `VALIDATOR_SCRIPT_HASH_HEX` with
+/// the actual validator script hash (hex) for your `Batch Traceability`
+/// validator. After compilation, test thoroughly on preprod before mainnet.
+
+use cardano/transaction.{Transaction}
+use cardano/value.{get_mint}
+use aiken/list
+use aiken/map
+
+/// Redeemer for minting
+pub type Redeemer {
+  Mint { batch_id: ByteArray }
+}
+
+/// Approval datum structure expected in the UTxO at the validator
+pub type ApprovalDatum {
+  batch_id: ByteArray
+  approved_by: ByteArray
+  approved_at: ByteArray
+}
+
+/// Replace this with your Batch Traceability validator script hash (hex).
+/// Example: "abcdef1234..." (56 chars typically for script hash)
+const VALIDATOR_SCRIPT_HASH_HEX: String = "REPLACE_WITH_VALIDATOR_SCRIPT_HASH_HEX";
+
+/// Helper: convert hex string to bytes - most toolchains will provide this
+/// function. If your Aiken/toolchain uses a different helper, replace it.
+pub fn hex_to_bytes(hex: String) -> ByteArray {
+  /// Placeholder: toolchain-specific conversion may be required here.
+  from_hex(hex)
+}
+
+/// Checks whether the transaction consumes an input locked by the validator
+/// whose datum.batch_id matches the supplied batch_id.
+pub fn tx_has_matching_approval(tx: Transaction, expected_validator_hash: ByteArray, batch_id: ByteArray) -> Bool {
+  // Iterate inputs and look for a script input with matching validator hash
+  let inputs = tx.inputs;
+
+  list.fold(inputs, False, fn(inp, acc) {
+    // If we already found a match, short-circuit
+    if acc {
+      True
+    } else {
+      // Each input has a `resolved` output which may include a `script_hash` and `datum`
+      when inp.resolved is {
+        Some(resolved) -> {
+          when resolved.script_hash is {
+            Some(h) -> {
+              // compare script hash
+              if h == expected_validator_hash {
+                // Try to parse the datum as ApprovalDatum and check batch_id
+                when resolved.datum is {
+                  Some(datum_raw) -> {
+                    // Expect datum to be a map/object. Extract `batch_id` field.
+                    when datum_raw.batch_id is {
+                      Some(datum_batch_id) -> {
+                        datum_batch_id == batch_id
+                      }
+                      None -> False
+                    }
+                  }
+                  None -> False
+                }
+              } else {
+                False
+              }
+            }
+            None -> False
+          }
+        }
+        None -> False
+      }
+    }
+  })
+}
+
+validator batch_nft_qc {
+  mint(redeemer: Redeemer, policy_id: ByteArray, tx: Transaction) {
+    when redeemer is {
+      Mint { batch_id } -> {
+        // Basic mint checks (single asset, minted amount == 1)
+        let minted = get_mint(tx)
+        let policy_count = map.size(minted)
+        let is_single_policy = policy_count == 1
+        let is_own_policy = map.has_key(minted, policy_id)
+
+        let policy_assets = when map.get(minted, policy_id) {
+          Some(assets) -> assets
+          None -> map.empty()
+        }
+
+        let asset_count = map.size(policy_assets)
+        let is_single_asset = asset_count == 1
+
+        let all_valid = map.fold(policy_assets, True, fn(asset_name, quantity, acc) {
+          acc && quantity > 0 && quantity == 1
+        })
+
+        // Validator hash bytes
+        let validator_hash = hex_to_bytes(VALIDATOR_SCRIPT_HASH_HEX)
+
+        // Enforce that a matching approval UTxO is consumed
+        let has_approval = tx_has_matching_approval(tx, validator_hash, batch_id)
+
+        // Final: require both standard NFT rules and the approval check
+        is_single_policy && is_own_policy && is_single_asset && all_valid && has_approval
+      }
+    }
+  }
+}
+
+/// Notes:
+/// - `from_hex` / `hex_to_bytes` helper must be available in your Aiken environment.
+///   If not, the validator can be compiled with the validator hash embedded as
+///   bytes via the Aiken compiler or replaced by a constant byte array.
+/// - After compiling, set `VALIDATOR_SCRIPT_HASH_HEX` to the actual hash or
+///   parameterize the policy at deploy time.
+/// - The minting transaction must include (consume) the QC approval UTxO; the
+///   backend helper `createApprovalUTxO` in `blockchain.service.ts` creates this UTxO.

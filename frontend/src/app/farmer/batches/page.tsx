@@ -15,60 +15,15 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-<<<<<<< HEAD:frontend/src/app/farmer/batches/page.tsx
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-=======
 import { Badge } from "@/components/ui/badge";
->>>>>>> c259597 (All):frontend/src/app/(dashboard)/farmer/batches/page.tsx
 import { useBatches } from "@/hooks/useBatches";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { ProductType } from "@/types";
 
 export default function BatchesPage() {
     const { data: user } = useCurrentUser();
-    const [productType, setProductType] = useState<ProductType>(ProductType.coffee);
-    
+
     const { data: batchesData, isLoading } = useBatches(
-<<<<<<< HEAD:frontend/src/app/farmer/batches/page.tsx
-        { farmerId: user?.id }, // Filter by current farmer
-        productType
-    );
-
-    const batches = batchesData || [];
-
-    return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">My Batches</h1>
-                    <p className="text-muted-foreground">
-                        Manage your coffee and tea harvests.
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Select value={productType} onValueChange={(value) => setProductType(value as ProductType)}>
-                        <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Product Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={ProductType.coffee}>Coffee</SelectItem>
-                            <SelectItem value={ProductType.tea}>Tea</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button asChild className="gap-2">
-                        <Link href="/farmer/batches/new">
-                            <Plus className="h-4 w-4" />
-                            New Batch
-                        </Link>
-                    </Button>
-                </div>
-=======
         { farmerId: user?.id },
         ProductType.coffee
     );
@@ -82,7 +37,6 @@ export default function BatchesPage() {
                 <p className="text-muted-foreground">
                     Track your coffee deliveries through the supply chain.
                 </p>
->>>>>>> c259597 (All):frontend/src/app/(dashboard)/farmer/batches/page.tsx
             </div>
 
             <Card>
@@ -131,7 +85,7 @@ export default function BatchesPage() {
                                         <TableCell>{batch.quantity} kg</TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className="capitalize">
-                                                {batch.currentStage?.replace('_', ' ')}
+                                                {batch.currentStage?.replace('_', ' ') || 'farmer'}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
@@ -162,4 +116,3 @@ export default function BatchesPage() {
         </div>
     );
 }
-

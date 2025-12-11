@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Plus, Loader2, Eye, Users, Package, TrendingUp } from "lucide-react";
+import { Plus, Loader2, Eye, Users, Package, TrendingUp, CheckCircle2, Clock, XCircle, QrCode, ExternalLink } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,27 +16,45 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBatches } from "@/hooks/useBatches";
 import { useCurrentUser } from "@/hooks/useAuth";
-import { ProductType } from "@/types";
+import { ProductType, ProductBatch } from "@/types";
 
 export default function AgentDashboard() {
     const { data: user } = useCurrentUser();
     const { data: batchesData, isLoading } = useBatches(
-        { cooperativeId: user?.cooperativeId }, // Filter by agent's cooperative
+        { cooperativeId: user?.cooperativeId },
         ProductType.coffee
     );
+    const [activeTab, setActiveTab] = useState<string>("all");
 
     const batches = batchesData ?? [];
 
     // Stats
-    const todayBatches = batches.filter((b: any) => {
+    const todayBatches = batches.filter((b: ProductBatch) => {
         const today = new Date();
         const batchDate = new Date(b.createdAt);
         return batchDate.toDateString() === today.toDateString();
     });
 
-    const pendingBatches = batches.filter((b: any) => b.status === 'pending');
+    const pendingBatches = batches.filter((b: ProductBatch) => b.status === 'pending');
+    const approvedBatches = batches.filter((b: ProductBatch) => b.status === 'approved');
+    const rejectedBatches = batches.filter((b: ProductBatch) => b.status === 'rejected');
+
+    // Filter batches based on active tab
+    const filteredBatches = useMemo(() => {
+        switch (activeTab) {
+            case 'pending':
+                return pendingBatches;
+            case 'approved':
+                return approvedBatches;
+            case 'rejected':
+                return rejectedBatches;
+            default:
+                return batches;
+        }
+    }, [activeTab, batches, pendingBatches, approvedBatches, rejectedBatches]);
 
     return (
         <div className="space-y-8">
@@ -56,7 +74,7 @@ export default function AgentDashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Today's Batches</CardTitle>
@@ -70,11 +88,21 @@ export default function AgentDashboard() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        <Clock className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{pendingBatches.length}</div>
-                        <p className="text-xs text-muted-foreground">Awaiting approval</p>
+                        <div className="text-2xl font-bold text-orange-600">{pendingBatches.length}</div>
+                        <p className="text-xs text-muted-foreground">Awaiting QC approval</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-green-50 border-green-200">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium text-green-700">Approved</CardTitle>
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-700">{approvedBatches.length}</div>
+                        <p className="text-xs text-green-600">QR codes ready</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -89,69 +117,118 @@ export default function AgentDashboard() {
                 </Card>
             </div>
 
-            {/* Recent Batches */}
+            {/* Batches with Filter Tabs */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Recent Batches</CardTitle>
+                    <CardTitle>Batches</CardTitle>
                     <CardDescription>
                         Batches you've registered for farmers.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : batches.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            No batches found. Register your first batch to get started.
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Batch ID</TableHead>
-                                    <TableHead>Farmer</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {batches.slice(0, 10).map((batch: any) => (
-                                    <TableRow key={batch.id}>
-                                        <TableCell className="font-medium">
-                                            {batch.lotId || batch.id.substring(0, 8)}
-                                        </TableCell>
-                                        <TableCell>{batch.farmer?.name || "Unknown"}</TableCell>
-                                        <TableCell>
-                                            {format(new Date(batch.createdAt), "MMM d, yyyy")}
-                                        </TableCell>
-                                        <TableCell>{batch.quantity} kg</TableCell>
-                                        <TableCell>
-                                            <Badge variant={
-                                                batch.status === 'approved' ? 'default' :
-                                                    batch.status === 'rejected' ? 'destructive' :
-                                                        'secondary'
-                                            } className={
-                                                batch.status === 'approved' ? 'bg-green-600' : ''
-                                            }>
-                                                {batch.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="sm" asChild>
-                                                <Link href={`/farmer/batches/${batch.id}`}>
-                                                    <Eye className="h-4 w-4" />
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    )}
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="mb-4">
+                            <TabsTrigger value="all" className="gap-2">
+                                All <Badge variant="secondary" className="ml-1">{batches.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="pending" className="gap-2">
+                                <Clock className="h-3 w-3" />
+                                Pending <Badge variant="secondary" className="ml-1">{pendingBatches.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="approved" className="gap-2">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700">{approvedBatches.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="rejected" className="gap-2">
+                                <XCircle className="h-3 w-3" />
+                                Rejected <Badge variant="secondary" className="ml-1">{rejectedBatches.length}</Badge>
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value={activeTab}>
+                            {isLoading ? (
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : filteredBatches.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No {activeTab === 'all' ? '' : activeTab} batches found.
+                                </div>
+                            ) : (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Batch ID</TableHead>
+                                            <TableHead>Farmer</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Quantity</TableHead>
+                                            <TableHead>Grade</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead>QR Code</TableHead>
+                                            <TableHead>Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredBatches.slice(0, 10).map((batch: ProductBatch) => (
+                                            <TableRow key={batch.id}>
+                                                <TableCell className="font-medium">
+                                                    {batch.lotId || batch.id.substring(0, 8)}
+                                                </TableCell>
+                                                <TableCell>{batch.farmer?.name || "Unknown"}</TableCell>
+                                                <TableCell>
+                                                    {format(new Date(batch.createdAt), "MMM d, yyyy")}
+                                                </TableCell>
+                                                <TableCell>{batch.quantity} kg</TableCell>
+                                                <TableCell>
+                                                    {batch.grade ? (
+                                                        <Badge variant="outline">{batch.grade}</Badge>
+                                                    ) : '-'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={
+                                                        batch.status === 'approved' ? 'default' :
+                                                            batch.status === 'rejected' ? 'destructive' :
+                                                                'secondary'
+                                                    } className={
+                                                        batch.status === 'approved' ? 'bg-green-600' : ''
+                                                    }>
+                                                        {batch.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {batch.qrCodeUrl ? (
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <a href={batch.qrCodeUrl} target="_blank" rel="noopener noreferrer">
+                                                                <QrCode className="h-4 w-4 text-green-600" />
+                                                            </a>
+                                                        </Button>
+                                                    ) : (
+                                                        <span className="text-muted-foreground text-xs">-</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1">
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <Link href={`/farmer/batches/${batch.id}`}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                        {batch.publicTraceHash && (
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <Link href={`/trace/${batch.publicTraceHash}`}>
+                                                                    <ExternalLink className="h-4 w-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
             </Card>
         </div>

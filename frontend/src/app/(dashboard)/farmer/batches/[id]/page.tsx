@@ -11,7 +11,15 @@ import {
     Share2,
     Loader2,
     Edit,
-    Trash2
+    CheckCircle2,
+    Circle,
+    Truck,
+    Factory,
+    Ship,
+    Store,
+    Award,
+    ExternalLink,
+    Download
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -20,15 +28,27 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useBatch } from "@/hooks/useBatches";
 import { ProductType } from "@/types";
-import { QRCodeSVG } from "qrcode.react";
+import Link from "next/link";
+
+// Supply chain stages in order
+const SUPPLY_CHAIN_STAGES = [
+    { key: 'farmer', label: 'Farmer', icon: Package, description: 'Harvested' },
+    { key: 'washing_station', label: 'Washing Station', icon: Factory, description: 'Washed & Dried' },
+    { key: 'factory', label: 'Factory', icon: Factory, description: 'Processed & Packed' },
+    { key: 'exporter', label: 'Exporter', icon: Ship, description: 'Ready for Export' },
+    { key: 'importer', label: 'Importer', icon: Truck, description: 'Imported' },
+    { key: 'retailer', label: 'Retailer', icon: Store, description: 'Ready for Sale' },
+];
+
+function getStageIndex(stage: string): number {
+    return SUPPLY_CHAIN_STAGES.findIndex(s => s.key === stage);
+}
 
 export default function BatchDetailPage() {
     const params = useParams();
     const router = useRouter();
     const id = params.id as string;
 
-    // We'll default to coffee for now, but ideally we should know the type or try both
-    // In a real app, the ID might encode the type or we'd have a unified lookup
     const { data: batch, isLoading, error } = useBatch(id, ProductType.coffee);
 
     if (isLoading) {
@@ -52,6 +72,8 @@ export default function BatchDetailPage() {
         );
     }
 
+    const currentStageIndex = getStageIndex(batch.currentStage || 'farmer');
+
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -72,32 +94,101 @@ export default function BatchDetailPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
+                    {batch.publicTraceHash && (
+                        <Button variant="outline" size="sm" asChild>
+                            <Link href={`/trace/${batch.publicTraceHash}`}>
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                View Public Trace
+                            </Link>
+                        </Button>
+                    )}
                     <Button variant="outline" size="sm">
                         <Share2 className="mr-2 h-4 w-4" />
                         Share
                     </Button>
-                    <Button variant="outline" size="sm">
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit
-                    </Button>
                 </div>
             </div>
+
+            {/* Supply Chain Stage Tracker */}
+            <Card className="border-2 border-green-200 bg-green-50/50">
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Truck className="h-5 w-5 text-green-600" />
+                        Supply Chain Progress
+                    </CardTitle>
+                    <CardDescription>
+                        Track where your batch is in the supply chain
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative">
+                        {/* Progress Line */}
+                        <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200 rounded">
+                            <div
+                                className="h-full bg-green-500 rounded transition-all duration-500"
+                                style={{
+                                    width: `${Math.min(100, ((currentStageIndex + 1) / SUPPLY_CHAIN_STAGES.length) * 100)}%`
+                                }}
+                            />
+                        </div>
+
+                        {/* Stage Icons */}
+                        <div className="relative flex justify-between">
+                            {SUPPLY_CHAIN_STAGES.map((stage, index) => {
+                                const isCompleted = index <= currentStageIndex;
+                                const isCurrent = index === currentStageIndex;
+                                const Icon = stage.icon;
+
+                                return (
+                                    <div key={stage.key} className="flex flex-col items-center w-20">
+                                        <div className={`
+                                            w-12 h-12 rounded-full flex items-center justify-center z-10
+                                            transition-all duration-300
+                                            ${isCompleted
+                                                ? 'bg-green-500 text-white'
+                                                : 'bg-gray-200 text-gray-400'}
+                                            ${isCurrent ? 'ring-4 ring-green-200 scale-110' : ''}
+                                        `}>
+                                            {isCompleted && !isCurrent ? (
+                                                <CheckCircle2 className="h-6 w-6" />
+                                            ) : (
+                                                <Icon className="h-5 w-5" />
+                                            )}
+                                        </div>
+                                        <span className={`
+                                            text-xs mt-2 font-medium text-center
+                                            ${isCurrent ? 'text-green-700' : isCompleted ? 'text-green-600' : 'text-gray-400'}
+                                        `}>
+                                            {stage.label}
+                                        </span>
+                                        {isCurrent && (
+                                            <Badge className="mt-1 bg-green-600 text-xs">
+                                                Current
+                                            </Badge>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             <div className="grid gap-6 md:grid-cols-3">
                 {/* Main Info */}
                 <div className="md:col-span-2 space-y-6">
+                    {/* Status Card */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Batch Details</CardTitle>
-                            <CardDescription>Core information about this harvest</CardDescription>
+                            <CardTitle>Batch Status</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid gap-4 md:grid-cols-2">
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-1">
-                                    <span className="text-sm font-medium text-muted-foreground">Status</span>
+                                    <span className="text-sm font-medium text-muted-foreground">QC Status</span>
                                     <div>
                                         <Badge variant={
-                                            batch.status === 'approved' ? 'default' : // default is usually black/primary
+                                            batch.status === 'approved' ? 'default' :
                                                 batch.status === 'rejected' ? 'destructive' :
                                                     'secondary'
                                         } className={
@@ -107,6 +198,35 @@ export default function BatchDetailPage() {
                                         </Badge>
                                     </div>
                                 </div>
+                                <div className="space-y-1">
+                                    <span className="text-sm font-medium text-muted-foreground">NFT Status</span>
+                                    <div>
+                                        {batch.nftPolicyId ? (
+                                            <Badge className="bg-purple-100 text-purple-700">
+                                                <Award className="mr-1 h-3 w-3" />
+                                                Minted
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary">Pending</Badge>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-sm font-medium text-muted-foreground">Grade</span>
+                                    <p className="font-bold text-lg">{batch.grade || "Pending"}</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Batch Details */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Batch Details</CardTitle>
+                            <CardDescription>Core information about this harvest</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-1">
                                     <span className="text-sm font-medium text-muted-foreground">Quantity</span>
                                     <p className="font-medium">{batch.quantity} kg</p>
@@ -125,22 +245,22 @@ export default function BatchDetailPage() {
                                         <p>{batch.originLocation}</p>
                                     </div>
                                 </div>
+                                <div className="space-y-1">
+                                    <span className="text-sm font-medium text-muted-foreground">Processing</span>
+                                    <p className="capitalize">{batch.processingType || "N/A"}</p>
+                                </div>
                             </div>
 
                             <Separator />
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-1">
-                                    <span className="text-sm font-medium text-muted-foreground">Processing</span>
-                                    <p className="capitalize">{batch.processingType || "N/A"}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="text-sm font-medium text-muted-foreground">Grade</span>
-                                    <p>{batch.grade || "N/A"}</p>
-                                </div>
-                                <div className="space-y-1">
                                     <span className="text-sm font-medium text-muted-foreground">Moisture</span>
                                     <p>{batch.moisture ? `${batch.moisture}%` : "N/A"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-sm font-medium text-muted-foreground">Quality</span>
+                                    <p>{batch.quality || "N/A"}</p>
                                 </div>
                             </div>
 
@@ -156,7 +276,7 @@ export default function BatchDetailPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Timeline / History could go here */}
+                    {/* Timeline / History */}
                     <Card>
                         <CardHeader>
                             <CardTitle>History</CardTitle>
@@ -173,7 +293,28 @@ export default function BatchDetailPage() {
                                         </p>
                                     </div>
                                 </div>
-                                {/* Add more history items here if available in batch.history */}
+                                {batch.status === 'approved' && (
+                                    <div className="relative">
+                                        <div className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-green-500" />
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-none text-green-700">QC Approved</p>
+                                            <p className="text-sm text-muted-foreground">
+                                                Grade: {batch.grade || 'N/A'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                                {batch.nftPolicyId && (
+                                    <div className="relative">
+                                        <div className="absolute -left-[29px] top-1 h-3 w-3 rounded-full bg-purple-500" />
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-none text-purple-700">NFT Minted</p>
+                                            <p className="text-sm text-muted-foreground font-mono text-xs truncate">
+                                                {batch.nftPolicyId}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -181,46 +322,74 @@ export default function BatchDetailPage() {
 
                 {/* Sidebar */}
                 <div className="space-y-6">
+                    {/* QR Code Card */}
                     <Card>
                         <CardHeader>
                             <CardTitle>QR Code</CardTitle>
                             <CardDescription>Scan to verify authenticity</CardDescription>
                         </CardHeader>
                         <CardContent className="flex flex-col items-center space-y-4">
-                            <div className="bg-white p-4 rounded-lg border shadow-sm">
-                                <QRCodeSVG
-                                    value={`https://cuptrace.app/verify/${(batch as any).qrCode || batch.id}`}
-                                    size={200}
-                                    level="H"
-                                    includeMargin
-                                />
-                            </div>
-                            <Button className="w-full" variant="outline">
-                                <QrCode className="mr-2 h-4 w-4" />
-                                Download QR
-                            </Button>
+                            {batch.qrCodeUrl ? (
+                                <>
+                                    <div className="bg-white p-4 rounded-lg border shadow-sm">
+                                        <img
+                                            src={batch.qrCodeUrl}
+                                            alt="QR Code"
+                                            className="w-48 h-48"
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 w-full">
+                                        <Button className="flex-1" variant="outline" asChild>
+                                            <a href={batch.qrCodeUrl} target="_blank" rel="noopener noreferrer">
+                                                <ExternalLink className="mr-2 h-4 w-4" />
+                                                View
+                                            </a>
+                                        </Button>
+                                        <Button className="flex-1" variant="outline" asChild>
+                                            <a href={batch.qrCodeUrl} download={`qr-${batch.lotId || batch.id}.png`}>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                Download
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <QrCode className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                                    <p className="text-sm">QR code will be generated after QC approval</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
-                    {batch.blockchainTxHash && (
+                    {/* Blockchain Card */}
+                    {batch.nftPolicyId && (
                         <Card>
                             <CardHeader>
-                                <CardTitle>Blockchain</CardTitle>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Award className="h-5 w-5 text-purple-600" />
+                                    Blockchain
+                                </CardTitle>
                                 <CardDescription>On-chain verification</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-2">
-                                <div className="text-xs font-mono bg-muted p-2 rounded break-all">
-                                    {batch.blockchainTxHash}
+                            <CardContent className="space-y-3">
+                                <div>
+                                    <p className="text-xs text-muted-foreground mb-1">Policy ID</p>
+                                    <p className="text-xs font-mono bg-muted p-2 rounded break-all">
+                                        {batch.nftPolicyId}
+                                    </p>
                                 </div>
-                                <Button className="w-full" variant="secondary" asChild>
-                                    <a
-                                        href={`https://preprod.cardanoscan.io/transaction/${batch.blockchainTxHash}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        View on Cardanoscan
-                                    </a>
-                                </Button>
+                                {batch.blockchainTxHash && (
+                                    <Button className="w-full" variant="secondary" asChild>
+                                        <a
+                                            href={`https://preprod.cardanoscan.io/transaction/${batch.blockchainTxHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            View on Cardanoscan
+                                        </a>
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     )}

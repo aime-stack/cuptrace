@@ -19,7 +19,6 @@ export default function FarmerDashboard() {
         ProductType.coffee
     );
 
-<<<<<<< HEAD:frontend/src/app/farmer/page.tsx
     // Fetch payments for the farmer
     const { data: paymentsData } = useQuery({
         queryKey: ['payments', user?.id],
@@ -27,25 +26,19 @@ export default function FarmerDashboard() {
         enabled: !!user?.id,
     });
 
-    const batches = batchesData || [];
-    const totalBatches = batches.length;
-    const pendingBatches = batches.filter(b => b.status === BatchStatus.pending).length;
-    const approvedBatches = batches.filter(b => b.status === BatchStatus.approved).length;
-    
-    // Calculate total payments received
-    const payments = paymentsData || [];
-    const totalPayments = payments
-        .filter((p: any) => p.status === 'completed')
-        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-=======
     const batches = batchesData ?? [];
     const totalBatches = batches.length;
     const pendingBatches = batches.filter((b: any) => b.status === BatchStatus.pending).length;
     const approvedBatches = batches.filter((b: any) => b.status === BatchStatus.approved).length;
     const inTransit = batches.filter((b: any) =>
-        b.currentStage !== SupplyChainStage.farmer
+        b.currentStage && b.currentStage !== SupplyChainStage.farmer
     ).length;
->>>>>>> c259597 (All):frontend/src/app/(dashboard)/farmer/page.tsx
+
+    // Calculate total payments received
+    const payments = paymentsData || [];
+    const totalPayments = payments
+        .filter((p: any) => p.status === 'completed')
+        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     return (
         <div className="space-y-8">
@@ -126,9 +119,11 @@ export default function FarmerDashboard() {
                                                 <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(batch.status)}`}>
                                                     {batch.status}
                                                 </span>
-                                                <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                                                    {batch.currentStage}
-                                                </span>
+                                                {batch.currentStage && (
+                                                    <span className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                                        {batch.currentStage}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                                                 <span>{batch.type}</span>
@@ -185,4 +180,3 @@ export default function FarmerDashboard() {
         </div>
     );
 }
-

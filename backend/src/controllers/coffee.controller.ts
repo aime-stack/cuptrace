@@ -11,8 +11,11 @@ import {
   verifyBatchByQRCode,
   getProductByLotId,
 } from '../services/product.service';
-import { mintBatchNFT } from '../services/nft.service';
-import { createBatchOnChain } from '../services/blockchain.service';
+import { mintBatchNFT, generateNFTMetadata } from '../services/nft.service';
+import { uploadJSONToIPFS } from '../utils/ipfs.util';
+import { createBatchOnChain, createApprovalUTxO } from '../services/blockchain.service';
+import { generateQRCodeForBatch } from '../services/qrGenerator';
+import { sendBatchApprovedNotification } from '../services/notifications.service';
 import env from '../config/env';
 import { sendSuccess, sendSuccessWithMessage } from '../utils/response';
 // SupplyChainStage will be available after Prisma client generation
@@ -197,10 +200,101 @@ export const approveCoffeeBatchController = async (
   try {
     const { id } = req.params;
 
+    // Only Quality Controllers can approve and trigger minting
+    if (req.user?.role !== 'qc') {
+      return res.status(403).json({ success: false, error: 'Only Quality Controllers may approve batches' });
+    }
+
     const batch = await approveBatch(id);
 
-    return sendSuccess(res, batch);
+    // Fetch full batch data to generate metadata
+    const fullBatch = await getProductById(id, 'coffee');
+
+    let ipfsCid = '';
+    let approvalTxHash = '';
+    let nftInfo = null;
+
+    // Generate CIP-25 compliant metadata and upload to IPFS
+    try {
+      const metadata = generateNFTMetadata(fullBatch as any);
+      ipfsCid = await uploadJSONToIPFS(metadata);
+
+      // Persist IPFS CID inside batch metadata for transparency
+      await updateProduct(id, {
+        metadata: {
+          ...(fullBatch.metadata || {}),
+          ipfsCid,
+        },
+      });
+
+      console.log('[QC APPROVAL] Successfully uploaded metadata to IPFS:', ipfsCid);
+    } catch (ipfsErr) {
+      console.warn('[QC APPROVAL] Failed to upload metadata to IPFS:', ipfsErr);
+      // Continue without IPFS; this is not a critical failure
+    }
+
+    // Create an on-chain QC approval UTxO (so Plutus policies can require it)
+    const walletPrivateKey = env.WALLET_PRIVATE_KEY;
+    if (walletPrivateKey) {
+      try {
+        approvalTxHash = await createApprovalUTxO(id, req.user!.id, walletPrivateKey);
+        console.log('[QC APPROVAL] Created on-chain approval UTxO:', approvalTxHash);
+      } catch (err) {
+        console.warn('[QC APPROVAL] Failed to create on-chain approval UTxO:', err);
+      }
+    } else {
+      console.warn('[QC APPROVAL] WALLET_PRIVATE_KEY not configured; skipping creation of on-chain approval UTxO');
+    }
+
+    // Trigger NFT minting (uses WALLET_PRIVATE_KEY from env)
+    if (walletPrivateKey) {
+      try {
+        nftInfo = await mintBatchNFT(id, walletPrivateKey);
+        console.log('[QC APPROVAL] NFT minted successfully:', nftInfo);
+      } catch (mintErr) {
+        console.warn('[QC APPROVAL] Failed to mint NFT:', mintErr);
+        // Continue; NFT minting is not critical for batch approval
+      }
+    } else {
+      console.warn('[QC APPROVAL] WALLET_PRIVATE_KEY not configured; skipping NFT minting');
+    }
+
+    // Auto-generate QR code for approved batch
+    let qrInfo = null;
+    try {
+      qrInfo = await generateQRCodeForBatch(id);
+      if (qrInfo.success) {
+        console.log('[QC APPROVAL] QR code generated:', qrInfo.qrCodeUrl);
+      }
+    } catch (qrErr) {
+      console.warn('[QC APPROVAL] Failed to generate QR code:', qrErr);
+      // Continue; QR generation is not critical for batch approval
+    }
+
+    // Send notification to farmer
+    let notificationSent = false;
+    try {
+      const notifResult = await sendBatchApprovedNotification(id, true);
+      notificationSent = true;
+      console.log('[QC APPROVAL] Farmer notification sent:', notifResult.notificationId, 'SMS:', notifResult.smsSent);
+    } catch (notifErr) {
+      console.warn('[QC APPROVAL] Failed to send notification:', notifErr);
+      // Continue; notification is not critical for batch approval
+    }
+
+    return sendSuccess(res, {
+      batch,
+      nft: nftInfo,
+      ipfsCid: ipfsCid || undefined,
+      approvalTxHash: approvalTxHash || undefined,
+      qrCode: qrInfo?.success ? {
+        url: qrInfo.qrCodeUrl,
+        publicTraceHash: qrInfo.publicTraceHash,
+      } : undefined,
+      notificationSent,
+    });
   } catch (error) {
+    console.error('[QC APPROVAL] Unexpected error:', error);
     next(error);
   }
 };

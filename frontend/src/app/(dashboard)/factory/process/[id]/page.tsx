@@ -151,8 +151,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
 
         try {
             setMinting(true);
-            const wallet = await connectWallet();
-            const txHash = await mintBatchNFT(wallet, {
+            const txHash = await mintBatchNFT(null, {
                 id: batch.id,
                 farmerId: batch.farmerId,
                 integrityHash: batch.integrity?.hash || 'LEGACY_BATCH', // Fallback if no hash
@@ -182,8 +181,9 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
             }
 
         } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Failed to mint NFT';
             console.error('Minting failed:', error);
-            toast.error('Failed to mint NFT. Check console for details.');
+            toast.error(errorMessage);
         } finally {
             setMinting(false);
         }

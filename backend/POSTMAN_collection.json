@@ -1,0 +1,271 @@
+{
+    "info": {
+        "name": "CupTrace QR & USSD API",
+        "description": "API collection for QR code generation, public trace, and USSD endpoints",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3001"
+        },
+        {
+            "key": "token",
+            "value": ""
+        },
+        {
+            "key": "batchId",
+            "value": ""
+        },
+        {
+            "key": "publicTraceHash",
+            "value": ""
+        }
+    ],
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.data && jsonData.data.token) {",
+                                    "    pm.collectionVariables.set('token', jsonData.data.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"factory@test.com\",\n  \"password\": \"Test123!\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "auth",
+                                "login"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "QR Code",
+            "item": [
+                {
+                    "name": "Generate QR for Batch",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.data && jsonData.data.publicTraceHash) {",
+                                    "    pm.collectionVariables.set('publicTraceHash', jsonData.data.publicTraceHash);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/batches/{{batchId}}/generate-qr",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "batches",
+                                "{{batchId}}",
+                                "generate-qr"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Regenerate QR (Force)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"force\": true\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/batches/{{batchId}}/generate-qr",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "batches",
+                                "{{batchId}}",
+                                "generate-qr"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Public Trace",
+            "item": [
+                {
+                    "name": "Get Public Trace (No Auth)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/trace/{{publicTraceHash}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "trace",
+                                "{{publicTraceHash}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Verify by Code",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/verify-code/{{publicTraceHash}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "verify-code",
+                                "{{publicTraceHash}}"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "USSD",
+            "item": [
+                {
+                    "name": "USSD Main Menu",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"sessionId\": \"test-session-123\",\n  \"phoneNumber\": \"+250781234567\",\n  \"text\": \"\",\n  \"serviceCode\": \"*123#\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ussd",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ussd"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "USSD - List Batches",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"sessionId\": \"test-session-123\",\n  \"phoneNumber\": \"+250781234567\",\n  \"text\": \"1\",\n  \"serviceCode\": \"*123#\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ussd",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ussd"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "USSD - Check Status",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"sessionId\": \"test-session-123\",\n  \"phoneNumber\": \"+250781234567\",\n  \"text\": \"2*ABC12345\",\n  \"serviceCode\": \"*123#\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/ussd",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ussd"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -116,6 +116,10 @@ model User {
   isActive           Boolean  @default(true)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  
+  // Privacy & Hash-based Identity
+  publicHash         String?  @unique @map("public_hash")  // F-XXXX format public ID
+  phoneHash          String?  @map("phone_hash")           // HMAC hash of phone for USSD
 
   // Relations
   cooperative           Cooperative?       @relation(fields: [cooperativeId], references: [id])
@@ -133,6 +137,7 @@ model User {
   naebReports           NAEBReport[]
   events                SupplyChainEvent[]
   uploadedDocuments     BatchDocument[]
+  notifications         Notification[]
 
   @@map("users")
 }
@@ -185,6 +190,8 @@ model ProductBatch {
   qrCode            String?   @unique
   qrCodeGeneratedAt DateTime?
   verificationUrl   String?
+  qrCodeUrl         String?   @map("qr_code_url")          // Supabase Storage URL for QR image
+  publicTraceHash   String?   @unique @map("public_trace_hash")  // B-XXXX for trace URLs
 
   // Current Stage & Blockchain
   currentStage     SupplyChainStage
@@ -399,4 +406,33 @@ model BatchDocument {
   createdAt   DateTime @default(now())
 
   @@map("batch_documents")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  type        String   // 'batch_approved', 'batch_rejected', 'payment_received', 'qr_generated'
+  title       String
+  message     String
+  
+  // Flexible data storage for batch info, QR URLs, etc.
+  data        Json?    
+  
+  // Multi-channel notification status
+  isRead      Boolean  @default(false)
+  smsSent     Boolean  @default(false)
+  emailSent   Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  readAt      DateTime?
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
 }

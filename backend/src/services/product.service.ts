@@ -227,23 +227,9 @@ export const createProduct = async (data: CreateProductData) => {
 
   // Mint NFT for the batch (async, don't block on failure)
   // Only attempt if wallet is configured
-  if (walletPrivateKey) {
-    mintBatchNFT(product.id, walletPrivateKey)
-      .then((nftInfo) => {
-        console.log(`✅ NFT minted for batch ${product.id}:`, {
-          policyId: nftInfo.policyId,
-          assetName: nftInfo.assetName,
-          txHash: nftInfo.txHash,
-        });
-      })
-      .catch((error) => {
-        console.error(`❌ Failed to mint NFT for batch ${product.id}:`, error);
-        // NFT minting failure is logged but doesn't block batch creation
-        // User can retry manually later
-      });
-  } else {
-    console.warn(`⚠️  WALLET_PRIVATE_KEY not configured. NFT minting skipped for batch ${product.id}`);
-  }
+  // NOTE: NFT minting is intentionally deferred until quality control approval.
+  // The Quality Controller (QC) will trigger minting after batch approval to
+  // ensure NFTs are only minted for quality-approved batches. See QC workflow.
 
   // Create batch on blockchain (async, don't block on failure)
   // Only attempt if wallet is configured
@@ -810,6 +796,7 @@ export const deleteProduct = async (id: string) => {
 
 /**
  * Approve batch
+ * When QC approves a batch, it moves to the washing_station stage
  */
 export const approveBatch = async (id: string) => {
   if (!id) {
@@ -831,10 +818,12 @@ export const approveBatch = async (id: string) => {
     throw new ValidationError('Batch is already approved');
   }
 
+  // When approved, batch moves to washing_station stage
   const updated = await prisma.productBatch.update({
     where: { id },
     data: {
       status: 'approved',
+      currentStage: 'washing_station', // Advance to next stage on approval
     },
     include: {
       farmer: {
@@ -852,6 +841,8 @@ export const approveBatch = async (id: string) => {
       },
     },
   });
+
+  console.log(`[BATCH APPROVED] Batch ${id} approved and moved to washing_station stage`);
 
   return updated;
 };

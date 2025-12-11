@@ -17,6 +17,34 @@ const envSchema = z.object({
   STAGE_CONTRACT_ADDRESS: z.string().optional(),
   NFT_POLICY_ID: z.string().optional(),
   WALLET_PRIVATE_KEY: z.string().optional(),
+  // IPFS Configuration (Pinata)
+  PINATA_API_KEY: z.string().optional(),
+  PINATA_SECRET_KEY: z.string().optional(),
+  // Legacy IPFS configs (kept for backwards compatibility)
+  IPFS_API_URL: z.string().optional(),
+  IPFS_AUTH: z.string().optional(),
+  INFURA_PROJECT_ID: z.string().optional(),
+  INFURA_PROJECT_SECRET: z.string().optional(),
+  INFURA_IPFS_API_URL: z.string().optional(),
+  INFURA_IPFS_AUTH: z.string().optional(),
+  WEB3_STORAGE_TOKEN: z.string().optional(),
+  // Supabase Configuration
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_SERVICE_KEY: z.string().optional(),
+  SUPABASE_ANON_KEY: z.string().optional(),
+  SUPABASE_QR_BUCKET: z.string().default('qr-codes'),
+  // Hash Salts for Privacy
+  FARMER_HASH_SALT: z.string().optional(),
+  PHONE_HASH_SALT: z.string().optional(),
+  // Frontend Host for QR URLs
+  FRONTEND_HOST: z.string().default('http://localhost:3000'),
+  // USSD Provider Configuration
+  USSD_PROVIDER: z.enum(['at', 'twilio']).default('at'),
+  AT_USERNAME: z.string().optional(),
+  AT_API_KEY: z.string().optional(),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_PHONE_NUMBER: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

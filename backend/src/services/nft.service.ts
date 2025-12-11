@@ -8,7 +8,7 @@
 import prisma from '../config/database';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import { initializeLucid } from './blockchain.service';
-import { getNFTMintingPolicy, loadContractFromFile } from '../utils/contract-loader';
+import { getNFTMintingPolicy, loadContractFromFile, getBatchTraceabilityValidator } from '../utils/contract-loader';
 import env from '../config/env';
 
 interface NFTMetadata {
@@ -33,6 +33,89 @@ interface BatchNFTInfo {
 }
 
 /**
+ * Locate QC approval UTxO at the Batch Traceability validator address.
+ * Returns the UTxO that contains the approval datum for the given batchId.
+ * 
+ * @param lucidInstance - Initialized Lucid instance
+ * @param batchId - Batch identifier to search for in approval datum
+ * @returns UTxO reference with txHash and outputIndex, or null if not found
+ */
+export const findApprovalUTxO = async (
+  lucidInstance: unknown,
+  batchId: string
+): Promise<{ txHash: string; outputIndex: number } | null> => {
+  const lucid = lucidInstance as any;
+
+  try {
+    // Load the Batch Traceability validator to get its address
+    const validatorContract = getBatchTraceabilityValidator();
+
+    if (!validatorContract) {
+      console.warn('Batch Traceability validator not found in compiled contracts');
+      return null;
+    }
+
+    const validatorScript = validatorContract.compiledCode;
+
+    // Derive validator address
+    let validatorAddress: string;
+    try {
+      const validator = { type: 'PlutusV2', script: validatorScript };
+      validatorAddress = lucid.utils.validatorToAddress(validator);
+    } catch (err1) {
+      try {
+        const validator = { type: 'PlutusV1', script: validatorScript };
+        validatorAddress = lucid.utils.validatorToAddress(validator);
+      } catch (err2) {
+        console.warn('Failed to derive validator address for approval UTxO lookup');
+        return null;
+      }
+    }
+
+    // Query UTxOs at the validator address
+    const utxos = await lucid.utxosByAddress(validatorAddress);
+
+    // Filter for UTxOs with a datum containing matching batchId
+    for (const utxo of utxos) {
+      // Check if UTxO has inline datum or raw datum
+      if (utxo.datum || utxo.datumHash) {
+        // Try to extract batch_id from datum (may be JSON or raw bytes)
+        try {
+          let datum: any = utxo.datum;
+          if (typeof datum === 'string') {
+            // Try to parse as JSON first
+            try {
+              datum = JSON.parse(datum);
+            } catch {
+              // If not JSON, treat as raw hex or bytes
+              // For now, skip if we can't parse
+              continue;
+            }
+          }
+
+          // Check if datum.batch_id or datum.batchId matches
+          const datumBatchId = datum.batch_id || datum.batchId;
+          if (datumBatchId === batchId || datumBatchId === Buffer.from(batchId).toString('hex')) {
+            return {
+              txHash: utxo.txHash,
+              outputIndex: utxo.outputIndex,
+            };
+          }
+        } catch (err) {
+          // Skip this UTxO if we can't extract datum
+          continue;
+        }
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('Failed to find approval UTxO:', error);
+    return null;
+  }
+};
+
+/**
  * Generate CIP-25 compliant NFT metadata
  */
 export const generateNFTMetadata = (batch: {
@@ -50,6 +133,13 @@ export const generateNFTMetadata = (batch: {
   return {
     name,
     description: batch.description || `${batch.type.toUpperCase()} batch from ${batch.originLocation}`,
+    // If batch.metadata.ipfsCid is present, expose it as image/external_url for CIP-25
+    ...(batch as any).metadata && (batch as any).metadata.ipfsCid
+      ? {
+          image: `ipfs://${(batch as any).metadata.ipfsCid}`,
+          external_url: `ipfs://${(batch as any).metadata.ipfsCid}`,
+        }
+      : {},
     attributes: {
       batchId: batch.id,
       type: batch.type,
@@ -215,10 +305,33 @@ export const mintBatchNFT = async (
         },
       };
 
+      // Attempt to find and consume the QC approval UTxO
+      // This supports the QC-enforced minting policy (batch_nft_qc.aiken)
+      let txBuilder = lucid.newTx();
+      const approvalUTxO = await findApprovalUTxO(lucidInstance, batchId);
+      if (approvalUTxO) {
+        try {
+          // Add the approval UTxO as an input (to be consumed by the minting transaction)
+          // The policy will verify that this UTxO exists and has the correct batch_id
+          console.log(`Found approval UTxO for batch ${batchId}: ${approvalUTxO.txHash}#${approvalUTxO.outputIndex}`);
+          txBuilder = txBuilder.collectFrom([
+            {
+              txHash: approvalUTxO.txHash,
+              outputIndex: approvalUTxO.outputIndex,
+            },
+          ]);
+          console.log('Approval UTxO will be consumed as part of minting transaction');
+        } catch (err) {
+          console.warn('Failed to add approval UTxO as input:', err);
+          // Continue without consuming the approval UTxO; policy may still allow it if not enforcing
+        }
+      } else {
+        console.warn('No approval UTxO found for batch; minting may fail if policy enforces approval requirement');
+      }
+
       // Create minting transaction
       const fullAssetName = `${policyId}${assetName}`;
-      const tx = await lucid
-        .newTx()
+      const tx = await txBuilder
         .mintAssets({ [fullAssetName]: 1n })
         .attachMetadata(721, {
           [policyId]: {
