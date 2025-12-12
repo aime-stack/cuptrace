@@ -64,3 +64,17 @@ export const verifyTokenMiddleware = async (
   }
 };
 
+export const authorize = (roles: string[]) => {
+  return (req: AuthRequest, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AuthenticationError('User not authenticated'));
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return next(new AuthenticationError('Not authorized to access this route'));
+    }
+
+    next();
+  };
+};
+

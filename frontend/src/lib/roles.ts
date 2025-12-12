@@ -12,6 +12,8 @@ export const getRoleRoute = (role: UserRole): string => {
         [UserRole.importer]: '/importer',
         [UserRole.retailer]: '/retailer',
         [UserRole.admin]: '/admin',
+        [UserRole.agent]: '/agent',
+        [UserRole.qc]: '/qc',
     };
     return roleRoutes[role] || '/';
 };
@@ -28,6 +30,8 @@ export const getRoleRoutes = (role: UserRole): string[] => {
         [UserRole.importer]: ['/importer'],
         [UserRole.retailer]: ['/retailer'],
         [UserRole.admin]: ['/admin', '/admin/users', '/admin/batches', '/admin/cooperatives', '/admin/reports'],
+        [UserRole.agent]: ['/agent'],
+        [UserRole.qc]: ['/qc'],
     };
     return routes[role] || [];
 };

@@ -20,6 +20,7 @@ import mintRoutes from './routes/mint.routes';
 import qrRoutes from './routes/qr.routes';
 import ussdRoutes from './routes/ussd.routes';
 import notificationRoutes from './routes/notifications.routes';
+import communityRoutes from './routes/community.routes';
 
 const createApp = (): Express => {
   const app = express();
@@ -58,6 +59,9 @@ const createApp = (): Express => {
 
   // Notifications
   app.use('/notifications', notificationRoutes);
+
+  // Community
+  app.use('/community', communityRoutes);
 
   // Error handling middleware (must be last)
   app.use(errorHandler);

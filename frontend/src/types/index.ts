@@ -107,6 +107,9 @@ export interface ProductBatch {
         hash: string;
         frozenData: any;
     };
+    farmer?: User;
+    qrCodeUrl?: string;
+    publicTraceHash?: string;
 }
 
 export interface BatchHistory {
