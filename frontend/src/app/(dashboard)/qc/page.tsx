@@ -44,17 +44,17 @@ export default function QCDashboard() {
                     params: { status: 'approved', limit: 5 }
                 });
 
-                if (pendingResponse.data?.data?.data) {
-                    setPendingBatches(pendingResponse.data.data.data);
+                if (pendingResponse.data?.data) {
+                    setPendingBatches(pendingResponse.data.data);
                 }
 
-                if (approvedResponse.data?.data?.data) {
-                    setApprovedBatches(approvedResponse.data.data.data);
+                if (approvedResponse.data?.data) {
+                    setApprovedBatches(approvedResponse.data.data);
                 }
 
                 setStats({
-                    pending: pendingResponse.data?.data?.pagination?.total || 0,
-                    approvedToday: approvedResponse.data?.data?.pagination?.total || 0,
+                    pending: pendingResponse.data?.pagination?.total || 0,
+                    approvedToday: approvedResponse.data?.pagination?.total || 0,
                     avgScore: 84.5,
                 });
             } catch (error) {

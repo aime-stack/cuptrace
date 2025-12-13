@@ -204,7 +204,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                     }
                 }
             });
-            toast.success('Batch processing completed');
+            toast.success('Batch processing completed. Farmer has been notified!');
             router.push('/factory');
         } catch (error) {
             console.error('Failed to process batch:', error);
