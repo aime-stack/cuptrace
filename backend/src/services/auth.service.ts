@@ -5,6 +5,7 @@ import prisma from '../config/database';
 import { AuthenticationError, ValidationError, NotFoundError } from '../utils/errors';
 import { normalizeEmail, sanitizeString, isValidEmail } from '../utils/validation';
 import { normalizePagination, createPaginationResult } from '../utils/pagination';
+import { generateFarmerPublicHash } from '../lib/hashing';
 
 import { UserRole } from '@prisma/client';
 
@@ -127,6 +128,15 @@ export const register = async (data: RegisterData): Promise<AuthResponse> => {
       role: true,
     },
   });
+
+  // Generate public hash for farmers
+  if (user.role === 'farmer') {
+    const publicHash = generateFarmerPublicHash(user.id);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { publicHash },
+    });
+  }
 
   // Generate token
   const token = generateToken(user.id, user.email);

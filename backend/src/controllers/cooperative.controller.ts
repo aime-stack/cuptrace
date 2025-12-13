@@ -7,7 +7,7 @@ import {
   updateCooperative,
   deleteCooperative,
 } from '../services/cooperative.service';
-import { sendSuccess } from '../utils/response';
+import { sendSuccess, sendPaginatedResponse } from '../utils/response';
 
 export const createCooperativeController = async (
   req: AuthRequest,
@@ -59,7 +59,7 @@ export const listCooperativesController = async (
       search as string | undefined
     );
 
-    return sendSuccess(res, result);
+    return sendPaginatedResponse(res, result);
   } catch (error) {
     next(error);
   }

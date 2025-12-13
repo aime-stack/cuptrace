@@ -30,14 +30,13 @@ import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axios';
 import { ProductBatch } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 import { format } from 'date-fns';
+import { useFactoryStats } from '@/hooks/useStats';
+import { StatsCardSkeleton } from '@/components/skeletons/StatsCardSkeleton';
 
 export default function FactoryDashboard() {
-    const [stats, setStats] = useState({
-        readyToProcess: 0,
-        withQRCodes: 0,
-        nftsMinted: 0,
-    });
+    const { data: stats, isLoading: statsLoading } = useFactoryStats();
     const [incomingBatches, setIncomingBatches] = useState<ProductBatch[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -56,15 +55,6 @@ export default function FactoryDashboard() {
                 if (response.data?.data?.data) {
                     const batches = response.data.data.data;
                     setIncomingBatches(batches);
-
-                    const withQR = batches.filter((b: ProductBatch) => b.qrCodeUrl);
-                    const withNFT = batches.filter((b: ProductBatch) => b.nftPolicyId);
-
-                    setStats({
-                        readyToProcess: response.data.data.pagination.total || 0,
-                        withQRCodes: withQR.length,
-                        nftsMinted: withNFT.length,
-                    });
                 }
             } catch (error) {
                 console.error('Failed to fetch factory dashboard data:', error);
@@ -103,10 +93,10 @@ export default function FactoryDashboard() {
     };
 
     return (
-        <div className="space-y-8 p-8 bg-slate-50/50 min-h-screen">
+        <div className="space-y-8 p-8 bg-slate-50/50 dark:bg-background/50 min-h-screen">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Factory Operations</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-foreground">Factory Operations</h1>
                     <p className="text-muted-foreground mt-1">
                         Manage processing, QR codes, and digital twin creation.
                     </p>
@@ -123,52 +113,62 @@ export default function FactoryDashboard() {
 
             {/* Stats Overview */}
             <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-slate-600">Ready to Process</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Package className="h-4 w-4 text-blue-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-slate-900">{stats.readyToProcess}</div>
-                        <p className="text-xs text-muted-foreground">
-                            Approved batches
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-white border-green-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-green-700">QR Codes Generated</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                            <QrCode className="h-4 w-4 text-green-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-700">{stats.withQRCodes}</div>
-                        <p className="text-xs text-green-600">
-                            Ready for packaging
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-white border-purple-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-purple-700">NFTs Minted</CardTitle>
-                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
-                            <Award className="h-4 w-4 text-purple-600" />
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-purple-700">{stats.nftsMinted}</div>
-                        <p className="text-xs text-purple-600">
-                            Blockchain verified
-                        </p>
-                    </CardContent>
-                </Card>
+                {statsLoading ? (
+                    <>
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                    </>
+                ) : (
+                    <>
+                        <Card className="bg-white dark:bg-card border-slate-200 dark:border-border shadow-sm hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-slate-600 dark:text-muted-foreground">Ready to Process</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+                                    <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-slate-900 dark:text-foreground">{stats?.readyToProcess || 0}</div>
+                                <p className="text-xs text-muted-foreground">
+                                    Approved batches
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-white dark:bg-card border-green-200 dark:border-green-900/30 shadow-sm hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">QR Codes Generated</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                                    <QrCode className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats?.withQRCodes || 0}</div>
+                                <p className="text-xs text-green-600">
+                                    Ready for packaging
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-white dark:bg-card border-purple-200 dark:border-purple-900/30 shadow-sm hover:shadow-md transition-shadow">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-400">NFTs Minted</CardTitle>
+                                <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+                                    <Award className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">{stats?.nftsMinted || 0}</div>
+                                <p className="text-xs text-purple-600">
+                                    Blockchain verified
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
             </div>
 
             {/* Incoming Batches with QR Codes */}
-            <Card className="bg-white">
+            <Card className="bg-white dark:bg-card text-foreground">
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
@@ -238,9 +238,11 @@ export default function FactoryDashboard() {
                                             {batch.qrCodeUrl ? (
                                                 <div className="flex items-center gap-2">
                                                     {/* QR Thumbnail */}
-                                                    <img
+                                                    <Image
                                                         src={batch.qrCodeUrl}
                                                         alt="QR Code"
+                                                        width={40}
+                                                        height={40}
                                                         className="h-10 w-10 rounded border"
                                                     />
                                                     <div className="flex flex-col gap-1">

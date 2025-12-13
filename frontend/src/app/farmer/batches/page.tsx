@@ -25,7 +25,8 @@ export default function BatchesPage() {
 
     const { data: batchesData, isLoading } = useBatches(
         { farmerId: user?.id },
-        ProductType.coffee
+        ProductType.coffee,
+        { enabled: !!user?.id }
     );
 
     const batches = batchesData ?? [];
@@ -60,56 +61,49 @@ export default function BatchesPage() {
                             </p>
                         </div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Batch ID</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead>Date</TableHead>
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Current Stage</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {batches.map((batch: any) => (
-                                    <TableRow key={batch.id}>
-                                        <TableCell className="font-medium">
-                                            {batch.lotId || batch.id.substring(0, 8)}
-                                        </TableCell>
-                                        <TableCell className="capitalize">{batch.type}</TableCell>
-                                        <TableCell>
-                                            {format(new Date(batch.createdAt), "MMM d, yyyy")}
-                                        </TableCell>
-                                        <TableCell>{batch.quantity} kg</TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="capitalize">
-                                                {batch.currentStage?.replace('_', ' ') || 'farmer'}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={
-                                                batch.status === 'approved' ? 'bg-green-600' :
-                                                    batch.status === 'rejected' ? 'bg-red-600' :
-                                                        batch.status === 'completed' ? 'bg-blue-600' :
-                                                            'bg-yellow-600'
-                                            }>
-                                                {batch.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Button variant="ghost" size="sm" asChild>
-                                                <Link href={`/farmer/batches/${batch.id}`}>
-                                                    <Eye className="h-4 w-4" />
-                                                    <span className="sr-only">View</span>
-                                                </Link>
-                                            </Button>
-                                        </TableCell>
+                        <div className="rounded-md border overflow-x-auto">
+                            <Table className="min-w-[800px]">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Batch ID</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Quantity</TableHead>
+                                        <TableHead>Current Stage</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>Actions</TableHead>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
+                                </TableHeader>
+                                <TableBody>
+                                    {batches.map((batch: any) => (
+                                        <TableRow key={batch.id}>
+                                            <TableCell className="font-medium">
+                                                {batch.lotId || batch.id.substring(0, 8)}
+                                            </TableCell>
+                                            <TableCell className="capitalize">{batch.type}</TableCell>
+                                            <TableCell>
+                                                {format(new Date(batch.createdAt), "MMM d, yyyy")}
+                                            </TableCell>
+                                            <TableCell>{batch.quantity} kg</TableCell>
+                                            <TableCell className="capitalize">
+                                                {batch.currentStage?.replace('_', ' ') || 'farmer'}
+                                            </TableCell>
+                                            <TableCell className="capitalize">
+                                                {batch.status}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button variant="ghost" size="sm" asChild>
+                                                    <Link href={`/farmer/batches/${batch.id}`}>
+                                                        <Eye className="h-4 w-4" />
+                                                        <span className="sr-only">View</span>
+                                                    </Link>
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     )}
                 </CardContent>
             </Card>

@@ -5,6 +5,7 @@
  */
 
 import prisma from '../config/database';
+import { Notification } from '@prisma/client';
 import { maskPhone } from '../lib/hashing';
 
 // Africa's Talking SDK
@@ -70,7 +71,7 @@ export async function createNotification(
             type,
             title,
             message,
-            data: data || {},
+            data: (data || {}) as any,
         },
     });
 
@@ -230,17 +231,6 @@ export async function getUserNotifications(
     limit: number = 20,
     unreadOnly: boolean = false
 ): Promise<Notification[]> {
-    interface Notification {
-        id: string;
-        type: string;
-        title: string;
-        message: string;
-        data: unknown;
-        isRead: boolean;
-        createdAt: Date;
-        readAt: Date | null;
-    }
-
     return prisma.notification.findMany({
         where: {
             userId,
@@ -248,7 +238,7 @@ export async function getUserNotifications(
         },
         orderBy: { createdAt: 'desc' },
         take: limit,
-    }) as unknown as Notification[];
+    });
 }
 
 /**

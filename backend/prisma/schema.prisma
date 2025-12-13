@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
-  directUrl = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -139,6 +139,17 @@ model User {
   uploadedDocuments     BatchDocument[]
   notifications         Notification[]
 
+  // Community Relations
+  authoredAnnouncements Announcement[]
+  createdPolls          Poll[]
+  votes                 PollVote[]
+  threads               Thread[]
+  comments              Comment[]
+  aidApplications       AidParticipant[]
+  donationsReceived     Donation[]
+
+  @@index([role])
+  @@index([cooperativeId])
   @@map("users")
 }
 
@@ -153,6 +164,10 @@ model Cooperative {
   // Relations
   farmers User[]
   batches ProductBatch[]
+  announcements Announcement[]
+  polls         Poll[]
+  aidPrograms   AidProgram[]
+  threads       Thread[]
 
   @@map("cooperatives")
 }
@@ -237,7 +252,20 @@ model ProductBatch {
   payments          Payment[]
   exportRecord      ExportRecord?
   certificates      Certificate[]
+  ratings           Rating[]
 
+  @@index([status, deletedAt])
+  @@index([description])
+  // Performance Indices
+  @@index([farmerId])
+  @@index([washingStationId])
+  @@index([cooperativeId])
+  @@index([factoryId])
+  @@index([exporterId])
+  @@index([importerId])
+  @@index([retailerId]) 
+  @@index([farmerId, createdAt]) // Optimize farmer list sorting
+  
   @@map("product_batches")
 }
 
@@ -304,6 +332,9 @@ model Payment {
   payer User         @relation("PaymentsMade", fields: [payerId], references: [id])
   payee User         @relation("PaymentsReceived", fields: [payeeId], references: [id])
 
+  @@index([batchId])
+  @@index([payerId, createdAt])
+  @@index([payeeId, createdAt])
   @@map("payments")
 }
 
@@ -435,4 +466,187 @@ model Notification {
   @@index([userId, isRead])
   @@index([createdAt])
   @@map("notifications")
+}
+
+// ============================================
+// COMMUNITY & VOTING
+// ============================================
+
+model Announcement {
+  id             String   @id @default(uuid())
+  title          String
+  content        String   @db.Text
+  type           AnnouncementType
+  priority       String   @default("normal") // normal, high, urgent
+  cooperativeId  String?
+  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+  publishedAt    DateTime @default(now())
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  comments       Comment[]
+  
+  @@index([cooperativeId, publishedAt])
+  @@map("announcements")
+}
+
+enum AnnouncementType {
+  general
+  pricing
+  aid
+  training
+  event
+}
+
+model Poll {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?  @db.Text
+  pollType       PollType
+  cooperativeId  String?
+  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
+  createdBy      String
+  creator        User     @relation(fields: [createdBy], references: [id])
+  status         String   @default("active") // active, closed
+  startsAt       DateTime @default(now())
+  endsAt         DateTime
+  options        Json     // Array of poll options
+  votes          PollVote[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  comments       Comment[]
+  
+  @@index([cooperativeId, status])
+  @@map("polls")
+}
+
+enum PollType {
+  coffee_price
+  tea_price
+  aid_distribution
+  general
+}
+
+model PollVote {
+  id        String   @id @default(uuid())
+  pollId    String
+  poll      Poll     @relation(fields: [pollId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  optionId  String   // References option from poll.options
+  votedAt   DateTime @default(now())
+  
+  @@unique([pollId, userId]) // One vote per user per poll
+  @@index([pollId])
+  @@map("poll_votes")
+}
+
+// ============================================
+// NEW COMMUNITY MODELS
+// ============================================
+
+model AidProgram {
+  id             String   @id @default(uuid())
+  title          String
+  description    String   @db.Text
+  provider       String
+  type           String   // e.g., "Financial", "Material", "Training"
+  eligibility    String
+  deadline       DateTime?
+  status         String   @default("open") // open, closed
+  cooperativeId  String?
+  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  participants   AidParticipant[]
+  
+  @@index([cooperativeId, status])
+  @@map("aid_programs")
+}
+
+model AidParticipant {
+  id            String     @id @default(uuid())
+  programId     String
+  program       AidProgram @relation(fields: [programId], references: [id])
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  status        String     @default("applied") // applied, approved, rejected
+  appliedAt     DateTime   @default(now())
+
+  @@unique([programId, userId])
+  @@index([programId])
+  @@map("aid_participants")
+}
+
+model Thread {
+  id            String    @id @default(uuid())
+  title         String
+  content       String    @db.Text
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id])
+  cooperativeId String?
+  cooperative   Cooperative? @relation(fields: [cooperativeId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  comments      Comment[]
+
+  @@index([cooperativeId])
+  @@map("threads")
+}
+
+model Comment {
+  id             String        @id @default(uuid())
+  content        String        @db.Text
+  authorId       String
+  author         User          @relation(fields: [authorId], references: [id])
+  
+  // Polymorphic-ish relations (nullable fields)
+  announcementId String?
+  announcement   Announcement? @relation(fields: [announcementId], references: [id])
+  pollId         String?
+  poll           Poll?         @relation(fields: [pollId], references: [id])
+  threadId       String?
+  thread         Thread?       @relation(fields: [threadId], references: [id])
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([announcementId])
+  @@index([pollId])
+  @@index([threadId])
+  @@map("comments")
+}
+
+// ============================================
+// CONSUMER ENGAGEMENT
+// ============================================
+
+model Rating {
+  id        String       @id @default(uuid())
+  rating    Int          // 1-5
+  comment   String?      @db.Text
+  batchId   String
+  batch     ProductBatch @relation(fields: [batchId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([batchId])
+  @@map("ratings")
+}
+
+model Donation {
+  id          String        @id @default(uuid())
+  amount      Decimal
+  currency    String        @default("USD")
+  status      String        @default("pledged") // pledged, processed
+  farmerId    String
+  farmer      User          @relation(fields: [farmerId], references: [id])
+  donorName   String?
+  donorEmail  String?
+  message     String?
+  createdAt   DateTime      @default(now())
+
+  @@index([farmerId])
+  @@map("donations")
 }

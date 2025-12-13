@@ -1,14 +1,35 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Coffee, LogOut, User as UserIcon, Menu, X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import {
+    Coffee, LogOut, User as UserIcon, Menu, X, ChevronLeft, ChevronRight, Loader2,
+    LayoutDashboard, Package, Wallet, Users2, Plus, Users, Settings, ClipboardList,
+    Building, FileText, Ship, FileCheck, ClipboardCheck, History
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCurrentUser, useLogout } from '@/hooks/useAuth';
 import { NAVIGATION_ITEMS } from '@/lib/constants';
 import { getRoleLabel } from '@/lib/utils';
-import * as Icons from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
+
+// Map specific string names to components to avoid 'import * as Icons'
+const ICON_MAP: Record<string, any> = {
+    'LayoutDashboard': LayoutDashboard,
+    'Package': Package,
+    'Wallet': Wallet,
+    'Users2': Users2,
+    'User': UserIcon,
+    'Plus': Plus,
+    'Users': Users,
+    'Settings': Settings,
+    'ClipboardList': ClipboardList,
+    'Building': Building,
+    'FileText': FileText,
+    'Ship': Ship,
+    'FileCheck': FileCheck,
+    'ClipboardCheck': ClipboardCheck,
+    'History': History
+};
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -26,9 +47,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Redirect to login if not loading and no user
         if (isMounted && !isLoading && !user) {
-            router.replace('/login');
+            logout();
         }
-    }, [isMounted, isLoading, user, router]);
+    }, [isMounted, isLoading, user, logout]);
 
     if (!isMounted || isLoading || !user) {
         return (
@@ -63,6 +84,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                     {/* User info */}
                     <div className="flex items-center gap-2 sm:gap-4">
+                        <ThemeToggle />
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-medium dark:text-white">{user.name}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{getRoleLabel(user.role)}</p>
@@ -94,8 +116,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
                     <nav className="px-2 space-y-1">
                         {navItems.map((item) => {
-                            const Icon = (Icons as any)[item.icon] || UserIcon;
-                            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                            const Icon = ICON_MAP[item.icon] || UserIcon;
+                            const isRootDashboard = item.href.split('/').length === 2;
+                            const isActive = isRootDashboard
+                                ? pathname === item.href
+                                : pathname === item.href || pathname.startsWith(item.href + '/');
 
                             return (
                                 <Link
@@ -136,8 +161,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 `}>
                     <nav className="p-4 space-y-1">
                         {navItems.map((item) => {
-                            const Icon = (Icons as any)[item.icon] || UserIcon;
-                            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                            const Icon = ICON_MAP[item.icon] || UserIcon;
+                            const isRootDashboard = item.href.split('/').length === 2;
+                            const isActive = isRootDashboard
+                                ? pathname === item.href
+                                : pathname === item.href || pathname.startsWith(item.href + '/');
 
                             return (
                                 <Link
@@ -161,7 +189,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+                <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
                     {children}
                 </main>
             </div>
@@ -174,8 +202,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             ">
                 <div className="flex items-center justify-around max-w-md mx-auto">
                     {navItems.slice(0, 5).map((item) => {
-                        const Icon = (Icons as any)[item.icon] || UserIcon;
-                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                        const Icon = ICON_MAP[item.icon] || UserIcon;
+                        const isRootDashboard = item.href.split('/').length === 2;
+                        const isActive = isRootDashboard
+                            ? pathname === item.href
+                            : pathname === item.href || pathname.startsWith(item.href + '/');
 
                         return (
                             <Link

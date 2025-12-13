@@ -13,6 +13,7 @@ export const NAVIGATION_ITEMS: Record<string, Array<{ label: string; href: strin
         { label: 'Dashboard', href: '/farmer', icon: 'LayoutDashboard' },
         { label: 'My Batches', href: '/farmer/batches', icon: 'Package' },
         { label: 'Payments', href: '/farmer/payments', icon: 'Wallet' },
+        { label: 'Community', href: '/farmer/community', icon: 'Users2' },
         { label: 'Profile', href: '/farmer/profile', icon: 'User' },
     ],
     [UserRole.agent]: [
@@ -32,6 +33,7 @@ export const NAVIGATION_ITEMS: Record<string, Array<{ label: string; href: strin
         { label: 'Users', href: '/admin/users', icon: 'Users' },
         { label: 'Batches', href: '/admin/batches', icon: 'Package' },
         { label: 'Cooperatives', href: '/admin/cooperatives', icon: 'Building' },
+        { label: 'Analytics', href: '/admin/analytics', icon: 'BarChart' },
         { label: 'Reports', href: '/admin/reports', icon: 'FileText' },
     ],
     [UserRole.exporter]: [

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Edit, Loader2, UserCheck, UserX, Key } from 'lucide-react';
+import { ChevronLeft, Edit, Loader2, UserCheck, UserX, Key, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -62,10 +62,9 @@ export default function UserDetailPage() {
         return (
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                         <Link href="/admin/users">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back
+                            <ChevronLeft className="h-4 w-4" />
                         </Link>
                     </Button>
                 </div>
@@ -80,10 +79,9 @@ export default function UserDetailPage() {
         return (
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                         <Link href="/admin/users">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back
+                            <ChevronLeft className="h-4 w-4" />
                         </Link>
                     </Button>
                 </div>
@@ -96,45 +94,47 @@ export default function UserDetailPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" asChild>
+                    <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" asChild>
                         <Link href="/admin/users">
-                            <ArrowLeft className="h-4 w-4 mr-2" />
-                            Back to Users
+                            <ChevronLeft className="h-4 w-4" />
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{user.name}</h1>
-                        <p className="text-muted-foreground">
+                        <h1 className="text-xl md:text-3xl font-bold tracking-tight">{user.name}</h1>
+                        <p className="text-sm text-muted-foreground">
                             User details and management
                         </p>
                     </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {user.isActive ? (
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => deactivateMutation.mutate()}
                             disabled={deactivateMutation.isPending}
+                            className="flex-1 md:flex-none"
                         >
                             <UserX className="h-4 w-4 mr-2" />
                             Deactivate
                         </Button>
                     ) : (
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             onClick={() => activateMutation.mutate()}
                             disabled={activateMutation.isPending}
+                            className="flex-1 md:flex-none"
                         >
                             <UserCheck className="h-4 w-4 mr-2" />
                             Activate
                         </Button>
                     )}
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         onClick={() => resetPasswordMutation.mutate()}
                         disabled={resetPasswordMutation.isPending}
+                        className="flex-1 md:flex-none"
                     >
                         <Key className="h-4 w-4 mr-2" />
                         Reset Password
@@ -165,9 +165,8 @@ export default function UserDetailPage() {
                         </div>
                         <div>
                             <p className="text-sm font-medium text-gray-700">Status</p>
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                            }`}>
+                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                }`}>
                                 {user.isActive ? 'Active' : 'Inactive'}
                             </span>
                         </div>
@@ -215,4 +214,3 @@ export default function UserDetailPage() {
         </div>
     );
 }
-

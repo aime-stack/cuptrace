@@ -19,8 +19,8 @@ interface BatchDetailProps {
     productType?: ProductType;
 }
 
-export function BatchDetail({ 
-    batch, 
+export function BatchDetail({
+    batch,
     isLoading = false,
     showActions = false,
     onEdit,
@@ -77,7 +77,7 @@ export function BatchDetail({
             {/* Batch Overview */}
             <Card>
                 <CardHeader>
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <CardTitle className="text-2xl">
                                 {batch.lotId || `Batch #${batch.id.slice(0, 8)}`}
@@ -86,7 +86,7 @@ export function BatchDetail({
                                 {batch.type.toUpperCase()} • {getStageLabel(batch.currentStage)}
                             </CardDescription>
                         </div>
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${getStatusColor(batch.status)}`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize w-fit ${getStatusColor(batch.status)}`}>
                             {batch.status.replace('_', ' ')}
                         </span>
                     </div>
@@ -175,24 +175,13 @@ export function BatchDetail({
                         </div>
                     )}
 
-                    {batch.tags && batch.tags.length > 0 && (
-                        <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">Tags</p>
-                            <div className="flex flex-wrap gap-2">
-                                {batch.tags.map((tag, index) => (
-                                    <span key={index} className="inline-flex items-center rounded-md border border-gray-300 px-2 py-1 text-xs font-medium bg-white text-gray-700">
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+
 
                     {/* Blockchain & NFT Information */}
                     {(batch.blockchainTxHash || batch.nftPolicyId) && (
                         <div className="pt-4 border-t space-y-3">
                             <h3 className="text-sm font-medium text-gray-700">Blockchain & NFT</h3>
-                            
+
                             {batch.nftPolicyId && (
                                 <div>
                                     <div className="flex items-center gap-2 text-green-700 mb-1">
@@ -219,7 +208,7 @@ export function BatchDetail({
                                     </div>
                                 </div>
                             )}
-                            
+
                             {batch.blockchainTxHash && (
                                 <div>
                                     <div className="flex items-center gap-2 text-blue-700 mb-1">
@@ -231,8 +220,8 @@ export function BatchDetail({
                                     </p>
                                 </div>
                             )}
-                            
-                            
+
+
                             {/* Retry buttons if operations failed */}
                             {(!batch.nftPolicyId || !batch.blockchainTxHash) && (
                                 <div className="flex gap-2 pt-2">
