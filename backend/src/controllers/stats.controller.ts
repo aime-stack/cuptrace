@@ -50,29 +50,40 @@ export const getFarmerStats = async (
             return res.status(400).json({ success: false, message: 'User ID not found' });
         }
 
-        const [
-            totalBatches,
-            pendingBatches,
-            inTransitBatches,
-            completedBatches
-        ] = await Promise.all([
-            prisma.productBatch.count({
-                where: { farmerId, deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: { farmerId, status: 'pending', deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: {
-                    farmerId,
-                    deletedAt: null,
-                    NOT: { currentStage: 'farmer' }
-                }
-            }),
-            prisma.productBatch.count({
-                where: { farmerId, status: 'completed', deletedAt: null }
-            })
-        ]);
+        // Optimize: Use groupBy to fetch all stats in a single query
+        const stats = await prisma.productBatch.groupBy({
+            by: ['status', 'currentStage'],
+            where: {
+                farmerId,
+                deletedAt: null
+            },
+            _count: {
+                _all: true
+            }
+        });
+
+        // Initialize counters
+        let totalBatches = 0;
+        let pendingBatches = 0;
+        let inTransitBatches = 0;
+        let completedBatches = 0;
+
+        // Aggregate results in memory
+        stats.forEach(group => {
+            const count = group._count._all;
+            totalBatches += count;
+
+            if (group.status === 'pending') {
+                pendingBatches += count;
+            }
+            if (group.status === 'completed') {
+                completedBatches += count;
+            }
+            // In transit logic: NOT currentStage='farmer'
+            if (group.currentStage !== 'farmer') {
+                inTransitBatches += count;
+            }
+        });
 
         // Calculate total payments
         const payments = await prisma.payment.aggregate({
@@ -198,35 +209,44 @@ export const getAgentStats = async (
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
-        const [
-            totalBatches,
-            pendingBatches,
-            approvedBatches,
-            rejectedBatches,
-            todayBatches
-        ] = await Promise.all([
-            prisma.productBatch.count({
-                where: { cooperativeId, deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: { cooperativeId, status: 'pending', deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: { cooperativeId, status: 'approved', deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: { cooperativeId, status: 'rejected', deletedAt: null }
-            }),
-            prisma.productBatch.count({
-                where: {
-                    cooperativeId,
-                    deletedAt: null,
-                    createdAt: {
-                        gte: startOfDay
-                    }
+        // Optimize: Use groupBy for status counts (1 query instead of 4)
+        const statusStats = await prisma.productBatch.groupBy({
+            by: ['status'],
+            where: {
+                cooperativeId,
+                deletedAt: null
+            },
+            _count: {
+                _all: true
+            }
+        });
+
+        // Initialize counters
+        let totalBatches = 0;
+        let pendingBatches = 0;
+        let approvedBatches = 0;
+        let rejectedBatches = 0;
+
+        // Aggregate results in memory
+        statusStats.forEach(group => {
+            const count = group._count._all;
+            totalBatches += count;
+
+            if (group.status === 'pending') pendingBatches += count;
+            if (group.status === 'approved') approvedBatches += count;
+            if (group.status === 'rejected') rejectedBatches += count;
+        });
+
+        // Fetch today's count separately (date filter) - 2nd query
+        const todayBatches = await prisma.productBatch.count({
+            where: {
+                cooperativeId,
+                deletedAt: null,
+                createdAt: {
+                    gte: startOfDay
                 }
-            })
-        ]);
+            }
+        });
 
         res.set('Cache-Control', 'public, max-age=60');
 

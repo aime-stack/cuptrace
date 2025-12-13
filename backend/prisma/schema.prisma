@@ -264,6 +264,7 @@ model ProductBatch {
   @@index([exporterId])
   @@index([importerId])
   @@index([retailerId]) 
+  @@index([farmerId, createdAt]) // Optimize farmer list sorting
   
   @@map("product_batches")
 }
@@ -331,6 +332,9 @@ model Payment {
   payer User         @relation("PaymentsMade", fields: [payerId], references: [id])
   payee User         @relation("PaymentsReceived", fields: [payeeId], references: [id])
 
+  @@index([batchId])
+  @@index([payerId, createdAt])
+  @@index([payeeId, createdAt])
   @@map("payments")
 }
 

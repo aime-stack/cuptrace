@@ -11,6 +11,7 @@ export const useBatches = (filters?: BatchFilters, type: ProductType = ProductTy
         queryKey: ['batches', type, filters],
         queryFn: () => batchService.listBatches(filters, type),
         enabled: options?.enabled,
+        staleTime: 60000, // 1 minute cache
     });
 };
 
