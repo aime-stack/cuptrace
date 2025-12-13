@@ -6,6 +6,13 @@ const nextConfig = {
       ...config.experiments,
       asyncWebAssembly: true,
     };
+    // Handle @utxorpc and @meshsdk dependencies
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+    };
     return config;
   },
   // Allow external network access for mobile device testing
