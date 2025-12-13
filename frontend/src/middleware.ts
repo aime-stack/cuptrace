@@ -22,6 +22,7 @@ export function middleware(request: NextRequest) {
         pathname === '/login' ||
         pathname === '/register' ||
         pathname.startsWith('/verify') ||
+        pathname.startsWith('/trace') ||
         pathname === '/' ||
         pathname.startsWith('/_next') ||
         pathname.startsWith('/api') ||

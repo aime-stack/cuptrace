@@ -7,6 +7,7 @@ import { normalizePagination, createPaginationResult, PaginationResult } from '.
 import { buildSoftDeleteFilter } from '../utils/query';
 import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
 import { createBatchOnChain } from './blockchain.service';
+import { sendBatchProcessedNotification } from './notifications.service';
 import env from '../config/env';
 
 type ProductType = 'coffee' | 'tea';
@@ -699,6 +700,21 @@ export const updateProduct = async (id: string, data: UpdateProductData) => {
     });
 
     console.log(`[BATCH LOCK-IN] Batch ${id} frozen with hash: ${hash}`);
+  }
+
+  // Automation: If status is changing to 'completed', auto-advance stage and notify farmer
+  if (data.status === 'completed' && existingProduct.status !== 'completed') {
+    // 1. Auto-advance stage to 'exporter' if not already there or further
+    if (existingProduct.currentStage === 'factory' || existingProduct.currentStage === 'washing_station') {
+      updateData.currentStage = 'exporter';
+      console.log(`[AUTOMATION] Batch ${id} auto-advanced to EXPORTER stage`);
+    }
+
+    // 2. Notify Farmer
+    // We do this async and don't block the response
+    sendBatchProcessedNotification(id, true)
+      .then(result => console.log(`[AUTOMATION] Farmer notified for batch ${id} completion. SMS Sent: ${result.smsSent}`))
+      .catch(err => console.error(`[AUTOMATION] Failed to notify farmer for batch ${id}:`, err));
   }
 
   const product = await prisma.productBatch.update({

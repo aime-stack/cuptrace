@@ -52,8 +52,8 @@ export default function FactoryDashboard() {
                     }
                 });
 
-                if (response.data?.data?.data) {
-                    const batches = response.data.data.data;
+                if (response.data?.data) {
+                    const batches = response.data.data;
                     setIncomingBatches(batches);
                 }
             } catch (error) {

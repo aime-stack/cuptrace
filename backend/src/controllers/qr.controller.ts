@@ -71,9 +71,16 @@ export async function getPublicTrace(req: Request, res: Response) {
             });
         }
 
-        // Find batch by public trace hash
+        // Find batch by public trace hash, lotId, or id
         const batch = await prisma.productBatch.findFirst({
-            where: { publicTraceHash: publicHash },
+            where: {
+                OR: [
+                    { publicTraceHash: publicHash },
+                    { lotId: publicHash },
+                    { id: publicHash },
+                    { qrCode: publicHash }
+                ]
+            },
             include: {
                 farmer: {
                     select: {

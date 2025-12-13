@@ -224,6 +224,60 @@ export async function sendQRGeneratedNotification(
 }
 
 /**
+ * Send batch processed notification
+ */
+export async function sendBatchProcessedNotification(
+    batchId: string,
+    includesSMS: boolean = true
+): Promise<{ notificationId: string; smsSent: boolean }> {
+    const batch = await prisma.productBatch.findUnique({
+        where: { id: batchId },
+        include: {
+            farmer: {
+                select: { id: true, name: true, phone: true },
+            },
+        },
+    });
+
+    if (!batch || !batch.farmer) {
+        throw new Error('Batch or farmer not found');
+    }
+
+    const lotId = batch.lotId || batch.id.substring(0, 8);
+    const traceUrl = batch.publicTraceHash
+        ? `${process.env.FRONTEND_HOST || 'http://localhost:3000'}/trace/${batch.publicTraceHash}`
+        : `${process.env.FRONTEND_HOST || 'http://localhost:3000'}/trace/${batch.id}`; // Fallback if no hash
+
+    const notification = await createNotification(
+        batch.farmer.id,
+        NotificationType.BATCH_APPROVED, // Reusing approved type or could allow custom type
+        `Batch ${lotId} Processed`,
+        `Your batch has been processed at the factory and is ready for export.`,
+        {
+            batchId: batch.id,
+            lotId,
+            traceUrl,
+        }
+    );
+
+    let smsSent = false;
+    if (includesSMS && batch.farmer.phone) {
+        const smsMessage = `CupTrace: Your batch ${lotId} has been PROCESSED at the factory! Track details here: ${traceUrl}`;
+        const smsResult = await sendSMS(batch.farmer.phone, smsMessage);
+        smsSent = smsResult.success;
+
+        if (smsSent) {
+            await prisma.notification.update({
+                where: { id: notification.id },
+                data: { smsSent: true },
+            });
+        }
+    }
+
+    return { notificationId: notification.id, smsSent };
+}
+
+/**
  * Get user's notifications
  */
 export async function getUserNotifications(
@@ -288,6 +342,7 @@ export default {
     createNotification,
     sendSMS,
     sendBatchApprovedNotification,
+    sendBatchProcessedNotification,
     sendQRGeneratedNotification,
     getUserNotifications,
     getUnreadCount,
