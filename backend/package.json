@@ -2,10 +2,12 @@
   "name": "cuptrace-backend",
   "version": "1.0.0",
   "description": "Backend API for CupTrace - Blockchain-powered traceability platform for Coffee & Tea supply chains",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run fix-imports",
+    "fix-imports": "node scripts/fix-imports.mjs",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
