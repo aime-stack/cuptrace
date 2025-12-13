@@ -224,12 +224,12 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
 
     if (!batch) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-slate-50/50">
-                <div className="bg-white p-8 rounded-lg shadow-sm text-center max-w-md border">
-                    <div className="h-12 w-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-slate-50/50 dark:bg-background">
+                <div className="bg-white dark:bg-card p-8 rounded-lg shadow-sm text-center max-w-md border">
+                    <div className="h-12 w-12 bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center mx-auto mb-4">
                         <AlertCircle className="h-6 w-6" />
                     </div>
-                    <h2 className="text-xl font-semibold text-slate-900 mb-2">Batch Unavailable</h2>
+                    <h2 className="text-xl font-semibold text-slate-900 dark:text-foreground mb-2">Batch Unavailable</h2>
                     <p className="text-muted-foreground mb-6">
                         We couldn&apos;t find the requested batch details. It may not be approved for processing yet.
                     </p>
@@ -242,7 +242,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
     }
 
     return (
-        <div className="min-h-screen bg-slate-50/50 p-6 space-y-8">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-background p-6 space-y-8">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -252,7 +252,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-foreground">
                             Process Batch #{batch.id.substring(0, 8)}
                         </h1>
                         <p className="text-sm text-muted-foreground">
@@ -371,7 +371,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                             </div>
 
                             {/* Full Event List */}
-                            <div className="bg-slate-50 rounded-lg border p-4 max-h-[200px] overflow-y-auto space-y-3">
+                            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg border p-4 max-h-[200px] overflow-y-auto space-y-3">
                                 {batch.events?.map((event: any) => (
                                     <div key={event.id} className="flex items-center justify-between text-sm">
                                         <div className="flex items-center gap-2">
@@ -435,10 +435,10 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                     </Card>
 
                     {/* 3. Packaging Form */}
-                    <Card className="border-t-4 border-t-slate-900">
+                    <Card className="border-t-4 border-t-slate-900 dark:border-t-slate-500">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Package className="h-5 w-5 text-slate-900" />
+                                <Package className="h-5 w-5 text-slate-900 dark:text-foreground" />
                                 Final Packaging
                             </CardTitle>
                             <CardDescription>Enter final product details for export.</CardDescription>
@@ -533,26 +533,26 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
 
                 {/* Right Sidebar: Digital Twin */}
                 <div className="lg:col-span-3 space-y-6">
-                    <Card className="bg-indigo-50 border-indigo-100">
+                    <Card className="bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/30">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-indigo-900">
+                            <CardTitle className="flex items-center gap-2 text-indigo-900 dark:text-indigo-300">
                                 <QrCode className="h-5 w-5" />
                                 Digital Twin
                             </CardTitle>
-                            <CardDescription className="text-indigo-700">
+                            <CardDescription className="text-indigo-700 dark:text-indigo-400">
                                 Blockchain verification
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {minted ? (
                                 <div className="space-y-3">
-                                    <div className="bg-white p-3 rounded-lg border border-indigo-100">
+                                    <div className="bg-white dark:bg-card p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
                                         <p className="text-xs text-muted-foreground mb-1">Status</p>
-                                        <div className="flex items-center gap-2 text-green-600 font-medium text-sm">
+                                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium text-sm">
                                             <CheckCircle2 className="h-4 w-4" /> Minted on Cardano
                                         </div>
                                     </div>
-                                    <div className="bg-white p-3 rounded-lg border border-indigo-100">
+                                    <div className="bg-white dark:bg-card p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
                                         <p className="text-xs text-muted-foreground mb-1">Asset ID</p>
                                         <p className="text-xs font-mono break-all text-slate-600">
                                             {batch.nftPolicyId?.substring(0, 12)}...
@@ -566,7 +566,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                                 </div>
                             ) : (
                                 <div className="space-y-4">
-                                    <div className="bg-white/50 p-3 rounded text-sm text-indigo-800">
+                                    <div className="bg-white/50 dark:bg-background/50 p-3 rounded text-sm text-indigo-800 dark:text-indigo-200">
                                         Mint a unique NFT for this batch to ensure traceability and authenticity.
                                     </div>
                                     <Button

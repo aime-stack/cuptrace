@@ -185,13 +185,27 @@ export default function TracePage() {
             return;
         }
         setIsSubmittingRating(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        toast.success("Thank you for your review!");
-        setIsSubmittingRating(false);
-        setIsRatingOpen(false);
-        setRating(0);
-        setReview('');
+        try {
+            const response = await axiosInstance.post('/api/consumer/ratings', {
+                publicHash,
+                rating,
+                comment: review
+            });
+
+            if (response.data.success) {
+                toast.success("Thank you for your review!");
+                setIsRatingOpen(false);
+                setRating(0);
+                setReview('');
+            } else {
+                toast.error(response.data.error || "Failed to submit review");
+            }
+        } catch (error) {
+            console.error("Error submitting rating:", error);
+            toast.error("Failed to submit review. Please try again.");
+        } finally {
+            setIsSubmittingRating(false);
+        }
     };
 
     const handleDonationSubmit = async () => {
@@ -199,14 +213,37 @@ export default function TracePage() {
             toast.error("Please enter a valid donation amount");
             return;
         }
+
+        if (!traceData?.farmer?.publicHash) {
+            toast.error("Farmer information is missing. Cannot proceed with donation.");
+            return;
+        }
+
         setIsProcessingDonation(true);
-        // Simulate API/Payment call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        toast.success(`Thank you! Your donation of $${donationAmount} has been sent to the farmer.`);
-        setIsProcessingDonation(false);
-        setIsDonationOpen(false);
-        setDonationAmount('');
-        setDonationMessage('');
+        try {
+            const response = await axiosInstance.post('/api/consumer/donations', {
+                farmerPublicHash: traceData.farmer.publicHash,
+                amount: Number(donationAmount),
+                currency: "USD",
+                message: donationMessage,
+                // In a real flow, we'd act differently or redirect to payment gateway
+                // Here we just record the pledge
+            });
+
+            if (response.data.success) {
+                toast.success(`Thank you! Your donation of $${donationAmount} has been pledged successfully.`);
+                setIsDonationOpen(false);
+                setDonationAmount('');
+                setDonationMessage('');
+            } else {
+                toast.error(response.data.error || "Failed to process donation");
+            }
+        } catch (error) {
+            console.error("Error submitting donation:", error);
+            toast.error("Failed to process donation. Please try again.");
+        } finally {
+            setIsProcessingDonation(false);
+        }
     };
 
     if (loading) {

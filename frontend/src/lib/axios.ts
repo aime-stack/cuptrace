@@ -29,6 +29,10 @@ axiosInstance.interceptors.response.use(
             localStorage.removeItem(STORAGE_KEYS.USER_DATA);
             // Don't redirect on auth pages (login, register) or if already on login
             if (typeof window !== 'undefined') {
+                // Clear cookies to prevent middleware from redirecting back to protected routes
+                document.cookie = 'cuptrace_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+                document.cookie = 'cuptrace_role=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+
                 const authPages = ['/login', '/register', '/forgot-password'];
                 const isAuthPage = authPages.some(page => window.location.pathname.includes(page));
                 if (!isAuthPage) {

@@ -1,44 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { Package, Wallet, CheckCircle, Clock, TrendingUp, MapPin } from 'lucide-react';
+import { Package, Wallet, Clock, TrendingUp, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { useCurrentUser } from '@/hooks/useAuth';
 import { useBatches } from '@/hooks/useBatches';
-import { ProductType, BatchStatus, SupplyChainStage } from '@/types';
+import { ProductType } from '@/types';
 import { formatCurrency, formatRelativeDate, getStatusColor } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import * as paymentService from '@/services/payment.service';
+
+import { StatsCardSkeleton } from '@/components/skeletons/StatsCardSkeleton';
+import { useFarmerStats } from '@/hooks/useStats';
 
 export default function FarmerDashboard() {
     const { data: user } = useCurrentUser();
+    const { data: stats, isLoading: statsLoading } = useFarmerStats();
+
+    // Fetch recent batches for the list (limited to 5)
     const { data: batchesData } = useBatches(
-        { farmerId: user?.id },
+        { farmerId: user?.id, limit: 5 },
         ProductType.coffee
     );
 
-    // Fetch payments for the farmer
-    const { data: paymentsData } = useQuery({
-        queryKey: ['payments', user?.id],
-        queryFn: () => paymentService.listPayments({ payeeId: user?.id }),
-        enabled: !!user?.id,
-    });
-
     const batches = batchesData ?? [];
-    const totalBatches = batches.length;
-    const pendingBatches = batches.filter((b: any) => b.status === BatchStatus.pending).length;
-    const approvedBatches = batches.filter((b: any) => b.status === BatchStatus.approved).length;
-    const inTransit = batches.filter((b: any) =>
-        b.currentStage && b.currentStage !== SupplyChainStage.farmer
-    ).length;
-
-    // Calculate total payments received
-    const payments = paymentsData || [];
-    const totalPayments = payments
-        .filter((p: any) => p.status === 'completed')
-        .reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
 
     return (
         <div className="space-y-8">
@@ -52,32 +37,43 @@ export default function FarmerDashboard() {
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatsCard
-                    title="Total Batches"
-                    value={totalBatches}
-                    icon={Package}
-                    description="Delivered to stations"
-                />
-                <StatsCard
-                    title="Pending Review"
-                    value={pendingBatches}
-                    icon={Clock}
-                    description="Awaiting approval"
-                    className="border-yellow-200"
-                />
-                <StatsCard
-                    title="In Supply Chain"
-                    value={inTransit}
-                    icon={TrendingUp}
-                    description="Processing or shipped"
-                    className="border-blue-200"
-                />
-                <StatsCard
-                    title="Total Payments"
-                    value={formatCurrency(totalPayments)}
-                    icon={Wallet}
-                    description={`${payments.filter((p: any) => p.status === 'completed').length} completed`}
-                />
+                {statsLoading ? (
+                    <>
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                    </>
+                ) : (
+                    <>
+                        <StatsCard
+                            title="Total Batches"
+                            value={stats?.totalBatches || 0}
+                            icon={Package}
+                            description="Delivered to stations"
+                        />
+                        <StatsCard
+                            title="Pending Review"
+                            value={stats?.pendingBatches || 0}
+                            icon={Clock}
+                            description="Awaiting approval"
+                            className="border-yellow-200 dark:border-yellow-900/50"
+                        />
+                        <StatsCard
+                            title="In Supply Chain"
+                            value={stats?.inTransitBatches || 0}
+                            icon={TrendingUp}
+                            description="Processing or shipped"
+                            className="border-blue-200 dark:border-blue-900/50"
+                        />
+                        <StatsCard
+                            title="Total Payments"
+                            value={formatCurrency(stats?.totalPayments || 0)}
+                            icon={Wallet}
+                            description="Total received"
+                        />
+                    </>
+                )}
             </div>
 
             {/* Recent Batches */}

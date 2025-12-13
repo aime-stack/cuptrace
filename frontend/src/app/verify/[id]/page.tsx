@@ -93,12 +93,12 @@ export default function VerifyPage() {
 
                 {/* Header / Status */}
                 <div className="text-center space-y-4">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-800 border border-green-200">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800">
                         <CheckCircle2 className="h-5 w-5" />
                         <span className="font-semibold">Authentic Rwandan Coffee</span>
                     </div>
-                    <h1 className="text-4xl font-bold text-slate-900">Batch #{batch.id.substring(0, 8)}</h1>
-                    <p className="text-lg text-slate-600">
+                    <h1 className="text-4xl font-bold text-slate-900 dark:text-foreground">Batch #{batch.id.substring(0, 8)}</h1>
+                    <p className="text-lg text-slate-600 dark:text-muted-foreground">
                         Verified on Cardano Blockchain
                     </p>
                 </div>
@@ -120,7 +120,7 @@ export default function VerifyPage() {
                                         : 'There are discrepancies between the current data and the blockchain record.'}
                                 </p>
                                 {batch.integrity && (
-                                    <div className="bg-white/50 p-2 rounded text-xs font-mono text-slate-500 break-all">
+                                    <div className="bg-white/50 dark:bg-black/30 p-2 rounded text-xs font-mono text-slate-500 break-all">
                                         Hash: {batch.integrity.hash}
                                     </div>
                                 )}
@@ -178,9 +178,9 @@ export default function VerifyPage() {
                         <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-4">
                             {/* Farm Stage */}
                             <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-green-500 border-2 border-white ring-2 ring-green-100" />
+                                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-green-500 border-2 border-white dark:border-slate-900 ring-2 ring-green-100 dark:ring-green-900" />
                                 <div className="space-y-1">
-                                    <h3 className="font-semibold text-slate-900">Harvested at Origin</h3>
+                                    <h3 className="font-semibold text-slate-900 dark:text-foreground">Harvested at Origin</h3>
                                     <p className="text-sm text-slate-500">
                                         {batch.harvestDate ? format(new Date(batch.harvestDate), 'MMM d, yyyy') : 'Date N/A'}
                                     </p>
@@ -192,9 +192,9 @@ export default function VerifyPage() {
 
                             {/* Washing Station */}
                             <div className="relative pl-8">
-                                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-blue-500 border-2 border-white ring-2 ring-blue-100" />
+                                <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-blue-500 border-2 border-white dark:border-slate-900 ring-2 ring-blue-100 dark:ring-blue-900" />
                                 <div className="space-y-1">
-                                    <h3 className="font-semibold text-slate-900">Processed at Washing Station</h3>
+                                    <h3 className="font-semibold text-slate-900 dark:text-foreground">Processed at Washing Station</h3>
                                     <p className="text-sm text-slate-500">
                                         {batch.createdAt ? format(new Date(batch.createdAt), 'MMM d, yyyy') : 'Date N/A'}
                                     </p>
@@ -207,9 +207,9 @@ export default function VerifyPage() {
                             {/* QC */}
                             {batch.quality && (
                                 <div className="relative pl-8">
-                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-purple-500 border-2 border-white ring-2 ring-purple-100" />
+                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-purple-500 border-2 border-white dark:border-slate-900 ring-2 ring-purple-100 dark:ring-purple-900" />
                                     <div className="space-y-1">
-                                        <h3 className="font-semibold text-slate-900">Quality Certified</h3>
+                                        <h3 className="font-semibold text-slate-900 dark:text-foreground">Quality Certified</h3>
                                         <p className="text-sm text-slate-600">
                                             Graded {batch.grade} with score {batch.quality?.match(/Score: (\d+)/)?.[1]}.
                                         </p>
@@ -220,9 +220,9 @@ export default function VerifyPage() {
                             {/* Dynamic Events */}
                             {batch.events?.map((event: any) => (
                                 <div key={event.id} className="relative pl-8">
-                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-orange-500 border-2 border-white ring-2 ring-orange-100" />
+                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-orange-500 border-2 border-white dark:border-slate-900 ring-2 ring-orange-100 dark:ring-orange-900" />
                                     <div className="space-y-1">
-                                        <h3 className="font-semibold text-slate-900">{event.eventType}</h3>
+                                        <h3 className="font-semibold text-slate-900 dark:text-foreground">{event.eventType}</h3>
                                         <p className="text-sm text-slate-500">
                                             {format(new Date(event.timestamp), 'MMM d, yyyy h:mm a')}
                                         </p>
@@ -239,9 +239,9 @@ export default function VerifyPage() {
                             {/* Factory / NFT */}
                             {batch.nftPolicyId && (
                                 <div className="relative pl-8">
-                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-indigo-500 border-2 border-white ring-2 ring-indigo-100" />
+                                    <div className="absolute -left-[9px] top-0 h-4 w-4 rounded-full bg-indigo-500 border-2 border-white dark:border-slate-900 ring-2 ring-indigo-100 dark:ring-indigo-900" />
                                     <div className="space-y-1">
-                                        <h3 className="font-semibold text-slate-900">Digital Twin Minted</h3>
+                                        <h3 className="font-semibold text-slate-900 dark:text-foreground">Digital Twin Minted</h3>
                                         <p className="text-sm text-slate-500">
                                             {batch.metadata?.mintedAt ? format(new Date(batch.metadata.mintedAt), 'MMM d, yyyy') : 'Date N/A'}
                                         </p>

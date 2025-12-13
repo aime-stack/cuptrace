@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
-  directUrl = "postgresql://postgres.wgziwbrlhmukxdrnpfzs:WJ9JhEt9YxD2Ss8O@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================
@@ -146,7 +146,10 @@ model User {
   threads               Thread[]
   comments              Comment[]
   aidApplications       AidParticipant[]
+  donationsReceived     Donation[]
 
+  @@index([role])
+  @@index([cooperativeId])
   @@map("users")
 }
 
@@ -249,7 +252,19 @@ model ProductBatch {
   payments          Payment[]
   exportRecord      ExportRecord?
   certificates      Certificate[]
+  ratings           Rating[]
 
+  @@index([status, deletedAt])
+  @@index([description])
+  // Performance Indices
+  @@index([farmerId])
+  @@index([washingStationId])
+  @@index([cooperativeId])
+  @@index([factoryId])
+  @@index([exporterId])
+  @@index([importerId])
+  @@index([retailerId]) 
+  
   @@map("product_batches")
 }
 
@@ -598,4 +613,36 @@ model Comment {
   @@index([pollId])
   @@index([threadId])
   @@map("comments")
+}
+
+// ============================================
+// CONSUMER ENGAGEMENT
+// ============================================
+
+model Rating {
+  id        String       @id @default(uuid())
+  rating    Int          // 1-5
+  comment   String?      @db.Text
+  batchId   String
+  batch     ProductBatch @relation(fields: [batchId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([batchId])
+  @@map("ratings")
+}
+
+model Donation {
+  id          String        @id @default(uuid())
+  amount      Decimal
+  currency    String        @default("USD")
+  status      String        @default("pledged") // pledged, processed
+  farmerId    String
+  farmer      User          @relation(fields: [farmerId], references: [id])
+  donorName   String?
+  donorEmail  String?
+  message     String?
+  createdAt   DateTime      @default(now())
+
+  @@index([farmerId])
+  @@map("donations")
 }

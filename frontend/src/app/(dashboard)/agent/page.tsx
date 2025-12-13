@@ -19,42 +19,36 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBatches } from "@/hooks/useBatches";
 import { useCurrentUser } from "@/hooks/useAuth";
+import { useAgentStats } from "@/hooks/useStats";
 import { ProductType, ProductBatch } from "@/types";
+import { StatsCardSkeleton } from "@/components/skeletons/StatsCardSkeleton";
 
 export default function AgentDashboard() {
     const { data: user } = useCurrentUser();
-    const { data: batchesData, isLoading } = useBatches(
+    const { data: stats, isLoading: statsLoading } = useAgentStats();
+    // Use useBatches only for the list view, ideally with pagination (default is 10)
+    const { data: batchesData, isLoading: batchesLoading } = useBatches(
         { cooperativeId: user?.cooperativeId },
-        ProductType.coffee
+        ProductType.coffee,
+        { enabled: !!user?.cooperativeId }
     );
     const [activeTab, setActiveTab] = useState<string>("all");
 
     const batches = useMemo(() => batchesData ?? [], [batchesData]);
 
-    // Stats
-    const todayBatches = useMemo(() => batches.filter((b: ProductBatch) => {
-        const today = new Date();
-        const batchDate = new Date(b.createdAt);
-        return batchDate.toDateString() === today.toDateString();
-    }), [batches]);
-
-    const pendingBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'pending'), [batches]);
-    const approvedBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'approved'), [batches]);
-    const rejectedBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'rejected'), [batches]);
-
-    // Filter batches based on active tab
+    // Filter batches based on active tab - strictly for the list view
     const filteredBatches = useMemo(() => {
         switch (activeTab) {
             case 'pending':
-                return pendingBatches;
+                return batches.filter(b => b.status === 'pending');
             case 'approved':
-                return approvedBatches;
+                return batches.filter(b => b.status === 'approved');
             case 'rejected':
-                return rejectedBatches;
+                return batches.filter(b => b.status === 'rejected');
             default:
                 return batches;
         }
-    }, [activeTab, batches, pendingBatches, approvedBatches, rejectedBatches]);
+    }, [activeTab, batches]);
 
     return (
         <div className="space-y-8">
@@ -75,46 +69,57 @@ export default function AgentDashboard() {
 
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Today&apos;s Batches</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{todayBatches.length}</div>
-                        <p className="text-xs text-muted-foreground">Registered today</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-                        <Clock className="h-4 w-4 text-orange-500" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingBatches.length}</div>
-                        <p className="text-xs text-muted-foreground">Awaiting QC approval</p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">Approved</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">{approvedBatches.length}</div>
-                        <p className="text-xs text-green-600 dark:text-green-500">QR codes ready</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Batches</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{batches.length}</div>
-                        <p className="text-xs text-muted-foreground">All time</p>
-                    </CardContent>
-                </Card>
+                {statsLoading ? (
+                    <>
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                    </>
+                ) : (
+                    <>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Today&apos;s Batches</CardTitle>
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{stats?.todayBatches || 0}</div>
+                                <p className="text-xs text-muted-foreground">Registered today</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+                                <Clock className="h-4 w-4 text-orange-500" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{stats?.pendingBatches || 0}</div>
+                                <p className="text-xs text-muted-foreground">Awaiting QC approval</p>
+                            </CardContent>
+                        </Card>
+                        <Card className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">Approved</CardTitle>
+                                <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-green-700 dark:text-green-400">{stats?.approvedBatches || 0}</div>
+                                <p className="text-xs text-green-600 dark:text-green-500">QR codes ready</p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium">Total Batches</CardTitle>
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold">{stats?.totalBatches || 0}</div>
+                                <p className="text-xs text-muted-foreground">All time</p>
+                            </CardContent>
+                        </Card>
+                    </>
+                )}
             </div>
 
             {/* Batches with Filter Tabs */}
@@ -129,24 +134,24 @@ export default function AgentDashboard() {
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="mb-4">
                             <TabsTrigger value="all" className="gap-2">
-                                All <Badge variant="secondary" className="ml-1">{batches.length}</Badge>
+                                All <Badge variant="secondary" className="ml-1">{stats?.totalBatches || 0}</Badge>
                             </TabsTrigger>
                             <TabsTrigger value="pending" className="gap-2">
                                 <Clock className="h-3 w-3" />
-                                Pending <Badge variant="secondary" className="ml-1">{pendingBatches.length}</Badge>
+                                Pending <Badge variant="secondary" className="ml-1">{stats?.pendingBatches || 0}</Badge>
                             </TabsTrigger>
                             <TabsTrigger value="approved" className="gap-2">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">{approvedBatches.length}</Badge>
+                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">{stats?.approvedBatches || 0}</Badge>
                             </TabsTrigger>
                             <TabsTrigger value="rejected" className="gap-2">
                                 <XCircle className="h-3 w-3" />
-                                Rejected <Badge variant="secondary" className="ml-1">{rejectedBatches.length}</Badge>
+                                Rejected <Badge variant="secondary" className="ml-1">{stats?.rejectedBatches || 0}</Badge>
                             </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value={activeTab}>
-                            {isLoading ? (
+                            {batchesLoading ? (
                                 <div className="flex justify-center py-8">
                                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                                 </div>

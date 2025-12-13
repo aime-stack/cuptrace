@@ -47,9 +47,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Redirect to login if not loading and no user
         if (isMounted && !isLoading && !user) {
-            router.replace('/login');
+            logout();
         }
-    }, [isMounted, isLoading, user, router]);
+    }, [isMounted, isLoading, user, logout]);
 
     if (!isMounted || isLoading || !user) {
         return (
