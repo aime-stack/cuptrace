@@ -40,39 +40,37 @@ const nextConfig = {
       };
     }
     
-    // Fix for bip174 exports issue with bitcoinjs-lib
-    // bitcoinjs-lib tries to import internal paths from bip174 that aren't exported
-    // Use webpack's NormalModuleReplacementPlugin to handle these imports
+    // Fix for bip174/bitcoinjs-lib issues
+    // Since this is a Cardano project, we don't need Bitcoin functionality
+    // But @meshsdk/react imports it, so we need to handle it properly
     const webpack = require('webpack');
-    const bip174Path = path.resolve(process.cwd(), 'node_modules', 'bip174');
     
-    if (fs.existsSync(bip174Path)) {
-      const varintPath = path.join(bip174Path, 'src', 'lib', 'converter', 'varint.js');
-      const utilsPath = path.join(bip174Path, 'src', 'lib', 'utils.js');
-      
-      // Add aliases for bip174 internal paths
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'bip174/src/lib/converter/varint': varintPath,
-        'bip174/src/lib/utils': utilsPath,
-      };
-      
-      // Also add a plugin to rewrite the imports
-      // This bypasses the package.json exports field check
-      if (!config.plugins) {
-        config.plugins = [];
-      }
-      config.plugins.push(
-        new webpack.NormalModuleReplacementPlugin(
-          /bip174\/src\/lib\/converter\/varint/,
-          varintPath
-        ),
-        new webpack.NormalModuleReplacementPlugin(
-          /bip174\/src\/lib\/utils/,
-          utilsPath
-        )
-      );
+    if (!config.plugins) {
+      config.plugins = [];
     }
+    
+    // Replace bitcoinjs-lib imports with a stub to avoid bip174 issues
+    // This prevents the build from failing on Bitcoin-related code we don't use
+    const stubPath = path.resolve(process.cwd(), 'src', 'lib', 'mocks', 'bitcoinjs-lib-stub.js');
+    
+    // Ignore bip174 to prevent export field issues
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^bip174$/,
+        contextRegExp: /bitcoinjs-lib/,
+      }),
+      new webpack.NormalModuleReplacementPlugin(
+        /bitcoinjs-lib/,
+        stubPath
+      )
+    );
+    
+    // Provide aliases to handle the problematic imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // Stub bitcoinjs-lib to avoid bip174 export issues
+      'bitcoinjs-lib': stubPath,
+    };
     
     // Ensure webpack can resolve modules from nested node_modules
     config.resolve.modules = [
