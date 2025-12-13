@@ -1,5 +1,0 @@
-touch frontend/components/cooperative/.gitkeep
-touch frontend/components/farmer/.gitkeep
-touch frontend/components/naeb/.gitkeep
-touch backend/.gitkeep
-touch tests/.gitkeep
