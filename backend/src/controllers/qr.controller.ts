@@ -75,10 +75,14 @@ export async function getPublicTrace(req: Request, res: Response) {
         const batch = await prisma.productBatch.findFirst({
             where: {
                 OR: [
-                    { publicTraceHash: publicHash },
-                    { lotId: publicHash },
+                    { publicTraceHash: { equals: publicHash, mode: 'insensitive' } },
+                    { qrCode: { equals: publicHash, mode: 'insensitive' } },
+                    { lotId: { equals: publicHash, mode: 'insensitive' } },
                     { id: publicHash },
-                    { qrCode: publicHash }
+                    // Loose matching for short codes/partial hashes
+                    { publicTraceHash: { contains: publicHash, mode: 'insensitive' } },
+                    { qrCode: { contains: publicHash, mode: 'insensitive' } },
+                    { id: { startsWith: publicHash, mode: 'insensitive' } }
                 ]
             },
             include: {
@@ -247,10 +251,14 @@ export async function verifyByCode(req: Request, res: Response) {
         const batch = await prisma.productBatch.findFirst({
             where: {
                 OR: [
-                    { publicTraceHash: code },
-                    { qrCode: code },
-                    { lotId: code },
+                    { publicTraceHash: { equals: code, mode: 'insensitive' } },
+                    { qrCode: { equals: code, mode: 'insensitive' } },
+                    { lotId: { equals: code, mode: 'insensitive' } },
                     { id: code },
+                    // Loose matching
+                    { publicTraceHash: { contains: code, mode: 'insensitive' } },
+                    { qrCode: { contains: code, mode: 'insensitive' } },
+                    { id: { startsWith: code, mode: 'insensitive' } }
                 ],
                 ...(type ? { type: type as 'coffee' | 'tea' } : {}),
             },

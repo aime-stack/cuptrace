@@ -48,18 +48,24 @@ interface ContractInfo {
   address?: string;
 }
 
-/**
- * Load plutus.json blueprint file
- */
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Define __dirname for ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export const loadPlutusBlueprint = (): PlutusBlueprint | null => {
   try {
     // Try multiple possible paths
     const possiblePaths = [
-      join(process.cwd(), 'contracts', 'plutus.json'), // From backend directory
-      join(process.cwd(), '..', 'contracts', 'plutus.json'), // From backend, go up to root
-      join(__dirname, '..', '..', '..', 'contracts', 'plutus.json'), // From src/utils, go up to root
+      join(process.cwd(), 'contracts', 'plutus.json'), // From backend root
+      join(process.cwd(), '..', 'contracts', 'plutus.json'), // From backend/scripts
+      join(__dirname, '..', '..', '..', 'contracts', 'plutus.json'), // Relative to file
+      // Robust Fallback
+      'C:\\Users\\user\\Videos\\cuptrace\\backend\\contracts\\plutus.json'
     ];
-    
+
     let blueprintPath: string | null = null;
     for (const path of possiblePaths) {
       if (existsSync(path)) {
@@ -67,13 +73,13 @@ export const loadPlutusBlueprint = (): PlutusBlueprint | null => {
         break;
       }
     }
-    
+
     if (!blueprintPath) {
       console.error('Could not find plutus.json in any of these locations:');
       possiblePaths.forEach(p => console.error(`  - ${p}`));
       return null;
     }
-    
+
     const blueprintContent = readFileSync(blueprintPath, 'utf-8');
     return JSON.parse(blueprintContent) as PlutusBlueprint;
   } catch (error) {
@@ -132,11 +138,11 @@ export const calculatePolicyId = (compiledCode: string): string => {
  */
 export const getNFTMintingPolicy = (): ContractInfo | null => {
   // Try different possible names for the NFT minting policy
-  const contract = getContractByName('batch_nft.batch_nft.mint') 
-    || getContractByName('batch_nft') 
+  const contract = getContractByName('batch_nft.batch_nft.mint')
+    || getContractByName('batch_nft')
     || getContractByName('cuptrace/policies/batch_nft')
     || getContractByName('cuptrace/validators/batch_nft');
-  
+
   if (!contract) {
     return null;
   }
@@ -156,7 +162,7 @@ export const getBatchTraceabilityValidator = (): ContractInfo | null => {
   const contract = getContractByName('batch_traceability.batch_traceability.spend')
     || getContractByName('batch_traceability')
     || getContractByName('cuptrace/validators/batch_traceability');
-  
+
   if (!contract) {
     return null;
   }
@@ -172,7 +178,7 @@ export const getStageTransitionValidator = (): ContractInfo | null => {
   const contract = getContractByName('stage_transition.stage_transition.spend')
     || getContractByName('stage_transition')
     || getContractByName('cuptrace/validators/stage_transition');
-  
+
   if (!contract) {
     return null;
   }
@@ -187,13 +193,13 @@ export const loadContractFromFile = async (contractPath: string): Promise<string
   try {
     const fullPath = join(process.cwd(), 'contracts', 'build', contractPath);
     const contractScript = readFileSync(fullPath, 'utf-8');
-    
+
     // If it's JSON, parse it
     if (contractPath.endsWith('.json')) {
       const parsed = JSON.parse(contractScript);
       return parsed.compiledCode || parsed.cborHex || contractScript;
     }
-    
+
     // Otherwise return as hex
     return contractScript.trim();
   } catch (error) {

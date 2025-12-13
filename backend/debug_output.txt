@@ -1,0 +1,19 @@
+--- DEBUG START ---
+DATABASE_URL: postgresql://postgres.wgziwbrlhmukxdrnpfzs:****@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true
+Host: aws-1-eu-west-3.pooler.supabase.com
+Port: 6543
+Testing TCP connection to aws-1-eu-west-3.pooler.supabase.com:6543...
+TCP Connection SUCCESS
+Attempting Prisma connection...
+BATCH NOT FOUND
+Total batches in DB: 17
+Testing FULL OR Query Logic (Fix Verification):
+BATCH FOUND with OR logic!
+Resolved Batch Details:
+{
+  "id": "cmj4gsnrf000114lpnvppevgg",
+  "lotId": null,
+  "qrCode": "CF-CMJ4GSNR-MJ4GSP5C-F18Z07",
+  "type": "coffee"
+}
+--- DEBUG END ---

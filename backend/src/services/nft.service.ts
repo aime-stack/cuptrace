@@ -253,27 +253,12 @@ export const mintBatchNFT = async (
         throw new Error('Failed to load NFT minting policy compiled code');
       }
 
-      const lucid = lucidInstance as {
-        selectWalletFromPrivateKey: (key: string) => unknown;
-        newTx: () => {
-          mintAssets: (assets: Record<string, bigint>) => {
-            attachMetadata: (label: number, data: unknown) => {
-              attachMintingPolicy: (policy: unknown, redeemer: unknown) => {
-                complete: () => Promise<{
-                  sign: () => {
-                    complete: () => Promise<{
-                      submit: () => Promise<string>;
-                    }>;
-                  };
-                }>;
-              };
-            };
-          };
-        };
-        newMintingPolicy: () => {
-          fromPlutusScript: (script: { type: string; script: string }) => unknown;
-        };
-      };
+      console.log('[MINT DEBUG] Compiled Code Length:', compiledCode.length);
+      console.log('[MINT DEBUG] Compiled Code Preview:', compiledCode.substring(0, 50) + '...');
+
+      const lucid = lucidInstance as any;
+      const walletAddr = await lucid.wallet.address();
+      console.log('[MINT DEBUG] Wallet Address:', walletAddr);
 
       lucid.selectWalletFromPrivateKey(privateKey);
 
@@ -295,6 +280,13 @@ export const mintBatchNFT = async (
         } catch (error2) {
           throw new Error(`Failed to create minting policy: ${error2 instanceof Error ? error2.message : 'Unknown error'}`);
         }
+      }
+
+      // CRITICAL FIX: Derive Policy ID from the script to avoid mismatches
+      const derivedPolicyId = lucid.utils.mintingPolicyToId(mintingPolicy);
+      if (policyId !== derivedPolicyId) {
+        console.log(`[MINT FIX] Config ID ${policyId} != Script ID ${derivedPolicyId}. Using Script ID.`);
+        policyId = derivedPolicyId;
       }
 
       // Create redeemer for minting (batch_id from batch ID)

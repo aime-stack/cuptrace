@@ -86,7 +86,7 @@ export const useAgentStats = () => {
     return useQuery({
         queryKey: ['agent-stats'],
         queryFn: async () => {
-            const { data } = await axiosInstance.get<{ data: AgentStats }>('/stats/agent');
+            const { data } = await axiosInstance.get<{ data: AgentStats }>(`/stats/agent?t=${Date.now()}`);
             return data.data;
         },
         staleTime: 60 * 1000,

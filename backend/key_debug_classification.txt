@@ -1,0 +1,7 @@
+Starting classification...
+Length: 450
+Contains spaces: false
+Space count: 0
+Starts with '{': false
+Starts with '[': false
+Is Hex only: true

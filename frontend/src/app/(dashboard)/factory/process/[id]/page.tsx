@@ -65,6 +65,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
     const [submitting, setSubmitting] = useState(false);
     const [minting, setMinting] = useState(false);
     const [minted, setMinted] = useState(false);
+    const [isPending, setIsPending] = useState(false);
 
     const form = useForm<ProcessingFormData>({
         resolver: zodResolver(processingSchema),
@@ -85,6 +86,9 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                     setBatch(response.data.data);
                     if (response.data.data.nftPolicyId) {
                         setMinted(true);
+                        if (response.data.data.nftPolicyId.startsWith('pending_')) {
+                            setIsPending(true);
+                        }
                     }
                 }
             } catch (error) {
@@ -173,6 +177,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
             // For now, we'll simulate the update
             toast.success('NFT Minting Transaction Submitted!');
             setMinted(true);
+            setIsPending(false); // Assume success on retry for UI feedback immediately, or reload page
 
             // Refresh
             const response = await axiosInstance.get(`/coffee/${params.id}`);
@@ -350,7 +355,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Activity className="h-5 w-5 text-blue-600" />
-                                Batch hasn&apos;t started processing yetLog
+                                Batch Packet Log
                             </CardTitle>
                             <CardDescription>Record processing stages for traceability.</CardDescription>
                         </CardHeader>
@@ -546,10 +551,14 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                         <CardContent className="space-y-4">
                             {minted ? (
                                 <div className="space-y-3">
-                                    <div className="bg-white dark:bg-card p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
+                                    <div className={`bg-white dark:bg-card p-3 rounded-lg border ${isPending ? 'border-yellow-200 dark:border-yellow-900/40' : 'border-indigo-100 dark:border-indigo-900/40'}`}>
                                         <p className="text-xs text-muted-foreground mb-1">Status</p>
-                                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium text-sm">
-                                            <CheckCircle2 className="h-4 w-4" /> Minted on Cardano
+                                        <div className={`flex items-center gap-2 ${isPending ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'} font-medium text-sm`}>
+                                            {isPending ? (
+                                                <><AlertCircle className="h-4 w-4" /> Pending / Local Only</>
+                                            ) : (
+                                                <><CheckCircle2 className="h-4 w-4" /> Minted on Cardano</>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="bg-white dark:bg-card p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40">
@@ -558,11 +567,26 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                                             {batch.nftPolicyId?.substring(0, 12)}...
                                         </p>
                                     </div>
-                                    <Button variant="outline" className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-100" asChild>
-                                        <a href={`https://cardanoscan.io/transaction/${batch.blockchainTxHash}`} target="_blank" rel="noopener noreferrer">
-                                            View on Explorer
-                                        </a>
-                                    </Button>
+
+                                    {isPending ? (
+                                        <Button
+                                            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white"
+                                            onClick={handleMintNFT}
+                                            disabled={minting}
+                                        >
+                                            {minting ? (
+                                                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Retrying...</>
+                                            ) : (
+                                                <><Wallet className="mr-2 h-4 w-4" /> Retry Minting</>
+                                            )}
+                                        </Button>
+                                    ) : (
+                                        <Button variant="outline" className="w-full border-indigo-200 text-indigo-700 hover:bg-indigo-100" asChild>
+                                            <a href={`https://cardanoscan.io/transaction/${batch.blockchainTxHash}`} target="_blank" rel="noopener noreferrer">
+                                                View on Explorer
+                                            </a>
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -605,3 +629,4 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
         </div>
     );
 }
+

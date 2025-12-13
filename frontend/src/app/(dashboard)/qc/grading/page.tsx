@@ -78,8 +78,8 @@ export default function QCGradingListPage() {
                         Pending
                     </Button>
                     <Button
-                        variant={statusFilter === 'approved' ? 'default' : 'outline'}
-                        onClick={() => setStatusFilter('approved')}
+                        variant={statusFilter === 'approved,rejected' ? 'default' : 'outline'}
+                        onClick={() => setStatusFilter('approved,rejected')}
                         size="sm"
                     >
                         Graded
@@ -108,8 +108,8 @@ export default function QCGradingListPage() {
                                 <div key={batch.id} className="p-4 hover:bg-muted/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <div className="flex items-start gap-4">
                                         <div className={`mt-1 h-10 w-10 rounded-full flex items-center justify-center ${batch.status === 'pending' ? 'bg-orange-100 text-orange-600' :
-                                                batch.status === 'approved' ? 'bg-green-100 text-green-600' :
-                                                    'bg-red-100 text-red-600'
+                                            batch.status === 'approved' ? 'bg-green-100 text-green-600' :
+                                                'bg-red-100 text-red-600'
                                             }`}>
                                             {batch.status === 'pending' ? <Clock className="h-5 w-5" /> :
                                                 batch.status === 'approved' ? <CheckCircle2 className="h-5 w-5" /> :

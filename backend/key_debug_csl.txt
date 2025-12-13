@@ -1,0 +1,6 @@
+Starting CSL analysis...
+CSL loaded
+Converted to buffer, length: 225
+FAIL: Not normal bytes: undefined
+FAIL: Not Bip32PrivateKey: undefined
+Done.

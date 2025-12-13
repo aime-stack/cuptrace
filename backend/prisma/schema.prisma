@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,9 +8,467 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ============================================
-// ENUMS
-// ============================================
+model User {
+  id                    String             @id @default(cuid())
+  name                  String
+  email                 String             @unique
+  password              String
+  role                  UserRole
+  phone                 String?
+  address               String?
+  city                  String?
+  province              String?
+  country               String             @default("Rwanda")
+  cooperativeId         String?
+  registrationNumber    String?
+  isActive              Boolean            @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  publicHash            String?            @unique @map("public_hash")
+  phoneHash             String?            @map("phone_hash")
+  aidApplications       AidParticipant[]
+  authoredAnnouncements Announcement[]
+  uploadedDocuments     BatchDocument[]
+  batchHistory          BatchHistory[]
+  comments              Comment[]
+  donationsReceived     Donation[]
+  exportRecords         ExportRecord[]
+  naebReports           NAEBReport[]
+  notifications         Notification[]
+  paymentsReceived      Payment[]          @relation("PaymentsReceived")
+  paymentsMade          Payment[]          @relation("PaymentsMade")
+  votes                 PollVote[]
+  createdPolls          Poll[]
+  processingRecords     ProcessingRecord[]
+  exporterBatches       ProductBatch[]     @relation("ExporterBatches")
+  factoryBatches        ProductBatch[]     @relation("FactoryBatches")
+  farmerBatches         ProductBatch[]     @relation("FarmerBatches")
+  importerBatches       ProductBatch[]     @relation("ImporterBatches")
+  retailerBatches       ProductBatch[]     @relation("RetailerBatches")
+  washingStationBatches ProductBatch[]     @relation("WashingStationBatches")
+  events                SupplyChainEvent[]
+  threads               Thread[]
+  cooperative           Cooperative?       @relation(fields: [cooperativeId], references: [id])
+
+  @@index([role])
+  @@index([cooperativeId])
+  @@map("users")
+}
+
+model Cooperative {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  location      String
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  aidPrograms   AidProgram[]
+  announcements Announcement[]
+  polls         Poll[]
+  batches       ProductBatch[]
+  threads       Thread[]
+  farmers       User[]
+
+  @@map("cooperatives")
+}
+
+model ProductBatch {
+  id                String             @id @default(cuid())
+  type              ProductType
+  status            BatchStatus        @default(pending)
+  originLocation    String
+  region            String?
+  district          String?
+  sector            String?
+  cell              String?
+  village           String?
+  coordinates       String?
+  lotId             String?            @unique
+  quantity          Float?
+  quality           String?
+  moisture          Float?
+  harvestDate       DateTime?
+  processingType    String?
+  grade             String?
+  teaType           String?
+  pluckingDate      DateTime?
+  qrCode            String?            @unique
+  qrCodeGeneratedAt DateTime?
+  verificationUrl   String?
+  qrCodeUrl         String?            @map("qr_code_url")
+  publicTraceHash   String?            @unique @map("public_trace_hash")
+  currentStage      SupplyChainStage
+  blockchainTxHash  String?
+  nftPolicyId       String?
+  nftAssetName      String?
+  nftMintedAt       DateTime?
+  description       String?
+  metadata          Json?
+  tags              String[]
+  deletedAt         DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  farmerId          String?
+  washingStationId  String?
+  factoryId         String?
+  exporterId        String?
+  importerId        String?
+  retailerId        String?
+  cooperativeId     String?
+  documents         BatchDocument[]
+  history           BatchHistory[]
+  integrity         BatchIntegrity?
+  certificates      Certificate[]
+  exportRecord      ExportRecord?
+  payments          Payment[]
+  processingRecords ProcessingRecord[]
+  cooperative       Cooperative?       @relation(fields: [cooperativeId], references: [id])
+  exporter          User?              @relation("ExporterBatches", fields: [exporterId], references: [id])
+  factory           User?              @relation("FactoryBatches", fields: [factoryId], references: [id])
+  farmer            User?              @relation("FarmerBatches", fields: [farmerId], references: [id])
+  importer          User?              @relation("ImporterBatches", fields: [importerId], references: [id])
+  retailer          User?              @relation("RetailerBatches", fields: [retailerId], references: [id])
+  washingStation    User?              @relation("WashingStationBatches", fields: [washingStationId], references: [id])
+  ratings           Rating[]
+  events            SupplyChainEvent[]
+
+  @@index([status, deletedAt])
+  @@index([description])
+  @@index([farmerId])
+  @@index([washingStationId])
+  @@index([cooperativeId])
+  @@index([factoryId])
+  @@index([exporterId])
+  @@index([importerId])
+  @@index([retailerId])
+  @@index([farmerId, createdAt])
+  @@map("product_batches")
+}
+
+model BatchHistory {
+  id               String           @id @default(cuid())
+  batchId          String
+  stage            SupplyChainStage
+  blockchainTxHash String?
+  timestamp        DateTime         @default(now())
+  changedBy        String
+  notes            String?
+  quantity         Float?
+  quality          String?
+  location         String?
+  metadata         Json?
+  batch            ProductBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [changedBy], references: [id])
+
+  @@map("batch_history")
+}
+
+model ProcessingRecord {
+  id               String           @id @default(cuid())
+  batchId          String
+  stage            SupplyChainStage
+  processingType   String
+  notes            String?
+  qualityScore     Float?
+  quantityIn       Float?
+  quantityOut      Float?
+  processedBy      String
+  processedAt      DateTime         @default(now())
+  blockchainTxHash String?
+  batch            ProductBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  processor        User             @relation(fields: [processedBy], references: [id])
+
+  @@map("processing_records")
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  batchId          String
+  payerId          String
+  payeeId          String
+  amount           Decimal
+  currency         String        @default("RWF")
+  paymentType      PaymentType
+  status           PaymentStatus @default(pending)
+  paymentDate      DateTime?
+  transactionRef   String?
+  notes            String?
+  blockchainTxHash String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  batch            ProductBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  payee            User          @relation("PaymentsReceived", fields: [payeeId], references: [id])
+  payer            User          @relation("PaymentsMade", fields: [payerId], references: [id])
+
+  @@map("payments")
+}
+
+model ExportRecord {
+  id               String       @id @default(cuid())
+  batchId          String       @unique
+  exporterId       String
+  buyerName        String
+  buyerAddress     String?
+  buyerEmail       String?
+  shippingMethod   String
+  shippingDate     DateTime
+  expectedArrival  DateTime?
+  trackingNumber   String?
+  certificates     String?
+  blockchainTxHash String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  batch            ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  exporter         User         @relation(fields: [exporterId], references: [id])
+
+  @@map("export_records")
+}
+
+model Certificate {
+  id                String          @id @default(cuid())
+  batchId           String
+  certificateType   CertificateType
+  certificateNumber String          @unique
+  issuedBy          String
+  issuedDate        DateTime
+  expiryDate        DateTime?
+  documentUrl       String?
+  blockchainTxHash  String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  batch             ProductBatch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@map("certificates")
+}
+
+model NAEBReport {
+  id              String       @id @default(cuid())
+  reportType      ReportType
+  periodStart     DateTime
+  periodEnd       DateTime
+  generatedBy     String
+  data            Json
+  status          ReportStatus @default(draft)
+  submittedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  generatedByUser User         @relation(fields: [generatedBy], references: [id])
+
+  @@map("naeb_reports")
+}
+
+model BatchIntegrity {
+  id         String       @id @default(cuid())
+  batchId    String       @unique
+  hash       String
+  frozenData Json
+  createdAt  DateTime     @default(now())
+  batch      ProductBatch @relation(fields: [batchId], references: [id])
+
+  @@map("batch_integrity")
+}
+
+model SupplyChainEvent {
+  id          String       @id @default(cuid())
+  batchId     String
+  eventType   String
+  timestamp   DateTime     @default(now())
+  operatorId  String
+  location    String?
+  description String?
+  metadata    Json?
+  eventHash   String?
+  batch       ProductBatch @relation(fields: [batchId], references: [id])
+  operator    User         @relation(fields: [operatorId], references: [id])
+
+  @@map("supply_chain_events")
+}
+
+model BatchDocument {
+  id         String       @id @default(cuid())
+  batchId    String
+  type       String
+  url        String
+  hash       String
+  uploadedBy String
+  createdAt  DateTime     @default(now())
+  batch      ProductBatch @relation(fields: [batchId], references: [id])
+  uploader   User         @relation(fields: [uploadedBy], references: [id])
+
+  @@map("batch_documents")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean   @default(false)
+  smsSent   Boolean   @default(false)
+  emailSent Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model Announcement {
+  id            String           @id @default(uuid())
+  title         String
+  content       String
+  type          AnnouncementType
+  priority      String           @default("normal")
+  cooperativeId String?
+  authorId      String
+  publishedAt   DateTime         @default(now())
+  expiresAt     DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  author        User             @relation(fields: [authorId], references: [id])
+  cooperative   Cooperative?     @relation(fields: [cooperativeId], references: [id])
+  comments      Comment[]
+
+  @@index([cooperativeId, publishedAt])
+  @@map("announcements")
+}
+
+model Poll {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  pollType      PollType
+  cooperativeId String?
+  createdBy     String
+  status        String       @default("active")
+  startsAt      DateTime     @default(now())
+  endsAt        DateTime
+  options       Json
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  comments      Comment[]
+  votes         PollVote[]
+  cooperative   Cooperative? @relation(fields: [cooperativeId], references: [id])
+  creator       User         @relation(fields: [createdBy], references: [id])
+
+  @@index([cooperativeId, status])
+  @@map("polls")
+}
+
+model PollVote {
+  id       String   @id @default(uuid())
+  pollId   String
+  userId   String
+  optionId String
+  votedAt  DateTime @default(now())
+  poll     Poll     @relation(fields: [pollId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+  @@index([pollId])
+  @@map("poll_votes")
+}
+
+model AidProgram {
+  id            String           @id @default(uuid())
+  title         String
+  description   String
+  provider      String
+  type          String
+  eligibility   String
+  deadline      DateTime?
+  status        String           @default("open")
+  cooperativeId String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  participants  AidParticipant[]
+  cooperative   Cooperative?     @relation(fields: [cooperativeId], references: [id])
+
+  @@index([cooperativeId, status])
+  @@map("aid_programs")
+}
+
+model AidParticipant {
+  id        String     @id @default(uuid())
+  programId String
+  userId    String
+  status    String     @default("applied")
+  appliedAt DateTime   @default(now())
+  program   AidProgram @relation(fields: [programId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([programId, userId])
+  @@index([programId])
+  @@map("aid_participants")
+}
+
+model Thread {
+  id            String       @id @default(uuid())
+  title         String
+  content       String
+  authorId      String
+  cooperativeId String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  comments      Comment[]
+  author        User         @relation(fields: [authorId], references: [id])
+  cooperative   Cooperative? @relation(fields: [cooperativeId], references: [id])
+
+  @@index([cooperativeId])
+  @@map("threads")
+}
+
+model Comment {
+  id             String        @id @default(uuid())
+  content        String
+  authorId       String
+  announcementId String?
+  pollId         String?
+  threadId       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  announcement   Announcement? @relation(fields: [announcementId], references: [id])
+  author         User          @relation(fields: [authorId], references: [id])
+  poll           Poll?         @relation(fields: [pollId], references: [id])
+  thread         Thread?       @relation(fields: [threadId], references: [id])
+
+  @@index([announcementId])
+  @@index([pollId])
+  @@index([threadId])
+  @@map("comments")
+}
+
+model Rating {
+  id        String       @id @default(uuid())
+  rating    Int
+  comment   String?
+  batchId   String
+  createdAt DateTime     @default(now())
+  batch     ProductBatch @relation(fields: [batchId], references: [id])
+
+  @@index([batchId])
+  @@map("ratings")
+}
+
+model Donation {
+  id         String   @id @default(uuid())
+  amount     Decimal
+  currency   String   @default("USD")
+  status     String   @default("pledged")
+  farmerId   String
+  donorName  String?
+  donorEmail String?
+  message    String?
+  createdAt  DateTime @default(now())
+  farmer     User     @relation(fields: [farmerId], references: [id])
+
+  @@index([farmerId])
+  @@map("donations")
+}
 
 enum UserRole {
   farmer
@@ -23,7 +478,6 @@ enum UserRole {
   exporter
   importer
   retailer
-
   admin
   qc
 }
@@ -96,402 +550,6 @@ enum CertificateType {
   other
 }
 
-// ============================================
-// MODELS
-// ============================================
-
-model User {
-  id                 String   @id @default(cuid())
-  name               String
-  email              String   @unique
-  password           String
-  role               UserRole
-  phone              String?
-  address            String?
-  city               String?
-  province           String?
-  country            String   @default("Rwanda")
-  cooperativeId      String?
-  registrationNumber String?
-  isActive           Boolean  @default(true)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  
-  // Privacy & Hash-based Identity
-  publicHash         String?  @unique @map("public_hash")  // F-XXXX format public ID
-  phoneHash          String?  @map("phone_hash")           // HMAC hash of phone for USSD
-
-  // Relations
-  cooperative           Cooperative?       @relation(fields: [cooperativeId], references: [id])
-  farmerBatches         ProductBatch[]     @relation("FarmerBatches")
-  washingStationBatches ProductBatch[]     @relation("WashingStationBatches")
-  factoryBatches        ProductBatch[]     @relation("FactoryBatches")
-  exporterBatches       ProductBatch[]     @relation("ExporterBatches")
-  importerBatches       ProductBatch[]     @relation("ImporterBatches")
-  retailerBatches       ProductBatch[]     @relation("RetailerBatches")
-  batchHistory          BatchHistory[]
-  processingRecords     ProcessingRecord[]
-  paymentsMade          Payment[]          @relation("PaymentsMade")
-  paymentsReceived      Payment[]          @relation("PaymentsReceived")
-  exportRecords         ExportRecord[]
-  naebReports           NAEBReport[]
-  events                SupplyChainEvent[]
-  uploadedDocuments     BatchDocument[]
-  notifications         Notification[]
-
-  // Community Relations
-  authoredAnnouncements Announcement[]
-  createdPolls          Poll[]
-  votes                 PollVote[]
-  threads               Thread[]
-  comments              Comment[]
-  aidApplications       AidParticipant[]
-  donationsReceived     Donation[]
-
-  @@index([role])
-  @@index([cooperativeId])
-  @@map("users")
-}
-
-model Cooperative {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  location    String
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  farmers User[]
-  batches ProductBatch[]
-  announcements Announcement[]
-  polls         Poll[]
-  aidPrograms   AidProgram[]
-  threads       Thread[]
-
-  @@map("cooperatives")
-}
-
-model ProductBatch {
-  id     String      @id @default(cuid())
-  type   ProductType
-  status BatchStatus @default(pending)
-
-  // Location (structured)
-  originLocation String // Keep for backward compatibility
-  region         String?
-  district       String?
-  sector         String?
-  cell           String?
-  village        String?
-  coordinates    String? // GPS coordinates (lat, lng)
-
-  // Product Attributes
-  lotId       String?   @unique // Unique lot identifier
-  quantity    Float? // Weight in kg
-  quality     String? // Quality grade/rating
-  moisture    Float? // Moisture percentage
-  harvestDate DateTime? // When product was harvested/plucked
-
-  // Coffee-specific
-  processingType String? // "wet", "dry", "honey"
-  grade          String? // Coffee grade (A, AA, etc.)
-
-  // Tea-specific
-  teaType      String? // "CTC", "Orthodox", "Green", "Black", "White"
-  pluckingDate DateTime?
-
-  // QR Code & Verification
-  qrCode            String?   @unique
-  qrCodeGeneratedAt DateTime?
-  verificationUrl   String?
-  qrCodeUrl         String?   @map("qr_code_url")          // Supabase Storage URL for QR image
-  publicTraceHash   String?   @unique @map("public_trace_hash")  // B-XXXX for trace URLs
-
-  // Current Stage & Blockchain
-  currentStage     SupplyChainStage
-  blockchainTxHash String?
-  // NFT Information
-  nftPolicyId  String? // NFT Policy ID
-  nftAssetName String? // NFT Asset Name
-  nftMintedAt  DateTime? // When NFT was minted
-
-  // Metadata
-  description String?
-  metadata    Json? // Flexible JSON for additional data
-  tags        String[] // Array of tags for categorization
-
-  // Relations
-  integrity        BatchIntegrity?
-  events           SupplyChainEvent[]
-  documents        BatchDocument[]
-  // Soft Delete
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // Foreign keys for supply chain participants
-  farmerId         String?
-  washingStationId String?
-  factoryId        String?
-  exporterId       String?
-  importerId       String?
-  retailerId       String?
-  cooperativeId    String?
-
-  // Relations
-  cooperative       Cooperative?       @relation(fields: [cooperativeId], references: [id])
-  farmer            User?              @relation("FarmerBatches", fields: [farmerId], references: [id])
-  washingStation    User?              @relation("WashingStationBatches", fields: [washingStationId], references: [id])
-  factory           User?              @relation("FactoryBatches", fields: [factoryId], references: [id])
-  exporter          User?              @relation("ExporterBatches", fields: [exporterId], references: [id])
-  importer          User?              @relation("ImporterBatches", fields: [importerId], references: [id])
-  retailer          User?              @relation("RetailerBatches", fields: [retailerId], references: [id])
-  history           BatchHistory[]
-  processingRecords ProcessingRecord[]
-  payments          Payment[]
-  exportRecord      ExportRecord?
-  certificates      Certificate[]
-  ratings           Rating[]
-
-  @@index([status, deletedAt])
-  @@index([description])
-  // Performance Indices
-  @@index([farmerId])
-  @@index([washingStationId])
-  @@index([cooperativeId])
-  @@index([factoryId])
-  @@index([exporterId])
-  @@index([importerId])
-  @@index([retailerId]) 
-  @@index([farmerId, createdAt]) // Optimize farmer list sorting
-  
-  @@map("product_batches")
-}
-
-model BatchHistory {
-  id               String           @id @default(cuid())
-  batchId          String
-  stage            SupplyChainStage
-  blockchainTxHash String?
-  timestamp        DateTime         @default(now())
-  changedBy        String
-
-  // Enhanced fields
-  notes    String?
-  quantity Float?
-  quality  String?
-  location String?
-  metadata Json?
-
-  // Relations
-  batch ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  user  User         @relation(fields: [changedBy], references: [id])
-
-  @@map("batch_history")
-}
-
-model ProcessingRecord {
-  id               String           @id @default(cuid())
-  batchId          String
-  stage            SupplyChainStage
-  processingType   String // "wet_processing", "drying", "milling", "grading", "packaging", etc.
-  notes            String?
-  qualityScore     Float?
-  quantityIn       Float? // Input quantity
-  quantityOut      Float? // Output quantity (after processing loss)
-  processedBy      String // User ID
-  processedAt      DateTime         @default(now())
-  blockchainTxHash String?
-
-  // Relations
-  batch     ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  processor User         @relation(fields: [processedBy], references: [id])
-
-  @@map("processing_records")
-}
-
-model Payment {
-  id               String        @id @default(cuid())
-  batchId          String
-  payerId          String
-  payeeId          String
-  amount           Decimal // Payment amount
-  currency         String        @default("RWF")
-  paymentType      PaymentType
-  status           PaymentStatus @default(pending)
-  paymentDate      DateTime?
-  transactionRef   String? // External transaction reference
-  notes            String?
-  blockchainTxHash String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-
-  // Relations
-  batch ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  payer User         @relation("PaymentsMade", fields: [payerId], references: [id])
-  payee User         @relation("PaymentsReceived", fields: [payeeId], references: [id])
-
-  @@index([batchId])
-  @@index([payerId, createdAt])
-  @@index([payeeId, createdAt])
-  @@map("payments")
-}
-
-model ExportRecord {
-  id               String    @id @default(cuid())
-  batchId          String    @unique
-  exporterId       String
-  buyerName        String
-  buyerAddress     String?
-  buyerEmail       String?
-  shippingMethod   String // "air", "sea", "road"
-  shippingDate     DateTime
-  expectedArrival  DateTime?
-  trackingNumber   String?
-  certificates     String? // JSON array of certificate references
-  blockchainTxHash String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  // Relations
-  batch    ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  exporter User         @relation(fields: [exporterId], references: [id])
-
-  @@map("export_records")
-}
-
-model Certificate {
-  id                String          @id @default(cuid())
-  batchId           String
-  certificateType   CertificateType
-  certificateNumber String          @unique
-  issuedBy          String
-  issuedDate        DateTime
-  expiryDate        DateTime?
-  documentUrl       String? // Link to certificate document
-  blockchainTxHash  String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  // Relations
-  batch ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-
-  @@map("certificates")
-}
-
-model NAEBReport {
-  id          String       @id @default(cuid())
-  reportType  ReportType
-  periodStart DateTime
-  periodEnd   DateTime
-  generatedBy String // Admin user ID
-  data        Json // Report data (JSON structure)
-  status      ReportStatus @default(draft)
-  submittedAt DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-
-  // Relations
-  generatedByUser User @relation(fields: [generatedBy], references: [id])
-
-  @@map("naeb_reports")
-}
-
-model BatchIntegrity {
-  id        String   @id @default(cuid())
-  batchId   String   @unique
-  batch     ProductBatch @relation(fields: [batchId], references: [id])
-  hash      String   // SHA256 hash of frozen data
-  frozenData Json    // The actual data that was hashed
-  createdAt DateTime @default(now())
-
-  @@map("batch_integrity")
-}
-
-model SupplyChainEvent {
-  id          String   @id @default(cuid())
-  batchId     String
-  batch       ProductBatch @relation(fields: [batchId], references: [id])
-  eventType   String   // "Washed", "Dried", "Roasted", etc.
-  timestamp   DateTime @default(now())
-  operatorId  String
-  operator    User     @relation(fields: [operatorId], references: [id])
-  location    String?
-  description String?
-  metadata    Json?
-  eventHash   String?  // SHA256 of this event data
-
-  @@map("supply_chain_events")
-}
-
-model BatchDocument {
-  id          String   @id @default(cuid())
-  batchId     String
-  batch       ProductBatch @relation(fields: [batchId], references: [id])
-  type        String   // "Certificate", "ICO", "LabReport"
-  url         String
-  hash        String   // SHA256 of the file content
-  uploadedBy  String
-  uploader    User     @relation(fields: [uploadedBy], references: [id])
-  createdAt   DateTime @default(now())
-
-  @@map("batch_documents")
-}
-
-// ============================================
-// NOTIFICATIONS
-// ============================================
-
-model Notification {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  
-  type        String   // 'batch_approved', 'batch_rejected', 'payment_received', 'qr_generated'
-  title       String
-  message     String
-  
-  // Flexible data storage for batch info, QR URLs, etc.
-  data        Json?    
-  
-  // Multi-channel notification status
-  isRead      Boolean  @default(false)
-  smsSent     Boolean  @default(false)
-  emailSent   Boolean  @default(false)
-  
-  createdAt   DateTime @default(now())
-  readAt      DateTime?
-
-  @@index([userId, isRead])
-  @@index([createdAt])
-  @@map("notifications")
-}
-
-// ============================================
-// COMMUNITY & VOTING
-// ============================================
-
-model Announcement {
-  id             String   @id @default(uuid())
-  title          String
-  content        String   @db.Text
-  type           AnnouncementType
-  priority       String   @default("normal") // normal, high, urgent
-  cooperativeId  String?
-  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
-  authorId       String
-  author         User     @relation(fields: [authorId], references: [id])
-  publishedAt    DateTime @default(now())
-  expiresAt      DateTime?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  comments       Comment[]
-  
-  @@index([cooperativeId, publishedAt])
-  @@map("announcements")
-}
-
 enum AnnouncementType {
   general
   pricing
@@ -500,153 +558,9 @@ enum AnnouncementType {
   event
 }
 
-model Poll {
-  id             String   @id @default(uuid())
-  title          String
-  description    String?  @db.Text
-  pollType       PollType
-  cooperativeId  String?
-  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
-  createdBy      String
-  creator        User     @relation(fields: [createdBy], references: [id])
-  status         String   @default("active") // active, closed
-  startsAt       DateTime @default(now())
-  endsAt         DateTime
-  options        Json     // Array of poll options
-  votes          PollVote[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  comments       Comment[]
-  
-  @@index([cooperativeId, status])
-  @@map("polls")
-}
-
 enum PollType {
   coffee_price
   tea_price
   aid_distribution
   general
-}
-
-model PollVote {
-  id        String   @id @default(uuid())
-  pollId    String
-  poll      Poll     @relation(fields: [pollId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  optionId  String   // References option from poll.options
-  votedAt   DateTime @default(now())
-  
-  @@unique([pollId, userId]) // One vote per user per poll
-  @@index([pollId])
-  @@map("poll_votes")
-}
-
-// ============================================
-// NEW COMMUNITY MODELS
-// ============================================
-
-model AidProgram {
-  id             String   @id @default(uuid())
-  title          String
-  description    String   @db.Text
-  provider       String
-  type           String   // e.g., "Financial", "Material", "Training"
-  eligibility    String
-  deadline       DateTime?
-  status         String   @default("open") // open, closed
-  cooperativeId  String?
-  cooperative    Cooperative? @relation(fields: [cooperativeId], references: [id])
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  participants   AidParticipant[]
-  
-  @@index([cooperativeId, status])
-  @@map("aid_programs")
-}
-
-model AidParticipant {
-  id            String     @id @default(uuid())
-  programId     String
-  program       AidProgram @relation(fields: [programId], references: [id])
-  userId        String
-  user          User       @relation(fields: [userId], references: [id])
-  status        String     @default("applied") // applied, approved, rejected
-  appliedAt     DateTime   @default(now())
-
-  @@unique([programId, userId])
-  @@index([programId])
-  @@map("aid_participants")
-}
-
-model Thread {
-  id            String    @id @default(uuid())
-  title         String
-  content       String    @db.Text
-  authorId      String
-  author        User      @relation(fields: [authorId], references: [id])
-  cooperativeId String?
-  cooperative   Cooperative? @relation(fields: [cooperativeId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  comments      Comment[]
-
-  @@index([cooperativeId])
-  @@map("threads")
-}
-
-model Comment {
-  id             String        @id @default(uuid())
-  content        String        @db.Text
-  authorId       String
-  author         User          @relation(fields: [authorId], references: [id])
-  
-  // Polymorphic-ish relations (nullable fields)
-  announcementId String?
-  announcement   Announcement? @relation(fields: [announcementId], references: [id])
-  pollId         String?
-  poll           Poll?         @relation(fields: [pollId], references: [id])
-  threadId       String?
-  thread         Thread?       @relation(fields: [threadId], references: [id])
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([announcementId])
-  @@index([pollId])
-  @@index([threadId])
-  @@map("comments")
-}
-
-// ============================================
-// CONSUMER ENGAGEMENT
-// ============================================
-
-model Rating {
-  id        String       @id @default(uuid())
-  rating    Int          // 1-5
-  comment   String?      @db.Text
-  batchId   String
-  batch     ProductBatch @relation(fields: [batchId], references: [id])
-  createdAt DateTime     @default(now())
-
-  @@index([batchId])
-  @@map("ratings")
-}
-
-model Donation {
-  id          String        @id @default(uuid())
-  amount      Decimal
-  currency    String        @default("USD")
-  status      String        @default("pledged") // pledged, processed
-  farmerId    String
-  farmer      User          @relation(fields: [farmerId], references: [id])
-  donorName   String?
-  donorEmail  String?
-  message     String?
-  createdAt   DateTime      @default(now())
-
-  @@index([farmerId])
-  @@map("donations")
 }

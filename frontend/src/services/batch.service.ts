@@ -71,8 +71,13 @@ export const rejectBatch = async (id: string, reason: string, type: ProductType 
 
 export const verifyBatchByQRCode = async (qrCode: string, type: ProductType = ProductType.coffee): Promise<ProductBatch> => {
     const endpoint = type === ProductType.coffee ? `/coffee/verify/${qrCode}` : `/tea/verify/${qrCode}`;
-    const { data } = await axiosInstance.get<ApiResponse<ProductBatch>>(endpoint);
-    if (data.data) return data.data;
+    const { data } = await axiosInstance.get<ApiResponse<{ batch: ProductBatch; verified: boolean }>>(endpoint);
+    // The API returns { success: true, data: { verified: true, batch: {}, ... } }
+    // We need to return the batch object
+    if (data.data?.batch) return data.data.batch;
+    // Fallback if the structure changes or if looking up by direct ID didn't use the wrapper
+    if (data.data && !('batch' in data.data)) return data.data as any;
+
     throw new Error(data.message || 'Batch not found');
 };
 
@@ -95,4 +100,11 @@ export const retryBlockchainRecord = async (id: string, type: ProductType = Prod
     const { data } = await axiosInstance.post<ApiResponse<{ txHash: string }>>(endpoint);
     if (data.data) return data.data;
     throw new Error(data.message || 'Failed to create blockchain record');
+};
+
+export const verifyBatchById = async (id: string, type: ProductType = ProductType.coffee): Promise<ProductBatch> => {
+    const endpoint = type === ProductType.coffee ? `/coffee/${id}/verify` : `/tea/${id}/verify`;
+    const { data } = await axiosInstance.get<ApiResponse<ProductBatch>>(endpoint);
+    if (data.data) return data.data;
+    throw new Error(data.message || 'Batch not found');
 };

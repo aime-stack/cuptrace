@@ -25,8 +25,16 @@ router.post('/', async (req, res) => {
             data: result
         });
     } catch (error) {
-        console.error('Minting error:', error);
-        const message = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Full Minting Error Object:', error);
+        console.error('Error Type:', typeof error);
+        if (typeof error === 'object') {
+            console.error('Error JSON:', JSON.stringify(error, null, 2));
+        }
+
+        const message = error instanceof Error
+            ? error.message
+            : (typeof error === 'string' ? error : 'Unknown error (check server logs)');
+
         return res.status(500).json({ message: `Minting failed: ${message}` });
     }
 });

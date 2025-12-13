@@ -1,0 +1,77 @@
+--- CHECK STATUS START ---
+Recent Batches:
+[
+  {
+    "id": "cmj4hu3eo00014ur7s7cud7pv",
+    "lotId": null,
+    "status": "approved",
+    "type": "coffee",
+    "currentStage": "washing_station"
+  },
+  {
+    "id": "cmj4gsnrf000114lpnvppevgg",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4glrwl00009qompv1dxtrk",
+    "lotId": "TEST-LOT-1765640227474",
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4gjrcb00009c30acb106l2",
+    "lotId": "TEST-LOT-1765640133392",
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4g5e3g000112h1fb0qdoya",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4frzue0001zkney25mewrg",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4fi6l20001mxetpz467bsx",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4em53k0003104cpgpdgihj",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj4edjwv0001104cd72uz8t1",
+    "lotId": null,
+    "status": "pending",
+    "type": "coffee",
+    "currentStage": "farmer"
+  },
+  {
+    "id": "cmj47t0pf0001w06fxcfri72x",
+    "lotId": null,
+    "status": "completed",
+    "type": "coffee",
+    "currentStage": "exporter"
+  }
+]
+Total Approved Batches: 6
+Total Approved Coffee Batches: 6
+--- CHECK STATUS END ---

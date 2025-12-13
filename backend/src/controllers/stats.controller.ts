@@ -233,7 +233,9 @@ export const getAgentStats = async (
             totalBatches += count;
 
             if (group.status === 'pending') pendingBatches += count;
-            if (group.status === 'approved') approvedBatches += count;
+            if (['approved', 'processing', 'ready_for_export', 'exported', 'delivered'].includes(group.status)) {
+                approvedBatches += count;
+            }
             if (group.status === 'rejected') rejectedBatches += count;
         });
 

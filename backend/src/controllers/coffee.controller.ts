@@ -169,7 +169,30 @@ export const updateCoffeeController = async (
     const { id } = req.params;
     const updateData = req.body;
 
-    const product = await updateProduct(id, updateData);
+    let product = await updateProduct(id, updateData);
+
+    // WORKFLOW CHANGE: "Lazy Minting" - Real Minting happens here
+    if (updateData.status === 'completed' && env.WALLET_PRIVATE_KEY) {
+      console.log('[UPDATE BATCH] Batch completed. Triggering Real Blockchain Mint...');
+      try {
+        // 1. Mint NFT on Cardano
+        const nftInfo = await mintBatchNFT(id, env.WALLET_PRIVATE_KEY);
+        console.log('[UPDATE BATCH] NFT Minted:', nftInfo.policyId);
+
+        // 2. Generate QR Code
+        const qrInfo = await generateQRCodeForBatch(id);
+        if (qrInfo.success) {
+          console.log('[UPDATE BATCH] QR Generated:', qrInfo.qrCodeUrl);
+        }
+
+        // Fetch updated product to return full data
+        product = await getProductById(id, 'coffee');
+
+      } catch (e) {
+        console.error('[UPDATE BATCH] Post-completion minting failed:', e);
+        // We do not throw; the batch is completed even if minting fails (retriable)
+      }
+    }
 
     return sendSuccess(res, product);
   } catch (error) {
@@ -248,29 +271,37 @@ export const approveCoffeeBatchController = async (
     }
 
     // Trigger NFT minting (uses WALLET_PRIVATE_KEY from env)
-    if (walletPrivateKey) {
-      try {
-        nftInfo = await mintBatchNFT(id, walletPrivateKey);
-        console.log('[QC APPROVAL] NFT minted successfully:', nftInfo);
-      } catch (mintErr) {
-        console.warn('[QC APPROVAL] Failed to mint NFT:', mintErr);
-        // Continue; NFT minting is not critical for batch approval
-      }
+    // WORKFLOW CHANGE: Logic moved to "Lazy Minting". 
+    // QC Approval now only creates a PENDING (Virtual) status.
+    // Real minting happens on Factory Completion.
+    if (env.WALLET_PRIVATE_KEY) {
+      console.log('[QC APPROVAL] "Lazy Minting" active: Creating Virtual (Pending) NFT record.');
+
+      // Create a deterministic "pending" ID so UI shows "Pending / Local Only"
+      const pendingPolicyId = `pending_${Buffer.from(id).toString('hex').substring(0, 56)}`;
+
+      // Update batch to show as 'Pending' in UI (Virtual Record)
+      await updateProduct(id, {
+        metadata: {
+          ...(fullBatch.metadata as Record<string, unknown> || {}),
+          nftMinted: false,
+          nftPending: true
+        },
+        nftPolicyId: pendingPolicyId,
+        nftAssetName: 'pending_mint'
+      });
+
+      nftInfo = { policyId: pendingPolicyId, assetName: 'pending_mint', txHash: '' };
+
     } else {
-      console.warn('[QC APPROVAL] WALLET_PRIVATE_KEY not configured; skipping NFT minting');
+      console.warn('[QC APPROVAL] WALLET_PRIVATE_KEY not configured; skipping NFT minting checks');
     }
 
     // Auto-generate QR code for approved batch
+    // WORKFLOW CHANGE: Moved to Factory Completion.
     let qrInfo = null;
-    try {
-      qrInfo = await generateQRCodeForBatch(id);
-      if (qrInfo.success) {
-        console.log('[QC APPROVAL] QR code generated:', qrInfo.qrCodeUrl);
-      }
-    } catch (qrErr) {
-      console.warn('[QC APPROVAL] Failed to generate QR code:', qrErr);
-      // Continue; QR generation is not critical for batch approval
-    }
+    // We do NOT call generateQRCodeForBatch here anymore.
+
 
     // Send notification to farmer
     let notificationSent = false;

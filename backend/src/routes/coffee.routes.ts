@@ -30,7 +30,9 @@ const router = Router();
 
 // All routes require authentication
 // Public routes
+// Public routes
 router.get('/verify/:qrCode', validate(verifyBatchByQRCodeSchema), verifyCoffeeByQRCodeController);
+router.get('/lot/:lotId', validate(getProductByLotIdSchema), getCoffeeByLotIdController);
 router.get('/:id/verify', validate(getProductSchema), getCoffeeController); // Public access for verification
 
 // Protected routes
@@ -38,7 +40,6 @@ router.use(verifyTokenMiddleware);
 
 router.post('/', validate(createProductSchema), createCoffeeController);
 router.get('/', validate(listProductsSchema), listCoffeeController);
-router.get('/lot/:lotId', validate(getProductByLotIdSchema), getCoffeeByLotIdController);
 
 // Parameterized routes
 router.get('/:id', validate(getProductSchema), getCoffeeController);

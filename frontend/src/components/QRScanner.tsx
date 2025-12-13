@@ -40,7 +40,7 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
             }
 
             onClose();
-            router.push(`/trace/${code}`);
+            router.push(`/verify?code=${code}`);
         }
     };
 

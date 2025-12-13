@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Loader2, ArrowLeft, Search, User } from "lucide-react";
+import { Loader2, ArrowLeft, Search, User, Copy, Check } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import {
     Form,
     FormControl,
@@ -31,6 +31,14 @@ import { useCreateBatch } from "@/hooks/useBatches";
 import { useCurrentUser } from "@/hooks/useAuth";
 import { ProductType, UserRole } from "@/types";
 import { axiosInstance } from "@/lib/axios";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 const batchSchema = z.object({
     farmerId: z.string().min(1, "Farmer is required"),
@@ -56,13 +64,22 @@ interface Farmer {
 
 export default function AgentNewBatchPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const typeParam = searchParams.get("type");
+    const productType = typeParam === "tea" ? ProductType.tea : ProductType.coffee;
+
     const { data: user } = useCurrentUser();
-    const { mutate: createBatch, isPending } = useCreateBatch(ProductType.coffee);
+    const { mutate: createBatch, isPending } = useCreateBatch(productType);
 
     const [farmers, setFarmers] = useState<Farmer[]>([]);
     const [loadingFarmers, setLoadingFarmers] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedFarmer, setSelectedFarmer] = useState<Farmer | null>(null);
+
+    // Success Dialog State
+    const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+    const [createdBatchCode, setCreatedBatchCode] = useState<string>("");
+    const [copied, setCopied] = useState(false);
 
     const form = useForm<BatchFormData>({
         resolver: zodResolver(batchSchema),
@@ -82,9 +99,6 @@ export default function AgentNewBatchPage() {
     // Fetch farmers in the agent's cooperative
     useEffect(() => {
         const fetchFarmers = async () => {
-            console.log('[AGENT] Current user:', user);
-            console.log('[AGENT] Cooperative ID:', user?.cooperativeId);
-
             try {
                 // Fetch farmers - if agent has cooperativeId, filter by it
                 const params: any = {
@@ -96,10 +110,7 @@ export default function AgentNewBatchPage() {
                     params.cooperativeId = user.cooperativeId;
                 }
 
-                console.log('[AGENT] Fetching farmers with params:', params);
-
                 const response = await axiosInstance.get('/auth/users', { params });
-                console.log('[AGENT] Response:', response.data);
 
                 // Handle various response formats
                 let farmersList: Farmer[] = [];
@@ -111,7 +122,6 @@ export default function AgentNewBatchPage() {
                     farmersList = response.data;
                 }
 
-                console.log('[AGENT] Farmers found:', farmersList.length);
                 setFarmers(farmersList);
             } catch (error) {
                 console.error('Failed to fetch farmers:', error);
@@ -143,7 +153,7 @@ export default function AgentNewBatchPage() {
     const onSubmit = (data: BatchFormData) => {
         // Build the batch request with required type field
         const batchRequest = {
-            type: ProductType.coffee,
+            type: productType,
             farmerId: data.farmerId,
             originLocation: data.originLocation,
             region: data.region,
@@ -157,10 +167,24 @@ export default function AgentNewBatchPage() {
         };
 
         createBatch(batchRequest, {
-            onSuccess: () => {
-                router.push("/agent");
+            onSuccess: (newBatch) => {
+                // Determine the best code to show: lotId > id (first 8 chars)
+                const code = newBatch.lotId || newBatch.id.substring(0, 8).toUpperCase();
+                setCreatedBatchCode(code);
+                setShowSuccessDialog(true);
             },
         });
+    };
+
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(createdBatchCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleCloseDialog = () => {
+        setShowSuccessDialog(false);
+        router.push("/agent");
     };
 
     return (
@@ -170,7 +194,7 @@ export default function AgentNewBatchPage() {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Register New Batch</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">Register New {productType === ProductType.tea ? 'Tea' : 'Coffee'} Batch</h1>
                     <p className="text-muted-foreground">
                         Create a batch on behalf of a farmer
                     </p>
@@ -240,7 +264,7 @@ export default function AgentNewBatchPage() {
                     <CardHeader>
                         <CardTitle>Batch Details</CardTitle>
                         <CardDescription>
-                            Enter the details for this coffee batch
+                            Enter the details for this {productType} batch
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -354,7 +378,7 @@ export default function AgentNewBatchPage() {
                                     <Button type="button" variant="outline" onClick={() => router.back()}>
                                         Cancel
                                     </Button>
-                                    <Button type="submit" disabled={isPending || !selectedFarmer}>
+                                    <Button type="submit" disabled={isPending || !selectedFarmer} className="bg-green-600 hover:bg-green-700">
                                         {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                         Register Batch
                                     </Button>
@@ -364,6 +388,42 @@ export default function AgentNewBatchPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Success Dialog */}
+            <Dialog open={showSuccessDialog} onOpenChange={handleCloseDialog}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl font-bold flex flex-col items-center gap-2">
+                            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                                <Check className="h-6 w-6 text-green-600" />
+                            </div>
+                            Registration Successful!
+                        </DialogTitle>
+                        <DialogDescription className="text-center">
+                            The batch has been successfully registered. The farmer has been notified via SMS.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col items-center space-y-4 py-4">
+                        <p className="text-sm font-medium text-muted-foreground">SHARE THIS CODE WITH THE FARMER</p>
+                        <div className="flex items-center gap-2 w-full max-w-sm">
+                            <div className="flex-1 bg-muted p-3 rounded-md text-center font-mono text-xl tracking-wider font-bold border">
+                                {createdBatchCode}
+                            </div>
+                            <Button size="icon" variant="outline" onClick={handleCopyCode} className="h-12 w-12">
+                                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                            </Button>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center max-w-[280px]">
+                            Farmers can use this code to track the status of their batch at any time.
+                        </p>
+                    </div>
+                    <DialogFooter className="sm:justify-center">
+                        <Button onClick={handleCloseDialog} className="w-full sm:w-auto min-w-[120px]">
+                            Done
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -29,13 +29,16 @@ import {
 const router = Router();
 
 // All routes require authentication
+// Public routes
+router.get('/verify/:qrCode', validate(verifyBatchByQRCodeSchema), verifyTeaByQRCodeController);
+router.get('/lot/:lotId', validate(getProductByLotIdSchema), getTeaByLotIdController);
+router.get('/:id/verify', validate(getProductSchema), getTeaController); // Public access for verification
+
+// Protected routes
 router.use(verifyTokenMiddleware);
 
 router.post('/', validate(createProductSchema), createTeaController);
 router.get('/', validate(listProductsSchema), listTeaController);
-// Specific routes must come before parameterized routes
-router.get('/verify/:qrCode', validate(verifyBatchByQRCodeSchema), verifyTeaByQRCodeController);
-router.get('/lot/:lotId', validate(getProductByLotIdSchema), getTeaByLotIdController);
 // Parameterized routes
 router.get('/:id', validate(getProductSchema), getTeaController);
 router.put('/:id', validate(updateProductSchema), updateTeaController);

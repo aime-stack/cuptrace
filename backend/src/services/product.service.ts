@@ -464,7 +464,11 @@ export const listProducts = async (
   }
 
   if (status) {
-    where.status = status;
+    if (status.includes(',')) {
+      where.status = { in: status.split(',') };
+    } else {
+      where.status = status;
+    }
   }
 
   if (farmerId) {
@@ -932,7 +936,15 @@ export const verifyBatchByQRCode = async (qrCode: string) => {
 
   const batch = await prisma.productBatch.findFirst({
     where: {
-      qrCode,
+      OR: [
+        { qrCode: { equals: qrCode, mode: 'insensitive' } },
+        { publicTraceHash: { equals: qrCode, mode: 'insensitive' } },
+        { lotId: { equals: qrCode, mode: 'insensitive' } },
+        { id: qrCode },
+        // Fallback for searches by short code (which might be part of the QR string or ID prefix)
+        { qrCode: { contains: qrCode, mode: 'insensitive' } },
+        { id: { startsWith: qrCode, mode: 'insensitive' } },
+      ],
       ...buildSoftDeleteFilter(),
     },
     include: {

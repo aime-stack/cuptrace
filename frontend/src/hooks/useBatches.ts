@@ -124,10 +124,45 @@ export const useRejectBatch = (type: ProductType = ProductType.coffee) => {
 /**
  * Verify batch by QR code query
  */
-export const useVerifyBatch = (qrCode: string, type: ProductType = ProductType.coffee) => {
+/**
+ * Verify batch by QR code or Lot ID query (Smart Search)
+ * Searches both Coffee and Tea databases if type is not specified
+ */
+export const useVerifyBatch = (qrCode: string, type?: ProductType) => {
     return useQuery({
         queryKey: ['verifyBatch', qrCode, type],
-        queryFn: () => batchService.verifyBatchByQRCode(qrCode, type),
+        queryFn: async () => {
+            // Helper to try fetching a batch
+            const tryFetch = async (t: ProductType) => {
+                // First try by Lot ID
+                try {
+                    return await batchService.getBatchByLotId(qrCode, t);
+                } catch {
+                    // Then try by QR Code/Hash
+                    try {
+                        return await batchService.verifyBatchByQRCode(qrCode, t);
+                    } catch {
+                        // Finally try by UUID (if user pasted a raw ID)
+                        return await batchService.verifyBatchById(qrCode, t);
+                    }
+                }
+            };
+
+            // If a specific type is provided, just search that
+            if (type) {
+                return await tryFetch(type);
+            }
+
+            // Otherwise, search both concurrently and return the first success
+            try {
+                return await Promise.any([
+                    tryFetch(ProductType.coffee),
+                    tryFetch(ProductType.tea)
+                ]);
+            } catch (error) {
+                throw new Error("Batch not found in any database");
+            }
+        },
         enabled: !!qrCode,
         retry: false,
     });

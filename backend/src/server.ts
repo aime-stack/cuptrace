@@ -1,5 +1,5 @@
-import createApp from './app';
 import env from './config/env';
+import createApp from './app';
 import prisma from './config/database';
 
 const app = createApp();

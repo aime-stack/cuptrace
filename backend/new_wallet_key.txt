@@ -1,0 +1,2 @@
+PRIVATE_KEY=ed25519_sk1kllm8nlcmj3dcxs0xexek4zu72nsrvnvkfk8ma6k0rjmvksk464qqul5c0
+ADDRESS=addr_test1vqfhys5mc0dafftm86kdtrhmlt8eqx0fpmv44nn5rz4eqlqczq55x

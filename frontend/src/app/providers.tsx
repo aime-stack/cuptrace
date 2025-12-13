@@ -3,8 +3,12 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/react-query';
 
-import { MeshProvider } from '@meshsdk/react';
+import dynamic from 'next/dynamic';
 import { ThemeProvider } from '@/components/theme-provider';
+
+const MeshProvider = dynamic(() => import('@meshsdk/react').then(mod => mod.MeshProvider), {
+    ssr: false,
+});
 
 export function Providers({ children }: { children: React.ReactNode }) {
     return (

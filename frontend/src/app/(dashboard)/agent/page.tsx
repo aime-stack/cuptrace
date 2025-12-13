@@ -26,13 +26,14 @@ import { StatsCardSkeleton } from "@/components/skeletons/StatsCardSkeleton";
 export default function AgentDashboard() {
     const { data: user } = useCurrentUser();
     const { data: stats, isLoading: statsLoading } = useAgentStats();
+    const [activeTab, setActiveTab] = useState<string>("all");
+    const [productType, setProductType] = useState<ProductType>(ProductType.coffee);
+
     // Use useBatches only for the list view, ideally with pagination (default is 10)
     const { data: batchesData, isLoading: batchesLoading } = useBatches(
         { cooperativeId: user?.cooperativeId },
-        ProductType.coffee,
-        { enabled: !!user?.cooperativeId }
+        productType
     );
-    const [activeTab, setActiveTab] = useState<string>("all");
 
     const batches = useMemo(() => batchesData ?? [], [batchesData]);
 
@@ -42,7 +43,7 @@ export default function AgentDashboard() {
             case 'pending':
                 return batches.filter(b => b.status === 'pending');
             case 'approved':
-                return batches.filter(b => b.status === 'approved');
+                return batches.filter(b => ['approved', 'processing', 'ready_for_export', 'exported', 'delivered'].includes(b.status));
             case 'rejected':
                 return batches.filter(b => b.status === 'rejected');
             default:
@@ -52,23 +53,25 @@ export default function AgentDashboard() {
 
     return (
         <div className="space-y-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Agent Dashboard</h1>
                     <p className="text-muted-foreground">
                         Here&apos;s what&apos;s happening with your farmers and batches today.
                     </p>
                 </div>
-                <Button asChild>
-                    <Link href="/agent/batches/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Register New Batch
-                    </Link>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <Button asChild className="w-full sm:w-auto">
+                        <Link href={`/agent/batches/new?type=${productType}`}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Register New Batch
+                        </Link>
+                    </Button>
+                </div>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                 {statsLoading ? (
                     <>
                         <StatsCardSkeleton />
@@ -125,30 +128,54 @@ export default function AgentDashboard() {
             {/* Batches with Filter Tabs */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Batches</CardTitle>
-                    <CardDescription>
-                        Manage your registered batches and ensure quality control.
-                    </CardDescription>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div>
+                            <CardTitle>Batches</CardTitle>
+                            <CardDescription>
+                                Manage your registered batches and ensure quality control.
+                            </CardDescription>
+                        </div>
+                        <div className="flex items-center space-x-2 bg-muted p-1 rounded-md self-start sm:self-auto">
+                            <Button
+                                variant={productType === ProductType.coffee ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={() => setProductType(ProductType.coffee)}
+                                className="h-8"
+                            >
+                                Coffee
+                            </Button>
+                            <Button
+                                variant={productType === ProductType.tea ? "secondary" : "ghost"}
+                                size="sm"
+                                onClick={() => setProductType(ProductType.tea)}
+                                className="h-8"
+                            >
+                                Tea
+                            </Button>
+                        </div>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="mb-4">
-                            <TabsTrigger value="all" className="gap-2">
-                                All <Badge variant="secondary" className="ml-1">{stats?.totalBatches || 0}</Badge>
-                            </TabsTrigger>
-                            <TabsTrigger value="pending" className="gap-2">
-                                <Clock className="h-3 w-3" />
-                                Pending <Badge variant="secondary" className="ml-1">{stats?.pendingBatches || 0}</Badge>
-                            </TabsTrigger>
-                            <TabsTrigger value="approved" className="gap-2">
-                                <CheckCircle2 className="h-3 w-3" />
-                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">{stats?.approvedBatches || 0}</Badge>
-                            </TabsTrigger>
-                            <TabsTrigger value="rejected" className="gap-2">
-                                <XCircle className="h-3 w-3" />
-                                Rejected <Badge variant="secondary" className="ml-1">{stats?.rejectedBatches || 0}</Badge>
-                            </TabsTrigger>
-                        </TabsList>
+                        <div className="overflow-x-auto pb-2">
+                            <TabsList className="mb-4 w-full justify-start">
+                                <TabsTrigger value="all" className="gap-2">
+                                    All <Badge variant="secondary" className="ml-1">{stats?.totalBatches || 0}</Badge>
+                                </TabsTrigger>
+                                <TabsTrigger value="pending" className="gap-2">
+                                    <Clock className="h-3 w-3" />
+                                    Pending <Badge variant="secondary" className="ml-1">{stats?.pendingBatches || 0}</Badge>
+                                </TabsTrigger>
+                                <TabsTrigger value="approved" className="gap-2">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">{stats?.approvedBatches || 0}</Badge>
+                                </TabsTrigger>
+                                <TabsTrigger value="rejected" className="gap-2">
+                                    <XCircle className="h-3 w-3" />
+                                    Rejected <Badge variant="secondary" className="ml-1">{stats?.rejectedBatches || 0}</Badge>
+                                </TabsTrigger>
+                            </TabsList>
+                        </div>
 
                         <TabsContent value={activeTab}>
                             {batchesLoading ? (
@@ -160,77 +187,79 @@ export default function AgentDashboard() {
                                     No {activeTab === 'all' ? '' : activeTab} batches found.
                                 </div>
                             ) : (
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Batch ID</TableHead>
-                                            <TableHead>Farmer</TableHead>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Quantity</TableHead>
-                                            <TableHead>Grade</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>QR Code</TableHead>
-                                            <TableHead>Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredBatches.slice(0, 10).map((batch: ProductBatch) => (
-                                            <TableRow key={batch.id}>
-                                                <TableCell className="font-medium">
-                                                    {batch.lotId || batch.id.substring(0, 8)}
-                                                </TableCell>
-                                                <TableCell>{batch.farmer?.name || "Unknown"}</TableCell>
-                                                <TableCell>
-                                                    {format(new Date(batch.createdAt), "MMM d, yyyy")}
-                                                </TableCell>
-                                                <TableCell>{batch.quantity} kg</TableCell>
-                                                <TableCell>
-                                                    {batch.grade ? (
-                                                        <Badge variant="outline">{batch.grade}</Badge>
-                                                    ) : '-'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge variant={
-                                                        batch.status === 'approved' ? 'default' :
-                                                            batch.status === 'rejected' ? 'destructive' :
-                                                                'secondary'
-                                                    } className={
-                                                        batch.status === 'approved' ? 'bg-green-600' : ''
-                                                    }>
-                                                        {batch.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {batch.qrCodeUrl ? (
-                                                        <Button variant="ghost" size="sm" asChild>
-                                                            <a href={batch.qrCodeUrl} target="_blank" rel="noopener noreferrer">
-                                                                <QrCode className="h-4 w-4 text-green-600" />
-                                                            </a>
-                                                        </Button>
-                                                    ) : (
-                                                        <span className="text-muted-foreground text-xs">-</span>
-                                                    )}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-1">
-                                                        <Button variant="ghost" size="sm" asChild>
-                                                            <Link href={`/farmer/batches/${batch.id}`}>
-                                                                <Eye className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
-                                                        {batch.publicTraceHash && (
+                                <div className="rounded-md border overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Batch ID</TableHead>
+                                                <TableHead>Farmer</TableHead>
+                                                <TableHead>Date</TableHead>
+                                                <TableHead>Quantity</TableHead>
+                                                <TableHead>Grade</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>QR Code</TableHead>
+                                                <TableHead>Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredBatches.slice(0, 10).map((batch: ProductBatch) => (
+                                                <TableRow key={batch.id}>
+                                                    <TableCell className="font-medium whitespace-nowrap">
+                                                        {batch.lotId || batch.id.substring(0, 8)}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">{batch.farmer?.name || "Unknown"}</TableCell>
+                                                    <TableCell className="whitespace-nowrap">
+                                                        {format(new Date(batch.createdAt), "MMM d, yyyy")}
+                                                    </TableCell>
+                                                    <TableCell className="whitespace-nowrap">{batch.quantity} kg</TableCell>
+                                                    <TableCell>
+                                                        {batch.grade ? (
+                                                            <Badge variant="outline">{batch.grade}</Badge>
+                                                        ) : '-'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge variant={
+                                                            batch.status === 'approved' ? 'default' :
+                                                                batch.status === 'rejected' ? 'destructive' :
+                                                                    'secondary'
+                                                        } className={
+                                                            batch.status === 'approved' ? 'bg-green-600' : ''
+                                                        }>
+                                                            {batch.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {batch.qrCodeUrl ? (
                                                             <Button variant="ghost" size="sm" asChild>
-                                                                <Link href={`/trace/${batch.publicTraceHash}`}>
-                                                                    <ExternalLink className="h-4 w-4" />
+                                                                <a href={batch.qrCodeUrl} target="_blank" rel="noopener noreferrer">
+                                                                    <QrCode className="h-4 w-4 text-green-600" />
+                                                                </a>
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-muted-foreground text-xs">-</span>
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1">
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <Link href={`/farmer/batches/${batch.id}`}>
+                                                                    <Eye className="h-4 w-4" />
                                                                 </Link>
                                                             </Button>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                                            {batch.publicTraceHash && (
+                                                                <Button variant="ghost" size="sm" asChild>
+                                                                    <Link href={`/trace/${batch.publicTraceHash}`}>
+                                                                        <ExternalLink className="h-4 w-4" />
+                                                                    </Link>
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             )}
                         </TabsContent>
                     </Tabs>
