@@ -8,20 +8,33 @@ import prisma from '../config/database';
 import { Notification } from '@prisma/client';
 import { maskPhone } from '../lib/hashing';
 
-// Africa's Talking SDK
+// Africa's Talking SDK - lazy loaded
 let AfricasTalking: any = null;
-try {
-    AfricasTalking = require('africastalking');
-} catch (e) {
-    console.warn('africastalking package not installed, SMS notifications will be disabled');
-}
+let africastalkingLoaded = false;
 
 // Initialize Africa's Talking client
-const getATClient = () => {
+const getATClient = async () => {
     const username = process.env.AT_USERNAME;
     const apiKey = process.env.AT_API_KEY;
 
-    if (!username || !apiKey || !AfricasTalking) {
+    if (!username || !apiKey) {
+        return null;
+    }
+
+    // Lazy load africastalking module
+    if (!africastalkingLoaded) {
+        try {
+            const africastalkingModule = await import('africastalking');
+            AfricasTalking = africastalkingModule.default || africastalkingModule;
+            africastalkingLoaded = true;
+        } catch (e) {
+            console.warn('africastalking package not installed, SMS notifications will be disabled');
+            africastalkingLoaded = true; // Mark as attempted to avoid repeated tries
+            return null;
+        }
+    }
+
+    if (!AfricasTalking) {
         return null;
     }
 
@@ -86,7 +99,7 @@ export async function sendSMS(
     phoneNumber: string,
     message: string
 ): Promise<{ success: boolean; error?: string }> {
-    const client = getATClient();
+    const client = await getATClient();
 
     if (!client) {
         console.warn('[SMS] Africa\'s Talking not configured, skipping SMS');

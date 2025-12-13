@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
+    "module": "ES2020",
     "lib": [
       "ES2020"
     ],
@@ -12,7 +12,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node10",
+    "moduleResolution": "node",
     "declaration": false,
     "declarationMap": false,
     "sourceMap": false,
@@ -31,9 +31,9 @@
     "dist"
   ],
   "ts-node": {
-    "esm": false,
+    "esm": true,
     "compilerOptions": {
-      "module": "commonjs"
+      "module": "ES2020"
     }
   }
 }
