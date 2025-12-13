@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start -H 0.0.0.0",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "node scripts/skip-native-builds.js || true"
   },
   "keywords": [
     "blockchain",

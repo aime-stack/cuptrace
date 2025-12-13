@@ -65,11 +65,22 @@ const nextConfig = {
       )
     );
     
+    // Stub node-datachannel to avoid native compilation issues
+    const nodeDatachannelStubPath = path.resolve(process.cwd(), 'src', 'lib', 'mocks', 'node-datachannel-stub.js');
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(
+        /^node-datachannel$/,
+        nodeDatachannelStubPath
+      )
+    );
+    
     // Provide aliases to handle the problematic imports
     config.resolve.alias = {
       ...config.resolve.alias,
       // Stub bitcoinjs-lib to avoid bip174 export issues
       'bitcoinjs-lib': stubPath,
+      // Stub node-datachannel to avoid native build issues
+      'node-datachannel': nodeDatachannelStubPath,
     };
     
     // Ensure webpack can resolve modules from nested node_modules
