@@ -6,7 +6,7 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join as pathJoin } from 'path';
 import { createHash } from 'crypto';
 
 interface PlutusBlueprint {
@@ -48,20 +48,12 @@ interface ContractInfo {
   address?: string;
 }
 
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-// Define __dirname for ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 export const loadPlutusBlueprint = (): PlutusBlueprint | null => {
   try {
     // Try multiple possible paths
     const possiblePaths = [
-      join(process.cwd(), 'contracts', 'plutus.json'), // From backend root
-      join(process.cwd(), '..', 'contracts', 'plutus.json'), // From backend/scripts
-      join(__dirname, '..', '..', '..', 'contracts', 'plutus.json'), // Relative to file
+      pathJoin(process.cwd(), 'contracts', 'plutus.json'), // From backend root
+      pathJoin(process.cwd(), '..', 'contracts', 'plutus.json'), // From backend/scripts
       // Robust Fallback
       'C:\\Users\\user\\Videos\\cuptrace\\backend\\contracts\\plutus.json'
     ];
@@ -191,7 +183,7 @@ export const getStageTransitionValidator = (): ContractInfo | null => {
  */
 export const loadContractFromFile = async (contractPath: string): Promise<string | null> => {
   try {
-    const fullPath = join(process.cwd(), 'contracts', 'build', contractPath);
+    const fullPath = pathJoin(process.cwd(), 'contracts', 'build', contractPath);
     const contractScript = readFileSync(fullPath, 'utf-8');
 
     // If it's JSON, parse it
@@ -243,4 +235,3 @@ export const getAllContracts = (): ContractInfo[] => {
 
   return contracts;
 };
-

@@ -104,11 +104,11 @@ export const listCertificatesController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { 
-      batchId, 
-      certificateType, 
-      page = '1', 
-      limit = '10' 
+    const {
+      batchId,
+      certificateType,
+      page = '1',
+      limit = '10'
     } = req.query;
 
     const result = await listCertificates(
@@ -172,4 +172,3 @@ export const deleteCertificateController = async (
     next(error);
   }
 };
-

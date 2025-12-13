@@ -181,7 +181,7 @@ export const updateCoffeeController = async (
 
         // 2. Generate QR Code
         const qrInfo = await generateQRCodeForBatch(id);
-        if (qrInfo.success) {
+        if (qrInfo && qrInfo.success) {
           console.log('[UPDATE BATCH] QR Generated:', qrInfo.qrCodeUrl);
         }
 
@@ -240,7 +240,7 @@ export const approveCoffeeBatchController = async (
 
     // Generate CIP-25 compliant metadata and upload to IPFS
     try {
-      const metadata = generateNFTMetadata(fullBatch as any);
+      const metadata = generateNFTMetadata(fullBatch);
       ipfsCid = await uploadJSONToIPFS(metadata);
 
       // Persist IPFS CID inside batch metadata for transparency
@@ -285,10 +285,10 @@ export const approveCoffeeBatchController = async (
         metadata: {
           ...(fullBatch.metadata as Record<string, unknown> || {}),
           nftMinted: false,
-          nftPending: true
-        },
-        nftPolicyId: pendingPolicyId,
-        nftAssetName: 'pending_mint'
+          nftPending: true,
+          nftPolicyId: pendingPolicyId,
+          nftAssetName: 'pending_mint'
+        }
       });
 
       nftInfo = { policyId: pendingPolicyId, assetName: 'pending_mint', txHash: '' };
@@ -442,4 +442,3 @@ export const retryBlockchainRecordCoffeeController = async (
     next(error);
   }
 };
-
