@@ -76,13 +76,23 @@ export const createReport = async (data: CreateReportData) => {
     throw new ValidationError('Report data must be a valid object');
   }
 
+  // Auto-generate report data if empty
+  let reportData = data.data;
+  if (Object.keys(reportData).length === 0) {
+    reportData = await generateNaebReport({
+      periodStart: data.periodStart instanceof Date ? data.periodStart.toISOString() : data.periodStart,
+      periodEnd: data.periodEnd instanceof Date ? data.periodEnd.toISOString() : data.periodEnd,
+      reportType: data.reportType,
+    });
+  }
+
   const report = await prisma.nAEBReport.create({
     data: {
       reportType: data.reportType,
       periodStart,
       periodEnd,
       generatedBy: data.generatedBy,
-      data: data.data as any,
+      data: reportData as any,
       status: data.status || 'draft',
     },
     include: {
@@ -222,7 +232,7 @@ export const updateReport = async (id: string, data: UpdateReportData) => {
     if (!periodEnd) {
       throw new ValidationError('Valid period end date is required');
     }
-    
+
     const periodStart = data.periodStart ? parseDate(data.periodStart) : existing.periodStart;
     if (!periodStart) {
       throw new ValidationError('Period start date is required for validation');
@@ -230,7 +240,7 @@ export const updateReport = async (id: string, data: UpdateReportData) => {
     if (periodEnd < periodStart) {
       throw new ValidationError('Period end date must be after period start date');
     }
-    
+
     updateData.periodEnd = periodEnd;
   }
 
@@ -243,7 +253,7 @@ export const updateReport = async (id: string, data: UpdateReportData) => {
 
   if (data.status !== undefined) {
     updateData.status = data.status;
-    
+
     // If status is submitted, set submittedAt
     if (data.status === 'submitted' && !existing.submittedAt) {
       updateData.submittedAt = new Date();

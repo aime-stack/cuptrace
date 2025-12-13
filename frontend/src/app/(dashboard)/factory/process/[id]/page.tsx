@@ -231,7 +231,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                     </div>
                     <h2 className="text-xl font-semibold text-slate-900 mb-2">Batch Unavailable</h2>
                     <p className="text-muted-foreground mb-6">
-                        We couldn't find the requested batch details. It may not be approved for processing yet.
+                        We couldn&apos;t find the requested batch details. It may not be approved for processing yet.
                     </p>
                     <Button variant="outline" asChild>
                         <Link href="/factory">Return to Inventory</Link>
@@ -350,7 +350,7 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Activity className="h-5 w-5 text-blue-600" />
-                                Processing Log
+                                Batch hasn&apos;t started processing yetLog
                             </CardTitle>
                             <CardDescription>Record processing stages for traceability.</CardDescription>
                         </CardHeader>

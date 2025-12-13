@@ -14,7 +14,8 @@ import {
 import { mintBatchNFT } from '../services/nft.service';
 import { createBatchOnChain } from '../services/blockchain.service';
 import env from '../config/env';
-import { sendSuccess, sendSuccessWithMessage } from '../utils/response';
+import { sendSuccess, sendPaginatedResponse, sendSuccessWithMessage } from '../utils/response';
+
 // SupplyChainStage will be available after Prisma client generation
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
@@ -140,7 +141,7 @@ export const listTeaController = async (
       search as string | undefined
     );
 
-    return sendSuccess(res, result);
+    return sendPaginatedResponse(res, result);
   } catch (error) {
     next(error);
   }

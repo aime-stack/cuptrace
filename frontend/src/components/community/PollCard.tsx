@@ -62,6 +62,8 @@ export function PollCard({ poll }: PollCardProps) {
 
     const isExpired = new Date(poll.endsAt) < new Date();
 
+    const [showComments, setShowComments] = useState(false);
+
     return (
         <Card className="w-full shadow-md mb-6">
             <CardHeader>
@@ -121,14 +123,26 @@ export function PollCard({ poll }: PollCardProps) {
                     </div>
                 )}
 
-                <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex justify-between">
+                <div className="mt-4 pt-4 border-t text-xs text-muted-foreground flex justify-between items-center">
                     <span>Ends {formatDistanceToNow(new Date(poll.endsAt), { addSuffix: true })}</span>
-                    {poll.userVote && <span className="text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> You voted</span>}
+                    <div className="flex gap-4">
+                        {poll.userVote && <span className="text-green-600 font-medium flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> You voted</span>}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowComments(!showComments)}
+                        >
+                            {showComments ? 'Hide Comments' : 'Show Comments'}
+                        </Button>
+                    </div>
                 </div>
 
-                <div className="mt-4 border-t border-gray-100 pt-2">
-                    <CommentSection targetId={poll.id} targetType="poll" />
-                </div>
+                {showComments && (
+                    <div className="mt-4 border-t border-gray-100 pt-2">
+                        <CommentSection targetId={poll.id} targetType="poll" />
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

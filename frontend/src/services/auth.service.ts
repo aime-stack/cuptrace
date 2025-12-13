@@ -54,6 +54,14 @@ export const register = async (userData: RegisterRequest): Promise<AuthResponse>
     throw new Error(data.message || 'Registration failed');
 };
 
+export const createUser = async (userData: RegisterRequest): Promise<User> => {
+    const { data } = await axiosInstance.post<ApiResponse<AuthResponse>>('/auth/register', userData);
+    if (data.data) {
+        return data.data.user;
+    }
+    throw new Error(data.message || 'User creation failed');
+};
+
 export const getCurrentUser = async (): Promise<User> => {
     const { data } = await axiosInstance.get<ApiResponse<User>>('/auth/me');
     if (data.data) {

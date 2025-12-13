@@ -1,5 +1,5 @@
 import { Data } from 'lucid-cardano';
-const Constr = Data.Constr;
+const Constr = (Data as any).Constr;
 
 // ==========================================
 // Schema Definitions (Matching Aiken Types)
@@ -28,7 +28,7 @@ export enum Stage {
  * Aiken: type Option<a> { Some(a), None }
  * Some = Constr(0, [val]), None = Constr(1, [])
  */
-const toOption = (val: Data | undefined | null): Constr<Data> => {
+const toOption = (val: Data | undefined | null): Data => {
     return val !== undefined && val !== null
         ? new Constr(0, [val])
         : new Constr(1, []);

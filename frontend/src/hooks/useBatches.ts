@@ -6,10 +6,11 @@ import { CreateBatchRequest, UpdateBatchRequest, BatchFilters, ProductType } fro
 /**
  * List batches query
  */
-export const useBatches = (filters?: BatchFilters, type: ProductType = ProductType.coffee) => {
+export const useBatches = (filters?: BatchFilters, type: ProductType = ProductType.coffee, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ['batches', type, filters],
         queryFn: () => batchService.listBatches(filters, type),
+        enabled: options?.enabled,
     });
 };
 

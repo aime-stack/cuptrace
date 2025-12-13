@@ -129,16 +129,16 @@ export const generateNFTMetadata = (batch: {
   region?: string | null;
 }): NFTMetadata => {
   const name = batch.lotId || `Batch-${batch.id.substring(0, 8)}`;
-  
+
   return {
     name,
     description: batch.description || `${batch.type.toUpperCase()} batch from ${batch.originLocation}`,
     // If batch.metadata.ipfsCid is present, expose it as image/external_url for CIP-25
     ...(batch as any).metadata && (batch as any).metadata.ipfsCid
       ? {
-          image: `ipfs://${(batch as any).metadata.ipfsCid}`,
-          external_url: `ipfs://${(batch as any).metadata.ipfsCid}`,
-        }
+        image: `ipfs://${(batch as any).metadata.ipfsCid}`,
+        external_url: `ipfs://${(batch as any).metadata.ipfsCid}`,
+      }
       : {},
     attributes: {
       batchId: batch.id,
@@ -193,7 +193,7 @@ export const mintBatchNFT = async (
   if (batchAny.nftPolicyId && batchAny.nftAssetName) {
     // Retrieve txHash from batch's blockchainTxHash or from batch history
     let txHash = '';
-    
+
     if (batchAny.blockchainTxHash) {
       txHash = batchAny.blockchainTxHash;
     } else {
@@ -210,12 +210,12 @@ export const mintBatchNFT = async (
           blockchainTxHash: true,
         },
       });
-      
+
       if (history?.blockchainTxHash) {
         txHash = history.blockchainTxHash;
       }
     }
-    
+
     return {
       policyId: batchAny.nftPolicyId,
       assetName: batchAny.nftAssetName,
@@ -314,7 +314,7 @@ export const mintBatchNFT = async (
           // Add the approval UTxO as an input (to be consumed by the minting transaction)
           // The policy will verify that this UTxO exists and has the correct batch_id
           console.log(`Found approval UTxO for batch ${batchId}: ${approvalUTxO.txHash}#${approvalUTxO.outputIndex}`);
-          txBuilder = txBuilder.collectFrom([
+          txBuilder = (txBuilder as any).collectFrom([
             {
               txHash: approvalUTxO.txHash,
               outputIndex: approvalUTxO.outputIndex,
@@ -363,10 +363,10 @@ export const mintBatchNFT = async (
     } catch (error) {
       // If blockchain minting fails, still store the asset name for future minting
       console.error(`Failed to mint NFT on blockchain for batch ${batchId}:`, error);
-      
+
       // Generate a deterministic policy ID for tracking
       const policyId = `pending_${Buffer.from(batchId).toString('hex').substring(0, 56)}`;
-      
+
       await prisma.productBatch.update({
         where: { id: batchId },
         data: {
@@ -386,7 +386,7 @@ export const mintBatchNFT = async (
 
   // If blockchain not configured, generate deterministic asset name
   const policyId = `offline_${Buffer.from(batchId).toString('hex').substring(0, 56)}`;
-  
+
   await prisma.productBatch.update({
     where: { id: batchId },
     data: {
@@ -432,7 +432,7 @@ export const getBatchNFT = async (batchId: string): Promise<BatchNFTInfo | null>
   });
 
   const batchAny = batch as any;
-  
+
   if (!batchAny || !batchAny.nftPolicyId || !batchAny.nftAssetName) {
     return null;
   }
@@ -516,7 +516,7 @@ export const verifyNFT = async (
 
       // Query Blockfrost API directly for NFT asset
       const fullAssetName = `${policyId}${assetName}`;
-      
+
       const lucidWithProvider = lucidInstance as {
         provider: {
           assetsById: (assetId: string) => Promise<{
@@ -528,13 +528,13 @@ export const verifyNFT = async (
           address: () => Promise<string>;
         };
       };
-      
+
       let nftFound = false;
-      
+
       try {
         // Query Blockfrost for the specific asset
         const assetInfo = await lucidWithProvider.provider.assetsById(fullAssetName);
-        
+
         // Check if asset exists and has quantity of 1
         if (assetInfo && assetInfo.length > 0) {
           const asset = assetInfo.find((a) => a.asset === fullAssetName);
@@ -547,7 +547,7 @@ export const verifyNFT = async (
         try {
           const walletAddress = await lucidWithProvider.wallet.address();
           const utxos = await (lucid as any).getUtxos(walletAddress);
-          
+
           nftFound = utxos.some((utxo: { assets: Record<string, bigint> }) => {
             return fullAssetName in utxo.assets && utxo.assets[fullAssetName] === 1n;
           });

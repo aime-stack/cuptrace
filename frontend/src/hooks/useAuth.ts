@@ -78,10 +78,10 @@ export const useRegister = () => {
  */
 export const useCurrentUser = () => {
     // Only fetch user if token exists
-    const token = typeof window !== 'undefined' 
-        ? localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN) 
+    const token = typeof window !== 'undefined'
+        ? localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN)
         : null;
-    
+
     return useQuery({
         queryKey: ['currentUser'],
         queryFn: authService.getCurrentUser,
@@ -115,6 +115,25 @@ export const useUsers = (params?: { role?: string; search?: string }) => {
         queryFn: () => authService.listUsers(params),
     });
 };
+
+/**
+ * Create user mutation (admin)
+ */
+export const useCreateUser = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (userData: RegisterRequest) => authService.createUser(userData),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['users'] });
+            toast.success('User created successfully');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || 'Failed to create user');
+        },
+    });
+};
+
 
 /**
  * Get user by ID

@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
-import { 
-  register, 
-  login, 
+import {
+  register,
+  login,
   getCurrentUser,
   listUsers,
   getUserById,
@@ -11,7 +11,7 @@ import {
   deactivateUser,
   activateUser,
 } from '../services/auth.service';
-import { sendSuccess } from '../utils/response';
+import { sendSuccess, sendPaginatedResponse } from '../utils/response';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 export const registerController = async (
@@ -20,10 +20,10 @@ export const registerController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { 
-      name, 
-      email, 
-      password, 
+    const {
+      name,
+      email,
+      password,
       role,
       phone,
       address,
@@ -97,11 +97,11 @@ export const listUsersController = async (
   next: NextFunction
 ): Promise<Response | void> => {
   try {
-    const { 
-      role, 
-      isActive, 
-      cooperativeId, 
-      page = '1', 
+    const {
+      role,
+      isActive,
+      cooperativeId,
+      page = '1',
       limit = '10',
     } = req.query;
 
@@ -113,7 +113,7 @@ export const listUsersController = async (
       cooperativeId as string | undefined
     );
 
-    return sendSuccess(res, result);
+    return sendPaginatedResponse(res, result);
   } catch (error) {
     next(error);
   }

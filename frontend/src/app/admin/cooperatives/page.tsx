@@ -1,5 +1,6 @@
 'use client';
 
+import { CreateCooperativeDialog } from '@/components/admin/CreateCooperativeDialog';
 import { Building, Loader2, Plus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,7 @@ export default function CooperativesPage() {
                         Manage farmer cooperatives
                     </p>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Cooperative
-                </Button>
+                <CreateCooperativeDialog />
             </div>
 
             <Card>
@@ -48,10 +46,14 @@ export default function CooperativesPage() {
                             <Building className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                             <h3 className="text-lg font-medium text-gray-900 mb-2">No cooperatives found</h3>
                             <p className="text-gray-500 mb-4">Create your first cooperative to get started</p>
-                            <Button className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Create Cooperative
-                            </Button>
+                            <CreateCooperativeDialog
+                                trigger={
+                                    <Button className="gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        Create Cooperative
+                                    </Button>
+                                }
+                            />
                         </div>
                     ) : (
                         <Table>

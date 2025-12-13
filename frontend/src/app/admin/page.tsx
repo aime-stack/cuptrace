@@ -5,56 +5,58 @@ import { Package, CheckCircle, Clock, Users, BarChart, FileText, Plus } from 'lu
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatsCard } from '@/components/shared/StatsCard';
-import { useCurrentUser } from '@/hooks/useAuth';
-import { useBatches } from '@/hooks/useBatches';
-import { useUsers } from '@/hooks/useAuth';
-import { ProductType, BatchStatus } from '@/types';
+import { StatsCardSkeleton } from '@/components/skeletons/StatsCardSkeleton';
+import { useDashboardStats } from '@/hooks/useStats';
 
 export default function AdminDashboard() {
-    const { data: user } = useCurrentUser();
-    const { data: batchesData } = useBatches({}, ProductType.coffee);
-    const { data: users } = useUsers();
-
-    const batches = batchesData || [];
-    const totalBatches = batches.length;
-    const pendingBatches = batches.filter(b => b.status === BatchStatus.pending).length;
-    const totalUsers = users?.length || 0;
+    const { data: stats, isLoading } = useDashboardStats();
 
     return (
         <div className="space-y-8">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                <p className="text-gray-500 mt-1">System overview and management</p>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Admin Dashboard</h1>
+                <p className="text-muted-foreground mt-1">System overview and management</p>
             </div>
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <StatsCard
-                    title="Total Batches"
-                    value={totalBatches}
-                    icon={Package}
-                    description="All batches in system"
-                />
-                <StatsCard
-                    title="Pending Approval"
-                    value={pendingBatches}
-                    icon={Clock}
-                    description="Require review"
-                    className="border-yellow-200"
-                />
-                <StatsCard
-                    title="Total Users"
-                    value={totalUsers}
-                    icon={Users}
-                    description="Registered users"
-                />
-                <StatsCard
-                    title="Reports"
-                    value={0}
-                    icon={FileText}
-                    description="Generated reports"
-                />
+                {isLoading ? (
+                    <>
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                        <StatsCardSkeleton />
+                    </>
+                ) : (
+                    <>
+                        <StatsCard
+                            title="Total Batches"
+                            value={stats?.totalBatches || 0}
+                            icon={Package}
+                            description="All batches in system"
+                        />
+                        <StatsCard
+                            title="Pending Approval"
+                            value={stats?.pendingBatches || 0}
+                            icon={Clock}
+                            description="Require review"
+                            className="border-yellow-200"
+                        />
+                        <StatsCard
+                            title="Total Users"
+                            value={stats?.totalUsers || 0}
+                            icon={Users}
+                            description="Registered users"
+                        />
+                        <StatsCard
+                            title="Reports"
+                            value={stats?.totalReports || 0}
+                            icon={FileText}
+                            description="Generated reports"
+                        />
+                    </>
+                )}
             </div>
 
             {/* Quick Actions */}

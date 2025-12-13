@@ -33,6 +33,7 @@ export const NAVIGATION_ITEMS: Record<string, Array<{ label: string; href: strin
         { label: 'Users', href: '/admin/users', icon: 'Users' },
         { label: 'Batches', href: '/admin/batches', icon: 'Package' },
         { label: 'Cooperatives', href: '/admin/cooperatives', icon: 'Building' },
+        { label: 'Analytics', href: '/admin/analytics', icon: 'BarChart' },
         { label: 'Reports', href: '/admin/reports', icon: 'FileText' },
     ],
     [UserRole.exporter]: [

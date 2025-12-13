@@ -69,7 +69,7 @@ export default function QRScanner({ isOpen, onClose }: QRScannerProps) {
                             <strong>To scan with camera:</strong>
                         </p>
                         <ol className="text-sm text-blue-700 list-decimal list-inside space-y-1">
-                            <li>Open your phone's camera app</li>
+                            <li>Open your phone&apos;s camera app</li>
                             <li>Point at the QR code</li>
                             <li>Tap the link that appears</li>
                         </ol>

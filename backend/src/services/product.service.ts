@@ -6,7 +6,6 @@ import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '..
 import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
 import { buildSoftDeleteFilter } from '../utils/query';
 import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
-import { mintBatchNFT } from './nft.service';
 import { createBatchOnChain } from './blockchain.service';
 import env from '../config/env';
 

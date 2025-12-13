@@ -12,6 +12,9 @@ export interface AuthRequest extends Request {
   };
 }
 
+const userCache = new Map<string, { user: any; timestamp: number }>();
+const CACHE_TTL = 60 * 1000; // 1 minute
+
 export const verifyTokenMiddleware = async (
   req: AuthRequest,
   _res: Response,
@@ -29,17 +32,30 @@ export const verifyTokenMiddleware = async (
     // Verify token
     const decoded = verifyToken(token);
 
-    // Fetch user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        isActive: true,
-        cooperativeId: true,
-      },
-    });
+    // Check cache
+    const now = Date.now();
+    const cached = userCache.get(decoded.userId);
+    let user;
+
+    if (cached && now - cached.timestamp < CACHE_TTL) {
+      user = cached.user;
+    } else {
+      // Fetch user from database
+      user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          cooperativeId: true,
+        },
+      });
+
+      if (user) {
+        userCache.set(decoded.userId, { user, timestamp: now });
+      }
+    }
 
     if (!user) {
       throw new AuthenticationError('User not found');

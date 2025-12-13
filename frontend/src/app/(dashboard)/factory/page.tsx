@@ -30,6 +30,7 @@ import { Input } from '@/components/ui/input';
 import { axiosInstance } from '@/lib/axios';
 import { ProductBatch } from '@/types';
 import Link from 'next/link';
+import Image from 'next/image';
 import { format } from 'date-fns';
 
 export default function FactoryDashboard() {
@@ -238,9 +239,11 @@ export default function FactoryDashboard() {
                                             {batch.qrCodeUrl ? (
                                                 <div className="flex items-center gap-2">
                                                     {/* QR Thumbnail */}
-                                                    <img
+                                                    <Image
                                                         src={batch.qrCodeUrl}
                                                         alt="QR Code"
+                                                        width={40}
+                                                        height={40}
                                                         className="h-10 w-10 rounded border"
                                                     />
                                                     <div className="flex flex-col gap-1">

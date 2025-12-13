@@ -29,18 +29,18 @@ export default function AgentDashboard() {
     );
     const [activeTab, setActiveTab] = useState<string>("all");
 
-    const batches = batchesData ?? [];
+    const batches = useMemo(() => batchesData ?? [], [batchesData]);
 
     // Stats
-    const todayBatches = batches.filter((b: ProductBatch) => {
+    const todayBatches = useMemo(() => batches.filter((b: ProductBatch) => {
         const today = new Date();
         const batchDate = new Date(b.createdAt);
         return batchDate.toDateString() === today.toDateString();
-    });
+    }), [batches]);
 
-    const pendingBatches = batches.filter((b: ProductBatch) => b.status === 'pending');
-    const approvedBatches = batches.filter((b: ProductBatch) => b.status === 'approved');
-    const rejectedBatches = batches.filter((b: ProductBatch) => b.status === 'rejected');
+    const pendingBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'pending'), [batches]);
+    const approvedBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'approved'), [batches]);
+    const rejectedBatches = useMemo(() => batches.filter((b: ProductBatch) => b.status === 'rejected'), [batches]);
 
     // Filter batches based on active tab
     const filteredBatches = useMemo(() => {
@@ -58,11 +58,11 @@ export default function AgentDashboard() {
 
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Agent Dashboard</h1>
                     <p className="text-muted-foreground">
-                        Register and manage batches for farmers in your cooperative.
+                        Here&apos;s what&apos;s happening with your farmers and batches today.
                     </p>
                 </div>
                 <Button asChild>
@@ -77,7 +77,7 @@ export default function AgentDashboard() {
             <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Today's Batches</CardTitle>
+                        <CardTitle className="text-sm font-medium">Today&apos;s Batches</CardTitle>
                         <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -91,18 +91,18 @@ export default function AgentDashboard() {
                         <Clock className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-orange-600">{pendingBatches.length}</div>
+                        <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{pendingBatches.length}</div>
                         <p className="text-xs text-muted-foreground">Awaiting QC approval</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-green-50 border-green-200">
+                <Card className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-green-700">Approved</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        <CardTitle className="text-sm font-medium text-green-700 dark:text-green-400">Approved</CardTitle>
+                        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-green-700">{approvedBatches.length}</div>
-                        <p className="text-xs text-green-600">QR codes ready</p>
+                        <div className="text-2xl font-bold text-green-700 dark:text-green-400">{approvedBatches.length}</div>
+                        <p className="text-xs text-green-600 dark:text-green-500">QR codes ready</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -122,7 +122,7 @@ export default function AgentDashboard() {
                 <CardHeader>
                     <CardTitle>Batches</CardTitle>
                     <CardDescription>
-                        Batches you've registered for farmers.
+                        Manage your registered batches and ensure quality control.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -137,7 +137,7 @@ export default function AgentDashboard() {
                             </TabsTrigger>
                             <TabsTrigger value="approved" className="gap-2">
                                 <CheckCircle2 className="h-3 w-3" />
-                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700">{approvedBatches.length}</Badge>
+                                Approved <Badge variant="secondary" className="ml-1 bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">{approvedBatches.length}</Badge>
                             </TabsTrigger>
                             <TabsTrigger value="rejected" className="gap-2">
                                 <XCircle className="h-3 w-3" />
@@ -234,3 +234,4 @@ export default function AgentDashboard() {
         </div>
     );
 }
+// Force recompile: Fixed typos and theming

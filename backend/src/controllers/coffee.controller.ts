@@ -17,7 +17,8 @@ import { createBatchOnChain, createApprovalUTxO } from '../services/blockchain.s
 import { generateQRCodeForBatch } from '../services/qrGenerator';
 import { sendBatchApprovedNotification } from '../services/notifications.service';
 import env from '../config/env';
-import { sendSuccess, sendSuccessWithMessage } from '../utils/response';
+import { sendSuccess, sendPaginatedResponse, sendSuccessWithMessage } from '../utils/response';
+
 // SupplyChainStage will be available after Prisma client generation
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
@@ -153,7 +154,7 @@ export const listCoffeeController = async (
       search as string | undefined
     );
 
-    return sendSuccess(res, result);
+    return sendPaginatedResponse(res, result);
   } catch (error) {
     next(error);
   }
@@ -222,7 +223,7 @@ export const approveCoffeeBatchController = async (
       // Persist IPFS CID inside batch metadata for transparency
       await updateProduct(id, {
         metadata: {
-          ...(fullBatch.metadata || {}),
+          ...(fullBatch.metadata as Record<string, unknown> || {}),
           ipfsCid,
         },
       });
