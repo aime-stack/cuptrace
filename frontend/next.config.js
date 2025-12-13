@@ -40,11 +40,54 @@ const nextConfig = {
       };
     }
     
+    // Fix for bip174 exports issue with bitcoinjs-lib
+    // bitcoinjs-lib tries to import internal paths from bip174 that aren't exported
+    // Use webpack's NormalModuleReplacementPlugin to handle these imports
+    const webpack = require('webpack');
+    const bip174Path = path.resolve(process.cwd(), 'node_modules', 'bip174');
+    
+    if (fs.existsSync(bip174Path)) {
+      const varintPath = path.join(bip174Path, 'src', 'lib', 'converter', 'varint.js');
+      const utilsPath = path.join(bip174Path, 'src', 'lib', 'utils.js');
+      
+      // Add aliases for bip174 internal paths
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'bip174/src/lib/converter/varint': varintPath,
+        'bip174/src/lib/utils': utilsPath,
+      };
+      
+      // Also add a plugin to rewrite the imports
+      // This bypasses the package.json exports field check
+      if (!config.plugins) {
+        config.plugins = [];
+      }
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          /bip174\/src\/lib\/converter\/varint/,
+          varintPath
+        ),
+        new webpack.NormalModuleReplacementPlugin(
+          /bip174\/src\/lib\/utils/,
+          utilsPath
+        )
+      );
+    }
+    
     // Ensure webpack can resolve modules from nested node_modules
     config.resolve.modules = [
       path.resolve(process.cwd(), 'node_modules'),
       'node_modules',
     ];
+    
+    // Configure webpack to be less strict about package exports
+    // This allows importing from package src directories
+    if (!config.resolve.conditionNames) {
+      config.resolve.conditionNames = ['require', 'node', 'import'];
+    }
+    
+    // Allow importing files without extensions
+    config.resolve.fullySpecified = false;
     
     return config;
   },
