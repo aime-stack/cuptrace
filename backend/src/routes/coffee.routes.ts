@@ -11,9 +11,9 @@ import {
   getCoffeeByLotIdController,
   retryMintNFTCoffeeController,
   retryBlockchainRecordCoffeeController,
-} from '../controllers/coffee.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/coffee.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createProductSchema,
   getProductSchema,
@@ -24,7 +24,7 @@ import {
   rejectBatchSchema,
   verifyBatchByQRCodeSchema,
   getProductByLotIdSchema,
-} from '../validators/product.validator';
+} from '../validators/product.validator.js';
 
 const router = Router();
 

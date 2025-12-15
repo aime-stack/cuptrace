@@ -5,7 +5,7 @@
  */
 
 import { Router } from 'express';
-import { handleUSSD } from '../controllers/ussd.controller';
+import { handleUSSD } from '../controllers/ussd.controller.js';
 
 const router = Router();
 

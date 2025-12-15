@@ -6,8 +6,8 @@
  */
 
 import { Request, Response } from 'express';
-import prisma from '../config/database';
-import { generatePhoneHash, maskPhone } from '../lib/hashing';
+import prisma from '../config/database.js';
+import { generatePhoneHash, maskPhone } from '../lib/hashing.js';
 
 // USSD provider from environment
 const USSD_PROVIDER = process.env.USSD_PROVIDER || 'at';

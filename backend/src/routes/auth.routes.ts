@@ -10,8 +10,8 @@ import {
   resetPasswordController,
   deactivateUserController,
   activateUserController,
-} from '../controllers/auth.controller';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/auth.controller.js';
+import { validate } from '../middleware/validation.middleware.js';
 import { 
   registerSchema, 
   loginSchema, 
@@ -23,8 +23,8 @@ import {
   resetPasswordSchema,
   deactivateUserSchema,
   activateUserSchema,
-} from '../validators/auth.validator';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
+} from '../validators/auth.validator.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

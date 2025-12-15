@@ -5,9 +5,9 @@
  */
 
 import { Request, Response } from 'express';
-import { generateQRCodeForBatch, regenerateQRCodeForBatch, buildTraceUrl } from '../services/qrGenerator';
-import { formatFarmerDisplayName } from '../lib/hashing';
-import prisma from '../config/database';
+import { generateQRCodeForBatch, regenerateQRCodeForBatch, buildTraceUrl } from '../services/qrGenerator.js';
+import { formatFarmerDisplayName } from '../lib/hashing.js';
+import prisma from '../config/database.js';
 
 /**
  * Generate QR code for a batch

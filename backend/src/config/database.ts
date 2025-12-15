@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import env from './env';
+import env from './env.js';
 
 // Prevent multiple instances of Prisma Client in development
 // This is important for hot reloading with nodemon to avoid

@@ -11,9 +11,9 @@ import {
   getTeaByLotIdController,
   retryMintNFTTeaController,
   retryBlockchainRecordTeaController,
-} from '../controllers/tea.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/tea.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createProductSchema,
   getProductSchema,
@@ -24,7 +24,7 @@ import {
   rejectBatchSchema,
   verifyBatchByQRCodeSchema,
   getProductByLotIdSchema,
-} from '../validators/product.validator';
+} from '../validators/product.validator.js';
 
 const router = Router();
 

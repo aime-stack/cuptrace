@@ -1,14 +1,14 @@
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 import crypto from 'crypto';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { parseDate } from '../utils/date';
-import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '../utils/validation';
-import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
-import { buildSoftDeleteFilter } from '../utils/query';
-import { generateQRCode, generateVerificationUrl } from '../utils/qrcode';
-import { createBatchOnChain } from './blockchain.service';
-import { sendBatchProcessedNotification } from './notifications.service';
-import env from '../config/env';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { parseDate } from '../utils/date.js';
+import { sanitizeString, isValidCoordinates, isValidNonNegativeNumber } from '../utils/validation.js';
+import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination.js';
+import { buildSoftDeleteFilter } from '../utils/query.js';
+import { generateQRCode, generateVerificationUrl } from '../utils/qrcode.js';
+import { createBatchOnChain } from './blockchain.service.js';
+import { sendBatchProcessedNotification } from './notifications.service.js';
+import env from '../config/env.js';
 
 type ProductType = 'coffee' | 'tea';
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';

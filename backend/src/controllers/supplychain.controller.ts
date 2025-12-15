@@ -1,8 +1,8 @@
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
-import prisma from '../config/database';
-import { sendSuccess, sendError } from '../utils/response';
-import { ValidationError } from '../utils/errors';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import prisma from '../config/database.js';
+import { sendSuccess, sendError } from '../utils/response.js';
+import { ValidationError } from '../utils/errors.js';
 
 export const transferNFTController = async (req: AuthRequest, res: Response) => {
     try {

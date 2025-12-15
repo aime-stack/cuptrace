@@ -3,13 +3,13 @@
  */
 
 import { Response } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
     getUserNotifications,
     getUnreadCount,
     markAsRead,
     markAllAsRead,
-} from '../services/notifications.service';
+} from '../services/notifications.service.js';
 
 /**
  * Get current user's notifications

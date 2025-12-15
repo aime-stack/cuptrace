@@ -3,10 +3,10 @@
  * Handles NAEB report generation and management
  */
 
-import prisma from '../config/database';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
-import { parseDate } from '../utils/date';
+import prisma from '../config/database.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination.js';
+import { parseDate } from '../utils/date.js';
 
 type ReportType = 'monthly_summary' | 'quarterly_export' | 'annual_statistics' | 'quality_report' | 'payment_report' | 'custom';
 type ReportStatus = 'draft' | 'submitted' | 'approved' | 'rejected';

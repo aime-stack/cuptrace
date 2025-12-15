@@ -3,14 +3,14 @@ import {
   updateCoffeeStageController,
   updateTeaStageController,
   getBatchHistoryController,
-} from '../controllers/stage.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/stage.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   updateCoffeeStageSchema,
   updateTeaStageSchema,
   getBatchHistorySchema,
-} from '../validators/stage.validator';
+} from '../validators/stage.validator.js';
 
 const router = Router();
 

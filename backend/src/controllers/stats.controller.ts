@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
-import prisma from '../config/database';
-import { sendSuccess } from '../utils/response';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import prisma from '../config/database.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const getDashboardStats = async (
     _req: AuthRequest,

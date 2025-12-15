@@ -8,8 +8,8 @@ import {
     getNotificationCount,
     markNotificationRead,
     markAllNotificationsRead,
-} from '../controllers/notifications.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
+} from '../controllers/notifications.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

@@ -1,28 +1,28 @@
 import express, { Express } from 'express';
 import cors from 'cors';
-import { errorHandler } from './middleware/error.middleware';
+import { errorHandler } from './middleware/error.middleware.js';
 
 // Import routes
-import authRoutes from './routes/auth.routes';
-import coffeeRoutes from './routes/coffee.routes';
-import teaRoutes from './routes/tea.routes';
-import stageRoutes from './routes/stage.routes';
-import cooperativeRoutes from './routes/cooperative.routes';
-import processingRoutes from './routes/processing.routes';
-import paymentRoutes from './routes/payment.routes';
-import exportRoutes from './routes/export.routes';
-import certificateRoutes from './routes/certificate.routes';
-import reportRoutes from './routes/report.routes';
-import supplyChainRoutes from './routes/supplychain.routes';
-import eventRoutes from './routes/events.routes';
-import documentRoutes from './routes/documents.routes';
-import mintRoutes from './routes/mint.routes';
-import qrRoutes from './routes/qr.routes';
-import ussdRoutes from './routes/ussd.routes';
-import notificationRoutes from './routes/notifications.routes';
-import communityRoutes from './routes/community.routes';
-import statsRoutes from './routes/stats.routes';
-import consumerRoutes from './routes/consumer.routes';
+import authRoutes from './routes/auth.routes.js';
+import coffeeRoutes from './routes/coffee.routes.js';
+import teaRoutes from './routes/tea.routes.js';
+import stageRoutes from './routes/stage.routes.js';
+import cooperativeRoutes from './routes/cooperative.routes.js';
+import processingRoutes from './routes/processing.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import exportRoutes from './routes/export.routes.js';
+import certificateRoutes from './routes/certificate.routes.js';
+import reportRoutes from './routes/report.routes.js';
+import supplyChainRoutes from './routes/supplychain.routes.js';
+import eventRoutes from './routes/events.routes.js';
+import documentRoutes from './routes/documents.routes.js';
+import mintRoutes from './routes/mint.routes.js';
+import qrRoutes from './routes/qr.routes.js';
+import ussdRoutes from './routes/ussd.routes.js';
+import notificationRoutes from './routes/notifications.routes.js';
+import communityRoutes from './routes/community.routes.js';
+import statsRoutes from './routes/stats.routes.js';
+import consumerRoutes from './routes/consumer.routes.js';
 
 const createApp = (): Express => {
   const app = express();

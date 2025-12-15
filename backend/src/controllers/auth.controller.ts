@@ -10,9 +10,9 @@ import {
   resetPassword,
   deactivateUser,
   activateUser,
-} from '../services/auth.service';
-import { sendSuccess, sendPaginatedResponse } from '../utils/response';
-import { AuthRequest } from '../middleware/auth.middleware';
+} from '../services/auth.service.js';
+import { sendSuccess, sendPaginatedResponse } from '../utils/response.js';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 
 export const registerController = async (
   req: AuthRequest,

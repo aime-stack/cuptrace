@@ -3,11 +3,11 @@
  * Handles certificate management for product batches
  */
 
-import prisma from '../config/database';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { sanitizeString } from '../utils/validation';
-import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
-import { parseDate } from '../utils/date';
+import prisma from '../config/database.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitizeString } from '../utils/validation.js';
+import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination.js';
+import { parseDate } from '../utils/date.js';
 
 type CertificateType = 'organic' | 'fair_trade' | 'quality_grade' | 'export_permit' | 'health_certificate' | 'origin_certificate' | 'other';
 

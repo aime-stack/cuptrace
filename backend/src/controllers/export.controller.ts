@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createExportRecord,
   getExportRecordByBatchId,
@@ -7,8 +7,8 @@ import {
   listExportRecords,
   updateExportRecord,
   deleteExportRecord,
-} from '../services/export.service';
-import { sendSuccess } from '../utils/response';
+} from '../services/export.service.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const createExportRecordController = async (
   req: AuthRequest,

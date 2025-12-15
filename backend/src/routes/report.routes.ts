@@ -9,9 +9,9 @@ import {
   rejectReportController,
   deleteReportController,
   generateNaebReportController,
-} from '../controllers/report.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/report.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createReportSchema,
   getReportSchema,
@@ -22,7 +22,7 @@ import {
   rejectReportSchema,
   deleteReportSchema,
   generateNaebReportSchema,
-} from '../validators/report.validator';
+} from '../validators/report.validator.js';
 
 const router = Router();
 

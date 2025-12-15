@@ -5,11 +5,11 @@
  * Integrates with Cardano blockchain using Lucid and Aiken-compiled contracts.
  */
 
-import prisma from '../config/database';
-import { ValidationError, NotFoundError } from '../utils/errors';
-import { initializeLucid } from './blockchain.service';
-import { getNFTMintingPolicy, loadContractFromFile, getBatchTraceabilityValidator } from '../utils/contract-loader';
-import env from '../config/env';
+import prisma from '../config/database.js';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
+import { initializeLucid } from './blockchain.service.js';
+import { getNFTMintingPolicy, loadContractFromFile, getBatchTraceabilityValidator } from '../utils/contract-loader.js';
+import env from '../config/env.js';
 
 interface NFTMetadata {
   name: string;

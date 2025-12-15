@@ -2,7 +2,7 @@
  * QR Code utility functions
  */
 
-import env from '../config/env';
+import env from '../config/env.js';
 
 /**
  * Generate unique QR code string for a batch

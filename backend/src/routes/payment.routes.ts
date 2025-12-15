@@ -5,16 +5,16 @@ import {
   listPaymentsController,
   updatePaymentController,
   deletePaymentController,
-} from '../controllers/payment.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/payment.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createPaymentSchema,
   getPaymentSchema,
   listPaymentsSchema,
   updatePaymentSchema,
   deletePaymentSchema,
-} from '../validators/payment.validator';
+} from '../validators/payment.validator.js';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createProcessingRecord,
   getProcessingRecordById,
@@ -7,8 +7,8 @@ import {
   listProcessingRecords,
   updateProcessingRecord,
   deleteProcessingRecord,
-} from '../services/processing.service';
-import { sendSuccess } from '../utils/response';
+} from '../services/processing.service.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const createProcessingRecordController = async (
   req: AuthRequest,

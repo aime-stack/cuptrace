@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createProduct,
   getProductById,
@@ -10,11 +10,11 @@ import {
   rejectBatch,
   verifyBatchByQRCode,
   getProductByLotId,
-} from '../services/product.service';
-import { mintBatchNFT } from '../services/nft.service';
-import { createBatchOnChain } from '../services/blockchain.service';
-import env from '../config/env';
-import { sendSuccess, sendPaginatedResponse, sendSuccessWithMessage } from '../utils/response';
+} from '../services/product.service.js';
+import { mintBatchNFT } from '../services/nft.service.js';
+import { createBatchOnChain } from '../services/blockchain.service.js';
+import env from '../config/env.js';
+import { sendSuccess, sendPaginatedResponse, sendSuccessWithMessage } from '../utils/response.js';
 
 // SupplyChainStage will be available after Prisma client generation
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';

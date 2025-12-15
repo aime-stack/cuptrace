@@ -1,8 +1,8 @@
-import prisma from '../config/database';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { buildSoftDeleteFilter } from '../utils/query';
-import { sanitizeString, isValidNonNegativeNumber } from '../utils/validation';
-import { updateBatchStageOnChain } from './blockchain.service';
+import prisma from '../config/database.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { buildSoftDeleteFilter } from '../utils/query.js';
+import { sanitizeString, isValidNonNegativeNumber } from '../utils/validation.js';
+import { updateBatchStageOnChain } from './blockchain.service.js';
 
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 

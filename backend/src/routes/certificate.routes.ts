@@ -7,9 +7,9 @@ import {
   listCertificatesController,
   updateCertificateController,
   deleteCertificateController,
-} from '../controllers/certificate.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/certificate.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createCertificateSchema,
   getCertificateSchema,
@@ -18,7 +18,7 @@ import {
   listCertificatesSchema,
   updateCertificateSchema,
   deleteCertificateSchema,
-} from '../validators/certificate.validator';
+} from '../validators/certificate.validator.js';
 
 const router = Router();
 

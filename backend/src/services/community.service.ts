@@ -1,6 +1,6 @@
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 import { AnnouncementType, PollType } from '@prisma/client';
-import { ValidationError, NotFoundError } from '../utils/errors';
+import { ValidationError, NotFoundError } from '../utils/errors.js';
 
 // Announcements
 export const createAnnouncement = async (

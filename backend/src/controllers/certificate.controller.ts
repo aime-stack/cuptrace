@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createCertificate,
   getCertificateById,
@@ -8,8 +8,8 @@ import {
   listCertificates,
   updateCertificate,
   deleteCertificate,
-} from '../services/certificate.service';
-import { sendSuccess } from '../utils/response';
+} from '../services/certificate.service.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const createCertificateController = async (
   req: AuthRequest,

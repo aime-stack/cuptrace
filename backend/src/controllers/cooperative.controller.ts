@@ -1,13 +1,13 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createCooperative,
   getCooperativeById,
   listCooperatives,
   updateCooperative,
   deleteCooperative,
-} from '../services/cooperative.service';
-import { sendSuccess, sendPaginatedResponse } from '../utils/response';
+} from '../services/cooperative.service.js';
+import { sendSuccess, sendPaginatedResponse } from '../utils/response.js';
 
 export const createCooperativeController = async (
   req: AuthRequest,

@@ -6,9 +6,9 @@
  */
 
 import QRCode from 'qrcode';
-import { uploadQRCode, isSupabaseConfigured } from './supabaseStorage';
-import { generateBatchTraceHash } from '../lib/hashing';
-import prisma from '../config/database';
+import { uploadQRCode, isSupabaseConfigured } from './supabaseStorage.js';
+import { generateBatchTraceHash } from '../lib/hashing.js';
+import prisma from '../config/database.js';
 
 // Get frontend host from environment
 const FRONTEND_HOST = process.env.FRONTEND_HOST || 'http://localhost:3000';

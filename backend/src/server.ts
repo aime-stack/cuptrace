@@ -1,6 +1,6 @@
-import env from './config/env';
-import createApp from './app';
-import prisma from './config/database';
+import env from './config/env.js';
+import createApp from './app.js';
+import prisma from './config/database.js';
 
 const app = createApp();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;

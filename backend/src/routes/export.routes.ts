@@ -6,9 +6,9 @@ import {
   listExportRecordsController,
   updateExportRecordController,
   deleteExportRecordController,
-} from '../controllers/export.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/export.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createExportRecordSchema,
   getExportRecordByBatchSchema,
@@ -16,7 +16,7 @@ import {
   listExportRecordsSchema,
   updateExportRecordSchema,
   deleteExportRecordSchema,
-} from '../validators/export.validator';
+} from '../validators/export.validator.js';
 
 const router = Router();
 

@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createReport,
   getReportById,
@@ -10,8 +10,8 @@ import {
   rejectReport,
   deleteReport,
   generateNaebReport,
-} from '../services/report.service';
-import { sendSuccess } from '../utils/response';
+} from '../services/report.service.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const createReportController = async (
   req: AuthRequest,

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { mintBatchNFT } from '../services/mint.service';
+import { mintBatchNFT } from '../services/mint.service.js';
 
 const router = Router();
 

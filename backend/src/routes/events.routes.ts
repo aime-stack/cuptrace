@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { createEventController, listEventsController } from '../controllers/events.controller';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { createEventController, listEventsController } from '../controllers/events.controller.js';
 
 const router = Router();
 

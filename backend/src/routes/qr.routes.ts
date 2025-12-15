@@ -5,8 +5,8 @@
  */
 
 import { Router } from 'express';
-import { generateQR, getPublicTrace, verifyByCode } from '../controllers/qr.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
+import { generateQR, getPublicTrace, verifyByCode } from '../controllers/qr.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

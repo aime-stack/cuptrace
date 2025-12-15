@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PaginationResult } from './pagination';
+import { PaginationResult } from './pagination.js';
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

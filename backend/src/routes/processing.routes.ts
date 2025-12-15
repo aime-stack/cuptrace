@@ -6,9 +6,9 @@ import {
   listProcessingRecordsController,
   updateProcessingRecordController,
   deleteProcessingRecordController,
-} from '../controllers/processing.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/processing.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createProcessingRecordSchema,
   getProcessingRecordSchema,
@@ -16,7 +16,7 @@ import {
   listProcessingRecordsSchema,
   updateProcessingRecordSchema,
   deleteProcessingRecordSchema,
-} from '../validators/processing.validator';
+} from '../validators/processing.validator.js';
 
 const router = Router();
 

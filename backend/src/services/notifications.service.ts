@@ -4,9 +4,9 @@
  * Handles in-app notifications, SMS (Africa's Talking), and email notifications.
  */
 
-import prisma from '../config/database';
+import prisma from '../config/database.js';
 import { Notification } from '@prisma/client';
-import { maskPhone } from '../lib/hashing';
+import { maskPhone } from '../lib/hashing.js';
 
 // Africa's Talking SDK - lazy loaded
 let AfricasTalking: any = null;

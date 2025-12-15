@@ -3,10 +3,10 @@
  * Handles CRUD operations for cooperatives
  */
 
-import prisma from '../config/database';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { sanitizeString } from '../utils/validation';
-import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination';
+import prisma from '../config/database.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitizeString } from '../utils/validation.js';
+import { normalizePagination, createPaginationResult, PaginationResult } from '../utils/pagination.js';
 
 export interface CreateCooperativeData {
   name: string;

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../services/auth.service';
-import { AuthenticationError } from '../utils/errors';
-import prisma from '../config/database';
+import { verifyToken } from '../services/auth.service.js';
+import { AuthenticationError } from '../utils/errors.js';
+import prisma from '../config/database.js';
 
 export interface AuthRequest extends Request {
   user?: {

@@ -3,11 +3,11 @@
  * Handles export records for product batches
  */
 
-import prisma from '../config/database';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { sanitizeString, isValidEmail, normalizeEmail } from '../utils/validation';
-import { normalizePagination, createPaginationResult } from '../utils/pagination';
-import { parseDate } from '../utils/date';
+import prisma from '../config/database.js';
+import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { sanitizeString, isValidEmail, normalizeEmail } from '../utils/validation.js';
+import { normalizePagination, createPaginationResult } from '../utils/pagination.js';
+import { parseDate } from '../utils/date.js';
 
 export interface CreateExportRecordData {
   batchId: string;

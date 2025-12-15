@@ -1,11 +1,11 @@
 import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
-import env from '../config/env';
-import prisma from '../config/database';
-import { AuthenticationError, ValidationError, NotFoundError } from '../utils/errors';
-import { normalizeEmail, sanitizeString, isValidEmail } from '../utils/validation';
-import { normalizePagination, createPaginationResult } from '../utils/pagination';
-import { generateFarmerPublicHash } from '../lib/hashing';
+import env from '../config/env.js';
+import prisma from '../config/database.js';
+import { AuthenticationError, ValidationError, NotFoundError } from '../utils/errors.js';
+import { normalizeEmail, sanitizeString, isValidEmail } from '../utils/validation.js';
+import { normalizePagination, createPaginationResult } from '../utils/pagination.js';
+import { generateFarmerPublicHash } from '../lib/hashing.js';
 
 import { UserRole } from '@prisma/client';
 

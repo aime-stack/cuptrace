@@ -1,7 +1,7 @@
 import { Response } from 'express';
-import * as communityService from '../services/community.service';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { sendSuccess, sendError } from '../utils/response';
+import * as communityService from '../services/community.service.js';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 import { AnnouncementType, PollType } from '@prisma/client';
 
 // Announcements

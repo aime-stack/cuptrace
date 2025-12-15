@@ -1,13 +1,13 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
+import { AuthRequest } from '../middleware/auth.middleware.js';
 import {
   createPayment,
   getPaymentById,
   listPayments,
   updatePayment,
   deletePayment,
-} from '../services/payment.service';
-import { sendSuccess } from '../utils/response';
+} from '../services/payment.service.js';
+import { sendSuccess } from '../utils/response.js';
 
 export const createPaymentController = async (
   req: AuthRequest,

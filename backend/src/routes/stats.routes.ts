@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getDashboardStats, getFarmerStats, getWashingStationStats, getFactoryStats, getAgentStats } from '../controllers/stats.controller';
-import { verifyTokenMiddleware, authorize } from '../middleware/auth.middleware';
+import { getDashboardStats, getFarmerStats, getWashingStationStats, getFactoryStats, getAgentStats } from '../controllers/stats.controller.js';
+import { verifyTokenMiddleware, authorize } from '../middleware/auth.middleware.js';
 
 const router = Router();
 

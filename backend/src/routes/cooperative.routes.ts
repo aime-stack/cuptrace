@@ -5,16 +5,16 @@ import {
   listCooperativesController,
   updateCooperativeController,
   deleteCooperativeController,
-} from '../controllers/cooperative.controller';
-import { verifyTokenMiddleware } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
+} from '../controllers/cooperative.controller.js';
+import { verifyTokenMiddleware } from '../middleware/auth.middleware.js';
+import { validate } from '../middleware/validation.middleware.js';
 import {
   createCooperativeSchema,
   getCooperativeSchema,
   listCooperativesSchema,
   updateCooperativeSchema,
   deleteCooperativeSchema,
-} from '../validators/cooperative.validator';
+} from '../validators/cooperative.validator.js';
 
 const router = Router();
 

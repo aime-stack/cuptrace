@@ -1,9 +1,9 @@
 import { Response, NextFunction } from 'express';
-import { AuthRequest } from '../middleware/auth.middleware';
-import { updateBatchStage, getBatchHistory } from '../services/stage.service';
-import { sendSuccess } from '../utils/response';
-import { NotFoundError } from '../utils/errors';
-import prisma from '../config/database';
+import { AuthRequest } from '../middleware/auth.middleware.js';
+import { updateBatchStage, getBatchHistory } from '../services/stage.service.js';
+import { sendSuccess } from '../utils/response.js';
+import { NotFoundError } from '../utils/errors.js';
+import prisma from '../config/database.js';
 
 export const updateCoffeeStageController = async (
   req: AuthRequest,

@@ -8,11 +8,11 @@
  * a deterministic hash generation system based on batch data for traceability.
  */
 
-import env from '../config/env';
-import prisma from '../config/database';
-import { ValidationError } from '../utils/errors';
+import env from '../config/env.js';
+import prisma from '../config/database.js';
+import { ValidationError } from '../utils/errors.js';
 import { createHash } from 'crypto';
-import { getBatchTraceabilityValidator, getStageTransitionValidator, loadContractFromFile } from '../utils/contract-loader';
+import { getBatchTraceabilityValidator, getStageTransitionValidator, loadContractFromFile } from '../utils/contract-loader.js';
 
 type SupplyChainStage = 'farmer' | 'washing_station' | 'factory' | 'exporter' | 'importer' | 'retailer';
 
