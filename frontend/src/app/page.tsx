@@ -36,11 +36,6 @@ export default function HomePage() {
                         <Link href="/login" className="hidden sm:block">
                             <Button variant="ghost" className="dark:text-gray-300 dark:hover:text-white">Login</Button>
                         </Link>
-                        <Link href="/register">
-                            <Button className="bg-coffee-600 hover:bg-coffee-700 text-white border-0 shadow-lg shadow-coffee-600/20">
-                                Get Started
-                            </Button>
-                        </Link>
                     </nav>
                 </div>
             </header>
