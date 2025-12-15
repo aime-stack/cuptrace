@@ -54,7 +54,7 @@ const nextConfig = {
     // 3. Robust alias for @utxorpc/sdk
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@utxorpc/sdk': path.resolve(process.cwd(), 'node_modules', '@utxorpc', 'sdk'),
+      '@utxorpc/sdk': path.resolve(process.cwd(), 'node_modules', '@utxorpc', 'sdk', 'lib', 'browser', 'index.mjs'),
     };
 
 
