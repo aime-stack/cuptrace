@@ -1,12 +1,13 @@
-import { BrowserWallet } from '@meshsdk/core';
+import type { BrowserWallet } from '@meshsdk/core';
 
 export const connectWallet = async (walletName: string = 'eternl') => {
     try {
         // Check if wallet is available
-        if (!window.cardano || !window.cardano[walletName]) {
+        if (typeof window === 'undefined' || !window.cardano || !window.cardano[walletName]) {
             throw new Error(`${walletName} wallet not found. Please install the ${walletName} browser extension.`);
         }
-        
+
+        const { BrowserWallet } = await import('@meshsdk/core');
         const wallet = await BrowserWallet.enable(walletName);
         return wallet;
     } catch (error) {
@@ -27,13 +28,13 @@ export const getWalletBalance = async (wallet: BrowserWallet) => {
         const utxos = await wallet.getUtxos();
         const address = await wallet.getChangeAddress();
         const networkId = await wallet.getNetworkId();
-        
+
         console.log('=== Wallet Balance Debug ===');
         console.log('Address:', address);
         console.log('Network ID:', networkId);
         console.log('UTxOs count:', utxos?.length || 0);
         console.log('Full UTxOs:', utxos);
-        
+
         // Calculate ADA balance
         let adaBalance = 0;
         if (utxos && utxos.length > 0) {
@@ -47,7 +48,7 @@ export const getWalletBalance = async (wallet: BrowserWallet) => {
                 }
             });
         }
-        
+
         const result = {
             address,
             networkId,
@@ -56,7 +57,7 @@ export const getWalletBalance = async (wallet: BrowserWallet) => {
             utxoCount: utxos?.length || 0,
             utxos
         };
-        
+
         console.log('Balance result:', result);
         return result;
     } catch (error) {
@@ -68,21 +69,23 @@ export const getWalletBalance = async (wallet: BrowserWallet) => {
 export const debugWallet = async () => {
     try {
         console.log('=== Starting Wallet Debug ===');
-        console.log('Window.cardano:', window.cardano);
-        
-        if (!window.cardano) {
+
+        if (typeof window === 'undefined' || !window.cardano) {
             console.error('No cardano object found in window');
             return;
         }
-        
+
+        console.log('Window.cardano:', window.cardano);
+
         if (!window.cardano.eternl) {
             console.error('Eternl wallet not found. Available wallets:', Object.keys(window.cardano));
             return;
         }
-        
+
+        const { BrowserWallet } = await import('@meshsdk/core');
         const wallet = await BrowserWallet.enable('eternl');
         const balance = await getWalletBalance(wallet);
-        
+
         console.log('Final balance:', balance);
         return balance;
     } catch (error) {
