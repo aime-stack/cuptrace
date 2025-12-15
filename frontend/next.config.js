@@ -68,7 +68,11 @@ const nextConfig = {
     // Fix for bip174/bitcoinjs-lib issues
     // Since this is a Cardano project, we don't need Bitcoin functionality
     // But @meshsdk/react imports it, so we need to handle it properly
-    const webpack = require('webpack');
+    // Fix for bip174/bitcoinjs-lib issues
+    // Since this is a Cardano project, we don't need Bitcoin functionality
+    // But @meshsdk/react imports it, so we need to handle it properly
+    // const webpack = require('webpack'); // Don't require check, use options
+    const { webpack } = options;
 
     if (!config.plugins) {
       config.plugins = [];
@@ -147,6 +151,8 @@ const nextConfig = {
     // Provide aliases to handle the problematic imports
     config.resolve.alias = {
       ...config.resolve.alias,
+      // Alias node:crypto to false explicitly (although stripped by plugin, this is a fallback)
+      'node:crypto': false,
       // Stub bitcoinjs-lib to avoid bip174 export issues
       'bitcoinjs-lib': stubPath,
       // Stub node-datachannel to avoid native build issues
