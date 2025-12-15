@@ -32,7 +32,8 @@ const createApp = (): Express => {
   const allowedOrigins = [
     process.env.FRONTEND_URL,
     'http://localhost:3000',
-    'http://localhost:3001'
+    'http://localhost:3001',
+    'https://cuptrace-frontend-production.up.railway.app'
   ].filter((origin): origin is string => !!origin);
 
   app.use(cors({
