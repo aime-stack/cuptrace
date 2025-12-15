@@ -134,7 +134,14 @@ const nextConfig = {
       }),
       new webpack.IgnorePlugin({
         resourceRegExp: /^@connectrpc\/connect-node$/,
-      })
+      }),
+      // Strip node: prefix from imports (fixes node:crypto UnhandledSchemeError)
+      new webpack.NormalModuleReplacementPlugin(
+        /^node:/,
+        (resource) => {
+          resource.request = resource.request.replace(/^node:/, "");
+        }
+      )
     );
 
     // Provide aliases to handle the problematic imports
