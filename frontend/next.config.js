@@ -22,13 +22,36 @@ const nextConfig = {
       stream: false,
       buffer: false,
       async_hooks: false,
+      'stream/web': false,
+      'util/types': false,
+      worker_threads: false,
     };
 
-    // Resolve @utxorpc/sdk to ensure it's found even in nested node_modules
-    // FAST TRACK FIX: Railway build fails without this manual resolution
+    // Fix for Railway build failing to find @utxorpc/sdk
     const path = require('path');
-    const fs = require('fs');
+    const { webpack } = options;
 
+    // 1. Force resolution to browser version for @utxorpc/sdk
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(
+        /@utxorpc\/sdk\/lib\/node/,
+        resource => {
+          resource.request = resource.request.replace('/node/', '/browser/');
+        }
+      )
+    );
+
+    // 2. Ignore Node.js-only dependencies
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^undici$/,
+      }),
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^@connectrpc\/connect-node$/,
+      })
+    );
+
+    // 3. Robust alias for @utxorpc/sdk
     config.resolve.alias = {
       ...config.resolve.alias,
       '@utxorpc/sdk': path.resolve(process.cwd(), 'node_modules', '@utxorpc', 'sdk'),
