@@ -86,7 +86,7 @@ function VerifyContent() {
                             </div>
                             <h3 className="text-xl font-bold text-red-900 mb-2">No Record Found</h3>
                             <p className="text-red-700 max-w-md mx-auto">
-                                We couldn't find a batch with that ID. Please double-check the code and try again.
+                                We couldn&apos;t find a batch with that ID. Please double-check the code and try again.
                             </p>
                         </CardContent>
                     </Card>
@@ -200,7 +200,10 @@ function VerifyContent() {
                                 </CardContent>
                                 {batch.qrCodeUrl && (
                                     <CardFooter className="bg-gray-50 border-t flex items-center gap-4">
-                                        <img src={batch.qrCodeUrl} alt="Batch QR" className="h-16 w-16" />
+                                        <div className="h-16 w-16 relative">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={batch.qrCodeUrl} alt="Batch QR" className="h-full w-full object-contain" />
+                                        </div>
                                         <div>
                                             <p className="font-semibold text-sm">Product QR Code</p>
                                             <p className="text-xs text-muted-foreground">Scan to verify this exact batch</p>
