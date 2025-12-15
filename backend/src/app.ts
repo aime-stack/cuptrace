@@ -28,9 +28,18 @@ const createApp = (): Express => {
   const app = express();
 
   // Middleware
+  // Middleware
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ].filter((origin): origin is string => !!origin);
+
   app.use(cors({
-    origin: [process.env.FRONTEND_URL || 'http://localhost:3000'],
+    origin: allowedOrigins,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
