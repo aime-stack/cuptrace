@@ -39,23 +39,24 @@ const nextConfig = {
       vm: false,
       zlib: false,
       crypto: false,
+      'node:crypto': false,
       buffer: false,
       events: false,
       http: false,
       https: false,
     };
-    
+
     // Resolve @utxorpc/sdk to ensure it's found even in nested node_modules
     const path = require('path');
     const fs = require('fs');
-    
+
     // Try multiple possible locations for @utxorpc/sdk
     const possiblePaths = [
       path.resolve(process.cwd(), 'node_modules', '@utxorpc', 'sdk'),
       path.resolve(process.cwd(), 'node_modules', '@meshsdk', 'web3-sdk', 'node_modules', '@utxorpc', 'sdk'),
       path.resolve(process.cwd(), 'node_modules', '@meshsdk', 'provider', 'node_modules', '@utxorpc', 'sdk'),
     ];
-    
+
     let utxorpcPath = null;
     for (const possiblePath of possiblePaths) {
       if (fs.existsSync(possiblePath)) {
@@ -63,21 +64,21 @@ const nextConfig = {
         break;
       }
     }
-    
+
     // Fix for bip174/bitcoinjs-lib issues
     // Since this is a Cardano project, we don't need Bitcoin functionality
     // But @meshsdk/react imports it, so we need to handle it properly
     const webpack = require('webpack');
-    
+
     if (!config.plugins) {
       config.plugins = [];
     }
-    
+
     // Replace Node.js version of @utxorpc/sdk with browser version
     if (utxorpcPath) {
       const browserPath = path.join(utxorpcPath, 'lib', 'browser', 'index.mjs');
       const nodePath = path.join(utxorpcPath, 'lib', 'node', 'index.mjs');
-      
+
       // Check if browser version exists
       if (fs.existsSync(browserPath)) {
         config.plugins.push(
@@ -86,7 +87,7 @@ const nextConfig = {
             browserPath
           )
         );
-        
+
         config.resolve.alias = {
           ...config.resolve.alias,
           '@utxorpc/sdk': utxorpcPath,
@@ -100,11 +101,11 @@ const nextConfig = {
         };
       }
     }
-    
+
     // Replace bitcoinjs-lib imports with a stub to avoid bip174 issues
     // This prevents the build from failing on Bitcoin-related code we don't use
     const stubPath = path.resolve(process.cwd(), 'src', 'lib', 'mocks', 'bitcoinjs-lib-stub.js');
-    
+
     // Ignore bip174 to prevent export field issues
     config.plugins.push(
       new webpack.IgnorePlugin({
@@ -116,10 +117,10 @@ const nextConfig = {
         stubPath
       )
     );
-    
+
     // Stub node-datachannel to avoid native compilation issues
     const nodeDatachannelStubPath = path.resolve(process.cwd(), 'src', 'lib', 'mocks', 'node-datachannel-stub.js');
-    
+
     // Exclude Node.js-only packages from client bundle
     // undici and @connectrpc/connect-node are server-only
     config.plugins.push(
@@ -135,7 +136,7 @@ const nextConfig = {
         resourceRegExp: /^@connectrpc\/connect-node$/,
       })
     );
-    
+
     // Provide aliases to handle the problematic imports
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -144,22 +145,22 @@ const nextConfig = {
       // Stub node-datachannel to avoid native build issues
       'node-datachannel': nodeDatachannelStubPath,
     };
-    
+
     // Ensure webpack can resolve modules from nested node_modules
     config.resolve.modules = [
       path.resolve(process.cwd(), 'node_modules'),
       'node_modules',
     ];
-    
+
     // Configure webpack to be less strict about package exports
     // This allows importing from package src directories
     if (!config.resolve.conditionNames) {
       config.resolve.conditionNames = ['require', 'node', 'import'];
     }
-    
+
     // Allow importing files without extensions
     config.resolve.fullySpecified = false;
-    
+
     return config;
   },
   // Allow external network access for mobile device testing
