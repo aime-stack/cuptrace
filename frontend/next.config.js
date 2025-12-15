@@ -5,6 +5,7 @@ const nextConfig = {
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
+      layers: true,
     };
     // Handle @utxorpc and @meshsdk dependencies
     // Exclude Node.js built-in modules from client bundle
