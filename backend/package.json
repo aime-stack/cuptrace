@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node --experimental-specifier-resolution=node dist/server.js",
+    "start": "tsx src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -36,6 +36,7 @@
     "kubo-rpc-client": "^4.1.1",
     "lucid-cardano": "^0.3.0",
     "qrcode": "^1.5.4",
+    "tsx": "^4.21.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -48,7 +49,6 @@
     "nodemon": "^3.1.0",
     "prisma": "^5.19.0",
     "ts-node-dev": "^2.0.0",
-    "tsx": "^4.21.0",
     "typescript": "^5.5.3"
   }
 }
