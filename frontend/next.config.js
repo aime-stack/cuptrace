@@ -21,6 +21,7 @@ const nextConfig = {
       path: false,
       stream: false,
       buffer: false,
+      async_hooks: false,
     };
 
     // Resolve @utxorpc/sdk to ensure it's found even in nested node_modules
