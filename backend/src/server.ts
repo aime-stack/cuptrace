@@ -3,14 +3,13 @@ import createApp from './app';
 import prisma from './config/database';
 
 const app = createApp();
-const PORT = parseInt(env.PORT, 10) || 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 const HOST = '0.0.0.0'; // Listen on all network interfaces
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 CupTrace Backend Server running on port ${PORT}`);
-  console.log(`📦 Environment: ${env.NODE_ENV}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`🌐 Network access: http://172.31.187.59:${PORT}/health`);
+  console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 Health check: http://${HOST}:${PORT}/health`);
 });
 
 // Graceful shutdown
