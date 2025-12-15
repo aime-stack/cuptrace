@@ -2,12 +2,14 @@
 // This provides minimal exports that satisfy the imports
 // Since we only use Cardano, Bitcoin functionality is not needed
 
-const Psbt = class {};
-const Transaction = class {};
+const Psbt = class { };
+const Transaction = class { };
 const address = {};
 const networks = {};
 const payments = {};
 const script = {};
+const initEccLib = () => { };
+const crypto = {};
 
 const bitcoinjsLib = {
   Psbt,
@@ -16,10 +18,12 @@ const bitcoinjsLib = {
   networks,
   payments,
   script,
+  initEccLib,
+  crypto,
 };
 
 // Support both ESM and CommonJS
-export { Psbt, Transaction, address, networks, payments, script };
+export { Psbt, Transaction, address, networks, payments, script, initEccLib, crypto };
 export default bitcoinjsLib;
 
 // CommonJS fallback
@@ -31,5 +35,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports.networks = networks;
   module.exports.payments = payments;
   module.exports.script = script;
+  module.exports.initEccLib = initEccLib;
+  module.exports.crypto = crypto;
 }
-
