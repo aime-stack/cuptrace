@@ -27,22 +27,43 @@ import consumerRoutes from './routes/consumer.routes.js';
 const createApp = (): Express => {
   const app = express();
 
-  // Middleware
-  // Middleware
+  // CORS Configuration - define allowed origins
   const allowedOrigins = [
     process.env.FRONTEND_URL,
     'http://localhost:3000',
     'http://localhost:3001',
     'https://cuptrace-frontend-production.up.railway.app',
+    'https://cuptrace-backend-production.up.railway.app',
     'https://cuptrace.vercel.app'
   ].filter((origin): origin is string => !!origin);
 
-  app.use(cors({
-    origin: allowedOrigins,
+  console.log('🔐 CORS allowed origins:', allowedOrigins);
+
+  // CORS middleware with dynamic origin checking
+  const corsOptions = {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (like mobile apps, curl, Postman)
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      return callback(null, false);
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  };
+
+  // Apply CORS middleware
+  app.use(cors(corsOptions));
+
+  // Explicit preflight handling for all routes
+  app.options('*', cors(corsOptions));
+
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
