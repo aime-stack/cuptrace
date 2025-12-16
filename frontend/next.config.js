@@ -73,7 +73,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns', 'recharts', 'lodash', '@radix-ui/react-icons'],
   },
-  transpilePackages: ['@meshsdk', '@utxorpc'],
+  transpilePackages: ['@meshsdk', '@utxorpc', '@cardano-sdk/core'],
 }
 
 module.exports = nextConfig
