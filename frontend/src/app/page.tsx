@@ -13,7 +13,8 @@ import {
     Database,
     Link as LinkIcon,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Search
 } from 'lucide-react';
 import ScannerButton from '@/components/ScannerButton';
 
@@ -30,10 +31,10 @@ export default function HomePage() {
                         <span className="text-2xl font-bold text-coffee-900 dark:text-white tracking-tight">CupTrace</span>
                     </div>
                     <nav className="flex items-center gap-2 sm:gap-6">
-                        <Link href="/verify" className="hidden md:block text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-coffee-600 dark:hover:text-white transition-colors">
+                        <Link href="/verify" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-coffee-600 dark:hover:text-white transition-colors">
                             Verify
                         </Link>
-                        <Link href="/login" className="hidden sm:block">
+                        <Link href="/login">
                             <Button variant="ghost" className="dark:text-gray-300 dark:hover:text-white">Login</Button>
                         </Link>
                     </nav>
@@ -74,10 +75,10 @@ export default function HomePage() {
                                 View Demo
                             </Button>
                         </Link>
-                        <Link href="/register" className="w-full sm:w-auto">
+                        <Link href="/trace" className="w-full sm:w-auto">
                             <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto h-14 px-8 text-lg bg-white dark:bg-transparent border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-white">
-                                <Users className="h-5 w-5" />
-                                For Cooperatives
+                                <Search className="h-5 w-5" />
+                                Trace
                             </Button>
                         </Link>
                     </div>
@@ -310,9 +311,9 @@ export default function HomePage() {
                         Join us in building a transparent, fair, and sustainable future for Rwanda&apos;s coffee and tea.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                        <Link href="/register">
+                        <Link href="/trace">
                             <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-coffee-500 hover:bg-coffee-600 text-white border-0">
-                                Create Account
+                                Trace Batch
                             </Button>
                         </Link>
                         <Link href="mailto:contact@cuptrace.rw">
