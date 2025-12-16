@@ -56,7 +56,7 @@ export default function HomePage() {
                     </div>
 
                     <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-8 tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                        Rwanda's Coffee & Tea
+                        Rwanda&apos;s Coffee & Tea
                         <br />
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-coffee-600 to-coffee-800 dark:from-coffee-400 dark:to-coffee-600">
                             Transparently Tracked
@@ -191,7 +191,7 @@ export default function HomePage() {
                             <Leaf className="h-10 w-10 text-blue-400 mb-6" />
                             <h3 className="text-xl font-bold mb-3">Sustainable</h3>
                             <p className="text-gray-400">
-                                Cardano's Proof-of-Stake consensus consumes a fraction of the energy of other blockchains, aligning with our eco-friendly mission.
+                                Cardano&apos;s Proof-of-Stake consensus consumes a fraction of the energy of other blockchains, aligning with our eco-friendly mission.
                             </p>
                         </div>
                     </div>
@@ -307,7 +307,7 @@ export default function HomePage() {
                 <div className="container mx-auto px-4 relative z-10">
                     <h2 className="text-4xl md:text-5xl font-bold mb-8">Ready to Transform Traceability?</h2>
                     <p className="text-xl text-coffee-100 mb-12 max-w-2xl mx-auto">
-                        Join us in building a transparent, fair, and sustainable future for Rwanda's coffee and tea.
+                        Join us in building a transparent, fair, and sustainable future for Rwanda&apos;s coffee and tea.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-6 justify-center">
                         <Link href="/register">
