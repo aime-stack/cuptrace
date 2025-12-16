@@ -31,7 +31,7 @@ export default function HomePage() {
                     </div>
                     <nav className="flex items-center gap-2 sm:gap-6">
                         <Link href="/verify" className="hidden md:block text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-coffee-600 dark:hover:text-white transition-colors">
-                            Verify Product
+                            Verify
                         </Link>
                         <Link href="/login" className="hidden sm:block">
                             <Button variant="ghost" className="dark:text-gray-300 dark:hover:text-white">Login</Button>
