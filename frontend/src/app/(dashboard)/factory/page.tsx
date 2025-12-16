@@ -47,8 +47,8 @@ export default function FactoryDashboard() {
             try {
                 const response = await axiosInstance.get('/coffee', {
                     params: {
-                        status: 'approved',
-                        limit: 20,
+                        status: 'approved,completed',
+                        limit: 100,
                     }
                 });
 
@@ -174,10 +174,10 @@ export default function FactoryDashboard() {
                         <div>
                             <CardTitle className="flex items-center gap-2">
                                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                                Approved Batches - QR Management
+                                Factory Batches
                             </CardTitle>
                             <CardDescription>
-                                Generate and download QR codes for approved batches.
+                                Process approved batches and manage QR codes for completed ones.
                             </CardDescription>
                         </div>
                         <div className="relative w-64">
@@ -263,7 +263,7 @@ export default function FactoryDashboard() {
                                                         </a>
                                                     </div>
                                                 </div>
-                                            ) : (
+                                            ) : batch.status === 'completed' ? (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -279,6 +279,10 @@ export default function FactoryDashboard() {
                                                         </>
                                                     )}
                                                 </Button>
+                                            ) : (
+                                                <span className="text-xs text-muted-foreground italic">
+                                                    Complete processing first
+                                                </span>
                                             )}
                                         </TableCell>
                                         <TableCell>

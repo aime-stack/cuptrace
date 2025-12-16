@@ -21,8 +21,10 @@ export enum BatchStatus {
     rejected = 'rejected',
     processing = 'processing',
     ready_for_export = 'ready_for_export',
+    in_transit = 'in_transit',
     exported = 'exported',
     delivered = 'delivered',
+    completed = 'completed',
 }
 
 export enum SupplyChainStage {
