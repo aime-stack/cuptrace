@@ -4,6 +4,9 @@
 
 import env from '../config/env.js';
 
+// Use FRONTEND_HOST for QR code URLs (matches qrGenerator.ts)
+const FRONTEND_HOST = process.env.FRONTEND_HOST || env.FRONTEND_HOST || 'http://localhost:3000';
+
 /**
  * Generate unique QR code string for a batch
  */
@@ -18,7 +21,7 @@ export const generateQRCode = (batchId: string, type: 'coffee' | 'tea'): string 
  * Generate verification URL for a batch
  */
 export const generateVerificationUrl = (batchId: string, baseUrl?: string): string => {
-  const base = baseUrl || env.APP_URL;
+  const base = baseUrl || FRONTEND_HOST;
   return `${base}/verify/${batchId}`;
 };
 
@@ -35,10 +38,10 @@ export const isValidQRCode = (qrCode: string): boolean => {
  */
 export const extractBatchIdFromQR = (qrCode: string): string | null => {
   if (!isValidQRCode(qrCode)) return null;
-  
+
   const parts = qrCode.split('-');
   if (parts.length < 2) return null;
-  
+
   // The batch ID is typically embedded in the QR code
   // This is a simplified extraction - adjust based on your QR code structure
   return parts[1] || null;
