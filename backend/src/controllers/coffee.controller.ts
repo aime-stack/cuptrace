@@ -148,7 +148,7 @@ export const listCoffeeController = async (
       stage ? (stage as SupplyChainStage) : undefined,
       parseInt(page as string, 10),
       parseInt(limit as string, 10),
-      status as 'pending' | 'approved' | 'rejected' | 'in_transit' | 'completed' | undefined,
+      status as string | undefined, // FIXED: Allow comma-separated values like "approved,completed"
       farmerId as string | undefined,
       cooperativeId as string | undefined,
       search as string | undefined

@@ -42,28 +42,78 @@ export default function FactoryDashboard() {
     const [searchTerm, setSearchTerm] = useState('');
     const [generatingQR, setGeneratingQR] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const response = await axiosInstance.get('/coffee', {
-                    params: {
-                        status: 'approved,completed',
-                        limit: 100,
-                    }
-                });
+    // Move fetchDashboardData outside useEffect so it can be reused
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            console.log('[Factory] Starting fetch...');
 
-                if (response.data?.data) {
-                    const batches = response.data.data;
-                    setIncomingBatches(batches);
-                }
-            } catch (error) {
-                console.error('Failed to fetch factory dashboard data:', error);
-            } finally {
-                setLoading(false);
+            const response = await axiosInstance.get('/coffee', {
+                params: {
+                    status: 'approved,completed',
+                    limit: 100,
+                },
+                timeout: 10000, // 10 second timeout
+            });
+
+            console.log('[Factory] API Response:', response.data);
+
+            // FIXED: Backend returns {success, data: [...], pagination: {...}}
+            if (response.data?.data) {
+                const batches = response.data.data;
+                setIncomingBatches(batches);
+                console.log('[Factory] Fetched batches:', batches.length);
+            } else {
+                console.warn('[Factory] No data in response:', response.data);
+                setIncomingBatches([]);
             }
+        } catch (error: any) {
+            console.error('[Factory] Failed to fetch factory dashboard data:', error);
+            console.error('[Factory] Error details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            setIncomingBatches([]);
+        } finally {
+            console.log('[Factory] Setting loading to false');
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+
+        // Refetch when window regains focus (works for in-app navigation)
+        const handleFocus = () => {
+            console.log('[Factory] Window focused, refetching data...');
+            fetchDashboardData();
         };
 
-        fetchDashboardData();
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('focus', handleFocus);
+        };
+    }, []);
+
+    // CRITICAL FIX: Refetch when navigating back from process page
+    // This works by detecting the 'refreshed' query param
+    useEffect(() => {
+        // Check if we have a 'refreshed' query parameter
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            const shouldRefresh = url.searchParams.get('refreshed');
+
+            if (shouldRefresh === 'true') {
+                console.log('[Factory] Detected refresh param, refetching data...');
+                fetchDashboardData();
+
+                // Clean up the URL by removing the query parameter
+                url.searchParams.delete('refreshed');
+                window.history.replaceState({}, '', url.pathname + url.search);
+            }
+        }
     }, []);
 
     const filteredBatches = incomingBatches.filter(batch =>

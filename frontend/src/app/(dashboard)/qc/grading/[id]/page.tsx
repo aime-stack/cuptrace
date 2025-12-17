@@ -157,6 +157,151 @@ export default function GradeBatchPage({ params }: { params: { id: string } }) {
         return <div className="text-center py-8">Batch not found</div>;
     }
 
+    // Determine if batch is already graded (approved or rejected)
+    // IMPORTANT: Check this AFTER confirming batch exists
+    const isAlreadyGraded = batch.status === 'approved' || batch.status === 'rejected';
+
+
+    // READ-ONLY VIEW for already graded batches
+    if (isAlreadyGraded) {
+        return (
+            <div className="space-y-6 max-w-4xl mx-auto">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.back()}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight">Batch #{batch.id.substring(0, 8)}</h1>
+                        <p className="text-muted-foreground">
+                            {batch.originLocation} • {batch.quantity} kg
+                        </p>
+                    </div>
+                    <div className="ml-auto">
+                        <Badge variant={batch.status === 'approved' ? 'default' : 'destructive'} className={batch.status === 'approved' ? 'bg-green-600' : 'bg-red-600'}>
+                            {batch.status.toUpperCase()}
+                        </Badge>
+                    </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                    {/* Batch Information Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                Batch Details
+                            </CardTitle>
+                            <CardDescription>View-only information for graded batch</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Processing Method</span>
+                                    <span className="font-medium capitalize">{batch.processingType || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Harvest Date</span>
+                                    <span className="font-medium">{batch.harvestDate ? new Date(batch.harvestDate).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Quantity</span>
+                                    <span className="font-medium">{batch.quantity} kg</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Origin</span>
+                                    <span className="font-medium">{batch.originLocation}</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Moisture</span>
+                                    <span className="font-medium">{batch.moisture ? `${batch.moisture}%` : 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Type</span>
+                                    <span className="font-medium capitalize">{batch.type}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Quality Assessment Card */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                {batch.status === 'approved' ? (
+                                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                ) : (
+                                    <XCircle className="h-5 w-5 text-red-600" />
+                                )}
+                                Quality Assessment
+                            </CardTitle>
+                            <CardDescription>
+                                Graded on {batch.metadata?.gradedAt ? new Date(batch.metadata.gradedAt as string).toLocaleDateString() : 'Unknown'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Grade</span>
+                                    <span className="text-2xl font-bold text-primary">{batch.grade || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Score</span>
+                                    <span className="text-2xl font-bold text-primary">
+                                        {batch.quality?.match(/Score: (\d+)/)?.[1] || 'N/A'}
+                                    </span>
+                                </div>
+                            </div>
+                            <Separator />
+                            {batch.metadata?.flavorNotes && Array.isArray(batch.metadata.flavorNotes) && (
+                                <div>
+                                    <span className="text-sm text-muted-foreground block mb-2">Flavor Notes</span>
+                                    <div className="flex flex-wrap gap-2">
+                                        {(batch.metadata.flavorNotes as string[]).map((note, i) => (
+                                            <Badge key={i} variant="secondary">{note}</Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            {batch.metadata?.defects && (
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Defects</span>
+                                    <span className="font-medium">{batch.metadata.defects as string}</span>
+                                </div>
+                            )}
+                            {batch.description && (
+                                <div>
+                                    <span className="text-sm text-muted-foreground block">Notes</span>
+                                    <p className="text-sm mt-1">{batch.description}</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {batch.status === 'rejected' && batch.metadata?.rejectionReason && (
+                    <Card className="border-red-200 bg-red-50">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-red-700">
+                                <AlertTriangle className="h-5 w-5" />
+                                Rejection Reason
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-red-800">{batch.metadata.rejectionReason as string}</p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                <div className="flex justify-end">
+                    <Button onClick={() => router.back()}>
+                        Back to Grading Queue
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
+    // EDITABLE FORM for pending batches
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
             <div className="flex items-center gap-4">

@@ -210,7 +210,9 @@ export default function FactoryProcessPage({ params }: { params: { id: string } 
                 }
             });
             toast.success('Batch processing completed. Farmer has been notified!');
-            router.push('/factory');
+
+            // CRITICAL FIX: Add query param to trigger refetch on Factory page
+            router.push('/factory?refreshed=true');
         } catch (error) {
             console.error('Failed to process batch:', error);
             toast.error('Failed to update batch');

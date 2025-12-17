@@ -36,11 +36,20 @@ export default function QCGradingListPage() {
                     }
                 });
 
-                if (response.data?.data?.data) {
-                    setBatches(response.data.data.data);
+                console.log('[QC Grading] API Response:', response.data);
+
+                // FIXED: Backend returns {success, data: [...], pagination: {...}}
+                // NOT {success, data: {data: [...]}}
+                if (response.data?.data) {
+                    setBatches(response.data.data);
+                    console.log('[QC Grading] Fetched batches:', response.data.data.length);
+                } else {
+                    console.warn('[QC Grading] No data in response:', response.data);
+                    setBatches([]);
                 }
             } catch (error) {
-                console.error('Failed to fetch batches:', error);
+                console.error('[QC Grading] Failed to fetch batches:', error);
+                setBatches([]);
             } finally {
                 setLoading(false);
             }

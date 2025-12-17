@@ -443,7 +443,7 @@ export const listProducts = async (
   stage?: SupplyChainStage,
   page: number = 1,
   limit: number = 10,
-  status?: BatchStatus,
+  status?: string, // FIXED: Changed from BatchStatus to string to allow "approved,completed"
   farmerId?: string,
   cooperativeId?: string,
   search?: string
